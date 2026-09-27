@@ -39,11 +39,11 @@ vi.mock("../../logic/consent", () => ({
   isConsentError: apiMocks.isConsentError,
 }));
 
-vi.mock("../../logic/password", () => ({
+vi.mock("../logic/password", () => ({
   generateRandomPassword: apiMocks.generateRandomPassword,
 }));
 
-vi.mock("../../monitor/telemetry", () => ({
+vi.mock("../monitor/telemetry", () => ({
   logEvent: apiMocks.logEvent,
 }));
 

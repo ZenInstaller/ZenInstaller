@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { PendingRestore } from "../types";
+import type { PendingRestore } from "../../types";
 
 export type { PendingRestore }; // re-export so existing hook imports still work
 

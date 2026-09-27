@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { fetchPullRequests } from "../api";
-import type { Account, PullRequest, RepoOption } from "../types";
+import { fetchPullRequests } from "../../api";
+import type { Account, PullRequest, RepoOption } from "../../types";
 import type { PendingRestore } from "./useUrlRestore";
 
 // ─── Types ────────────────────────────────────────────────────────────────────

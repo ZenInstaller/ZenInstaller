@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Box, Button, Typography } from "@mui/material";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
-import { MONO as mono, labelSx } from "../config/styles";
+import { MONO as mono, labelSx } from "../../config/styles";
 
 // A labelled value with a copy button. `masked` hides the value but still copies the real one.
 export default function CopyRow({ label, value, masked = false }: { label: string; value: string; masked?: boolean }) {

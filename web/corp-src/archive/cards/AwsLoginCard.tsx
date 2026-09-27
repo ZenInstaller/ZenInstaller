@@ -13,12 +13,12 @@ import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
-import Card from "../components/Card";
-import ViewLink from "../components/ViewLink";
-import { getAwsConsoleUrl } from "../logic/consoleUrls";
+import Card from "../../components/Card";
+import ViewLink from "../../components/ViewLink";
+import { getAwsConsoleUrl } from "../../logic/consoleUrls";
 import { CLOUD_DOCS } from "../config/docsConfig";
 import type { UseAwsLoginCard } from "../hooks/useAwsLoginCard";
-import type { CardChrome } from "../types";
+import type { CardChrome } from "../../types";
 
 const mono = { fontFamily: "'IBM Plex Mono', monospace" };
 type Props = {

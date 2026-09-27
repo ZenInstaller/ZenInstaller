@@ -8,14 +8,14 @@ import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import RadioButtonUncheckedIcon from "@mui/icons-material/RadioButtonUnchecked";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
-import Card from "../components/Card";
-import ViewLink from "../components/ViewLink";
-import { getIamRoleUrl } from "../logic/consoleUrls";
-import CloudVariableDetail from "./CloudVariableDetail";
-import { AWS_VARIABLE_KEYS } from "../logic/variables";
-import type { UseGithubVariables } from "../hooks/useGithubVariables";
+import Card from "../../components/Card";
+import ViewLink from "../../components/ViewLink";
+import { getIamRoleUrl } from "../../logic/consoleUrls";
+import CloudVariableDetail from "../../cards/CloudVariableDetail";
+import { AWS_VARIABLE_KEYS } from "../../logic/variables";
+import type { UseGithubVariables } from "../../hooks/useGithubVariables";
 import type { SetupStep, UseAwsSetupCard } from "../hooks/useAwsSetupCard";
-import type { Account, CardChrome, GhEnv } from "../types";
+import type { Account, CardChrome, GhEnv } from "../../types";
 
 const mono = { fontFamily: "'IBM Plex Mono', monospace" };
 const labelSx = {

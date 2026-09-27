@@ -13,9 +13,9 @@ import {
   type GraphAuthMethod,
 } from "../../api/azureGraph";
 import { isConsentError } from "../../logic/consent";
-import { generateRandomPassword } from "../../logic/password";
+import { generateRandomPassword } from "../logic/password";
 import { createResultStorage } from "../../logic/resultStorage";
-import { logEvent } from "../../monitor/telemetry";
+import { logEvent } from "../monitor/telemetry";
 import { useStepRunner } from "../../hooks/util/useStepRunner";
 import type { CardHook, CardRequirements, CardStatus, SetupStep, AzureAccount } from "../../types";
 

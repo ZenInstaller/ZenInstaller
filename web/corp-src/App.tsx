@@ -15,8 +15,6 @@ import { useCreateDomainCard } from "./hooks/useCreateDomainCard";
 import { useCoreInfraCard } from "./hooks/useCoreInfraCard";
 import { useRemoteTerminalInfraCard } from "./hooks/useRemoteTerminalInfraCard";
 import { useBackendDeployCard } from "./hooks/useBackendDeployCard";
-import { useAwsLoginCard } from "./hooks/useAwsLoginCard";
-import { useAwsSetupCard } from "./hooks/useAwsSetupCard";
 
 import NavBar from "./components/NavBar";
 import RestoreToast from "./components/RestoreToast";
@@ -29,8 +27,6 @@ import CoreInfraCard from "./cards/CoreInfraCard";
 import RemoteTerminalInfraCard from "./cards/RemoteTerminalInfraCard";
 import BackendDeployCard from "./cards/BackendDeployCard";
 import CreateDomainCard from "./cards/CreateDomainCard";
-import AwsLoginCard from "./cards/AwsLoginCard";
-import AwsSetupCard from "./cards/AwsSetupCard";
 
 import { withAITracking } from "@microsoft/applicationinsights-react-js";
 import { reactPlugin } from "./monitor/applicationInsights";
@@ -74,8 +70,6 @@ function AppDashboard() {
     }),
   );
 
-  const awsLogin = addCard(useAwsLoginCard());
-
   const azureSubscription = addCard(
     useAzureSubscriptionCard({
       azureAccount: azureLogin.account,
@@ -96,18 +90,6 @@ function AppDashboard() {
       tenantId: azureLogin.confirmedTenantId || undefined,
       variableValues: githubVariableValues,
       manualTenantId: azureLogin.manualTenantId,
-    }),
-  );
-
-  const awsSetup = addCard(
-    useAwsSetupCard({
-      githubAccount: githubRepoEnv.repo.selectedAccount?.login ?? "",
-      githubAccountId: githubRepoEnv.repo.selectedAccount?.id ?? 0,
-      githubRepo: githubRepoEnv.repo.selectedRepo?.name ?? "",
-      githubRepoId: typeof githubRepoEnv.repo.selectedRepo?.id === "number" ? githubRepoEnv.repo.selectedRepo.id : null,
-      variableValues: githubVariableValues,
-      awsReady: awsLogin.done,
-      awsAccount: awsLogin.account,
     }),
   );
   const infra = addCard(
@@ -351,18 +333,6 @@ function AppDashboard() {
                   ? `${githubRepoEnv.repo.selectedAccount.login}/${githubRepoEnv.repo.selectedRepo.name}`
                   : null
               }
-            />
-
-            <AwsLoginCard card={cardProps("aws_login")} awsLogin={awsLogin} />
-
-            <AwsSetupCard
-              card={cardProps("aws_setup")}
-              awsSetup={awsSetup}
-              account={githubRepoEnv.repo.selectedAccount}
-              repoName={githubRepoEnv.repo.selectedRepo?.name ?? ""}
-              repoFullName={githubRepoEnv.repo.repoFullName}
-              selectedEnv={githubRepoEnv.env.selectedEnv}
-              variables={githubVariables}
             />
           </Box>
         </Box>

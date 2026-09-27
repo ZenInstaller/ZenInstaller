@@ -3,7 +3,7 @@ import { getAwsCallerIdentity, getAwsMfaDevices, getAwsSessionCredentials } from
 import type { AwsCallerIdentity, AwsMfaDevice } from "../api/aws";
 import { clearAwsSession, loadAwsTemporarySession, saveAwsTemporarySession } from "../api/awsSession";
 import { SESSION_DURATION_MS, SESSION_REFRESH_LEAD_MS } from "../config/awsConfig";
-import type { CardHook, CardStatus, LoginHook } from "../types";
+import type { CardHook, CardStatus, LoginHook } from "../../types";
 
 export type UseAwsLoginCard = CardHook &
   LoginHook<AwsCallerIdentity> & {

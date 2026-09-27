@@ -20,7 +20,7 @@ import RadioButtonCheckedIcon from "@mui/icons-material/RadioButtonChecked";
 import RadioButtonUncheckedIcon from "@mui/icons-material/RadioButtonUnchecked";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
-import type { PendingSecret, SecretsStatus, UpsertStatus } from "../types";
+import type { PendingSecret, SecretsStatus, UpsertStatus } from "../../types";
 
 // ─── Input style ──────────────────────────────────────────────────────────────
 

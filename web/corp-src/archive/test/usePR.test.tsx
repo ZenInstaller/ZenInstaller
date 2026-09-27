@@ -3,7 +3,7 @@ import { createRoot } from "react-dom/client";
 import { useEffect } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { usePR, type UsePR } from "../hooks/usePR";
-import type { Account, PullRequest, RepoOption } from "../types";
+import type { Account, PullRequest, RepoOption } from "../../types";
 
 const { apiMocks } = vi.hoisted(() => ({
 	apiMocks: {
@@ -11,7 +11,7 @@ const { apiMocks } = vi.hoisted(() => ({
 	},
 }));
 
-vi.mock("../api", () => ({
+vi.mock("../../api", () => ({
 	fetchPullRequests: apiMocks.fetchPullRequests,
 }));
 

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { checkTemplate, createBranch, fetchBranches, fetchOrgList, fetchRepos, generateRepo } from "../api";
-import { PIPELINE } from "../logic/pipeline";
+import { TEMPLATE_REPO, VALID_ENVS } from "../config/githubConfig";
 import { findIgnoreCase } from "../logic/search";
 import { INITIAL_URL_PARAMS, type UrlRestoreField } from "./useUrlStateManager";
 import type { Account, Branch, CardStatus, Repo, RepoOption, User } from "../types";
@@ -59,8 +59,6 @@ export interface UseGithubRepo {
  * selected repo, and branches to load environments and match a branch).
  */
 export function useGithubRepo(user: User | null): UseGithubRepo {
-  const { validEnvs, templateRepo } = PIPELINE;
-
   // ── State ─────────────────────────────────────────────────────────────────
   const [accountList, setAccountList] = useState<Account[]>([]);
   const [accountsLoaded, setAccountsLoaded] = useState(false);
@@ -124,7 +122,7 @@ export function useGithubRepo(user: User | null): UseGithubRepo {
         const data = await checkTemplate(account, repo.name);
         const tName = data.templateName || null;
         setTemplateName(tName);
-        const isTemplate = tName !== null && tName === templateRepo;
+        const isTemplate = tName !== null && tName === TEMPLATE_REPO;
         if (!isTemplate) {
           setTemplateStatus("not_clone");
           setStatus("warning");
@@ -140,7 +138,7 @@ export function useGithubRepo(user: User | null): UseGithubRepo {
         setStatus("warning");
       }
     },
-    [templateRepo, loadBranches],
+    [loadBranches],
   );
 
   // ── Effects ───────────────────────────────────────────────────────────────
@@ -221,7 +219,7 @@ export function useGithubRepo(user: User | null): UseGithubRepo {
         repo: newRepo,
         envSuccess,
         results,
-      } = await generateRepo(acc, name, isPrivate, includeAllBranch, createEnvs, templateRepo, validEnvs);
+      } = await generateRepo(acc, name, isPrivate, includeAllBranch, createEnvs, TEMPLATE_REPO, VALID_ENVS);
       const updated = [...repoListRef.current, newRepo];
       setRepoList(updated);
       repoCache.current[String(acc.id)] = updated;
@@ -235,7 +233,7 @@ export function useGithubRepo(user: User | null): UseGithubRepo {
     } finally {
       setCloning(false);
     }
-  }, [isPrivate, includeAllBranch, createEnvs, templateRepo, validEnvs]);
+  }, [isPrivate, includeAllBranch, createEnvs]);
 
   const onRefresh = useCallback(() => {
     const acc = selectedAccountRef.current;

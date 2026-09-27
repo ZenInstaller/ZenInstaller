@@ -76,10 +76,8 @@ vi.mock("../config/azureConfig", () => ({
 	ARM_SCOPES: ["arm.scope"],
 }));
 
-vi.mock("../logic/pipeline", () => ({
-	PIPELINE: {
-		validEnvs: ["PROD", "TEST"],
-	},
+vi.mock("../config/githubConfig", () => ({
+	VALID_ENVS: ["PROD", "TEST"],
 }));
 
 function HookHarness(

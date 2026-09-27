@@ -20,18 +20,18 @@ import type {
   PrerequisiteStageVar,
   Stage,
   StageDefinition,
-} from "../types";
-import { createVariable, fetchLogArtifact, fetchPlan, updateVariable } from "../api";
+} from "../../types";
+import { createVariable, fetchLogArtifact, fetchPlan, updateVariable } from "../../api";
 import { useAzurePermissions } from "../hooks/util/useAzurePermissions";
 import { useRemoteTerminal } from "../hooks/useRemoteTerminal";
 import { PIPELINE } from "../logic/pipeline";
-import { computePlanSummary, isPlanBehind } from "../logic/stage";
-import { getVariableDisplayName } from "../logic/variables";
-import ViewLink from "../components/ViewLink";
-import { getWorkflowRunUrl } from "../logic/github";
-import { MONO as mono } from "../config/styles";
-import Card from "../components/Card";
-import VariablesCard from "../components/VariablesCard";
+import { computePlanSummary, isPlanBehind } from "../../logic/stage";
+import { getVariableDisplayName } from "../../logic/variables";
+import ViewLink from "../../components/ViewLink";
+import { getWorkflowRunUrl } from "../../logic/github";
+import { MONO as mono } from "../../config/styles";
+import Card from "../../components/Card";
+import VariablesCard from "../../components/VariablesCard";
 import StagePlanDetail from "./StagePlanDetail";
 import RemoteTerminal from "./RemoteTerminal";
 

@@ -1,14 +1,14 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import React, { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import type { AzureAccount } from "../types";
+import type { AzureAccount } from "../../types";
 
 const graph = vi.hoisted(() => ({
   getExistingSP: vi.fn(),
   listAppRoleAssignments: vi.fn(),
   grantAdminConsent: vi.fn(),
 }));
-vi.mock("../api/azureGraph", () => graph);
+vi.mock("../../api/azureGraph", () => graph);
 
 const { useAzurePermissions } = await import("../hooks/util/useAzurePermissions");
 type Perms = ReturnType<typeof useAzurePermissions>;

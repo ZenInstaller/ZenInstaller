@@ -41,7 +41,7 @@ import {
 } from "../logic/naming";
 import { REMOTE_TERMINAL_PROVIDERS } from "../config/azureConfig";
 import { createResultStorage } from "../logic/resultStorage";
-import { PIPELINE } from "../logic/pipeline";
+import { VALID_ENVS } from "../config/githubConfig";
 import type { Account, AzureConfigHook, AzureTarget, CardHook, CardStatus, SetupStep } from "../types";
 
 export type RemoteTerminalInfraResult = {
@@ -111,7 +111,7 @@ export function useRemoteTerminalInfraCard({
   const functionAppName = getTerminalFunctionAppName(corpName);
   const planName = `${functionAppName}-plan`;
   const pipelineAppName = getTerminalPipelineAppName(corpName);
-  const environments = ["PROD", "TEST"].filter((e) => PIPELINE.validEnvs.includes(e));
+  const environments = ["PROD", "TEST"].filter((e) => VALID_ENVS.includes(e));
 
   const resultMatches = !!result && result.corpName === corpName && result.subscriptionId === subscriptionId;
   const done = resultMatches;

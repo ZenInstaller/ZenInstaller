@@ -1,4 +1,4 @@
-import { toHex } from "./crypto";
+import { toHex } from "../../logic/crypto";
 
 export type SessionCredentials = { sessionId: string; accessToken: string };
 

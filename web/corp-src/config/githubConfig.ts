@@ -14,3 +14,8 @@ export const GITHUB_VERIFIER_KEY = "github_pkce_verifier";
 // OAuth first: a pasted personal access token is the fallback for whoever skipped the sign-in.
 export const GITHUB_TOKEN_KEYS = [GITHUB_TOKEN_KEY, GITHUB_PAT_KEY] as const;
 export type GithubTokenKey = (typeof GITHUB_TOKEN_KEYS)[number];
+
+// ── What this installer sets up ───────────────────────────────────────────────
+
+export const TEMPLATE_REPO: string = "ZenMe-AU/ZenbloxCore" as const;
+export const VALID_ENVS: readonly string[] = ["PROD", "TEST"];

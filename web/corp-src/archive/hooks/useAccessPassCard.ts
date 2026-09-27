@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
-import { getMsal } from "../cards/AzureLogin/msal";
-import { ACCESS_PASS_SCOPES } from "../config/azureConfig";
+import { getMsal } from "../../cards/AzureLogin/msal";
+import { ACCESS_PASS_SCOPES } from "../../config/azureConfig";
 import {
   listUsersManagedBySignedInUser,
   ensureTemporaryAccessPassEnabled,
@@ -11,13 +11,13 @@ import {
   temporaryAccessPassMethodExists,
   type EntraUser,
   type GraphAuthMethod,
-} from "../api/azureGraph";
-import { isConsentError } from "../logic/consent";
-import { generateRandomPassword } from "../logic/password";
-import { createResultStorage } from "../logic/resultStorage";
-import { logEvent } from "../monitor/telemetry";
-import { useStepRunner } from "./util/useStepRunner";
-import type { CardHook, CardRequirements, CardStatus, SetupStep, AzureAccount } from "../types";
+} from "../../api/azureGraph";
+import { isConsentError } from "../../logic/consent";
+import { generateRandomPassword } from "../../logic/password";
+import { createResultStorage } from "../../logic/resultStorage";
+import { logEvent } from "../../monitor/telemetry";
+import { useStepRunner } from "../../hooks/util/useStepRunner";
+import type { CardHook, CardRequirements, CardStatus, SetupStep, AzureAccount } from "../../types";
 
 export type AzureSetupResult = {
   accessPassValue: string;

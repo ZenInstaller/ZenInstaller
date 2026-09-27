@@ -1,6 +1,6 @@
-import type { PipelineConfig, StageDefinition } from "../types";
-import { GRAPH_PERMISSIONS } from "../config/azureConfig";
-import { AZURE_VARIABLE_KEYS, AWS_VARIABLE_KEYS, C01_KEYS } from "./variables";
+import type { PipelineConfig, StageDefinition } from "../../types";
+import { GRAPH_PERMISSIONS } from "../../config/azureConfig";
+import { AZURE_VARIABLE_KEYS, AWS_VARIABLE_KEYS, C01_KEYS } from "../../logic/variables";
 
 type StageSource = Omit<StageDefinition, "workflowId">;
 type PipelineSource = Omit<PipelineConfig, "stages"> & { stages: StageSource[] };
@@ -116,10 +116,5 @@ export const PIPELINES: Record<string, PipelineConfig> = Object.fromEntries(
   Object.entries(DEFINITIONS).map(([name, config]) => [name, withStageWorkflows(config)]),
 );
 
-// The only pipeline in use — cards import this directly instead of it being threaded through hooks.
+// Archived along with the stage cards; nothing in the live tree reads it.
 export const PIPELINE = PIPELINES.corpSetup;
-
-export function matchPipelineByTemplate(templateName: string): string | null {
-  const entry = Object.entries(PIPELINES).find(([, cfg]) => cfg.templateRepo === templateName);
-  return entry ? entry[0] : null;
-}

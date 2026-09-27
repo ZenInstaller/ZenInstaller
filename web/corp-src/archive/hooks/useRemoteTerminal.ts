@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Terminal } from "@xterm/xterm";
-import { triggerRemoteLogin } from "../api";
-import { deleteSession, negotiateSession, registerSession } from "../api/backend";
+import { triggerRemoteLogin } from "../../api";
+import { deleteSession, negotiateSession, registerSession } from "../api/remoteTerminal";
 import { TERMINAL_COLS, TERMINAL_ROWS, TERMINAL_THEME } from "../config/remoteTerminal";
 import { createSessionCredentials, parseSocketEvent } from "../logic/remoteTerminal";
 import type { Cloud, RunnerMessage, SessionCredentials, TerminalStatus } from "../logic/remoteTerminal";
-import type { Account, GhEnv } from "../types";
+import type { Account, GhEnv } from "../../types";
 
 const MAX_RECONNECT_ATTEMPTS = 10;
 const RECONNECT_BASE_MS = 1000;

@@ -2,7 +2,6 @@ import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { useEffect } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { useAccessPassCard, type UseAccessPassCard } from "../hooks/useAccessPassCard";
 import { useAzureAppRegistrationCard, type UseAzureAppRegistrationCard } from "../hooks/useAzureAppRegistrationCard";
 import { useCoreInfraCard, type UseCoreInfraCard } from "../hooks/useCoreInfraCard";
 import { useCreateDomainCard, type UseCreateDomainCard } from "../hooks/useCreateDomainCard";
@@ -183,44 +182,6 @@ describe("azure workflow cards", () => {
 		apiMocks.ensureRbacRoleAtScope.mockResolvedValue("created");
 		apiMocks.hasRbacRoleAtScope.mockResolvedValue(true);
 		apiMocks.listLocations.mockResolvedValue([{ name: "eastus", displayName: "East US" }]);
-	});
-
-	it("creates an access pass for a managed user", async () => {
-		const azureAccount = { tenantId: "tenant-1" } as AzureAccount;
-		let latest: UseAccessPassCard | null = null;
-		const { root, Harness } = mountHook(
-			() => useAccessPassCard({ azureAccount, confirmedTenantId: "tenant-1" }),
-			(value) => {
-				latest = value;
-			},
-		);
-
-		await act(async () => {
-			root.render(<Harness />);
-		});
-
-		await waitFor(() => {
-			expect(latest?.cardId).toBe("access_pass");
-			expect(apiMocks.listUsersManagedBySignedInUser).toHaveBeenCalledTimes(1);
-		});
-
-		let result: Awaited<ReturnType<UseAccessPassCard["runForUser"]>> = null;
-		await act(async () => {
-			result = await latest!.runForUser("user-1");
-		});
-
-		await waitFor(() => {
-			expect(result?.accessPassValue).toBe("tap-123");
-			expect(apiMocks.createTemporaryAccessPassForUser).toHaveBeenCalledWith(
-				azureAccount,
-				"user-1",
-				"tenant-1",
-			);
-		});
-
-		await act(async () => {
-			root.unmount();
-		});
 	});
 
 	it("prefills the app registration name and completes once variables are confirmed", async () => {

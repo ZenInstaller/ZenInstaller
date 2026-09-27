@@ -12,15 +12,15 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import type { CardChrome, SetupStep } from "../types";
+import type { CardChrome, SetupStep } from "../../types";
 import type { UseAccessPassCard } from "../hooks/useAccessPassCard";
-import StepRow from "./StepRow";
-import { logEvent } from "../monitor/telemetry";
-import Card from "../components/Card";
-import CopyRow from "../components/CopyRow";
-import ViewLink from "../components/ViewLink";
-import { getEntraUsersUrl } from "../logic/consoleUrls";
-import { MONO as mono } from "../config/styles";
+import StepRow from "../../cards/StepRow";
+import { logEvent } from "../../monitor/telemetry";
+import Card from "../../components/Card";
+import CopyRow from "../../components/CopyRow";
+import ViewLink from "../../components/ViewLink";
+import { getEntraUsersUrl } from "../../logic/consoleUrls";
+import { MONO as mono } from "../../config/styles";
 
 const COMPLETED_USERS_KEY = "zeninstaller_corp_access_pass_completed_users";
 const DELIVERY_CONFIRMED_USERS_KEY = "zeninstaller_corp_access_pass_delivery_confirmed_users";

@@ -4,13 +4,10 @@ import { Box, Typography } from "@mui/material";
 import { type CardChrome, type CardHook, type CardId } from "./types";
 import { groupSx, EXPANDED_W } from "./config/cardLayout";
 import { createResultStorage } from "./logic/resultStorage";
-import { PIPELINE } from "./logic/pipeline";
 import { useGithubLoginCard } from "./hooks/useGithubLoginCard";
 import { useRepoCard } from "./hooks/useRepoCard";
 import { useGithubVariables } from "./hooks/useGithubVariables";
 import { useUrlRestore, useUrlSync } from "./hooks/useUrlStateManager";
-import { useDeploymentPlan } from "./hooks/useDeploymentPlan";
-import { useCorpStageCards } from "./hooks/useCorpStageCards";
 import { useAzureLoginCard } from "./cards/AzureLogin/useAzureLoginCard";
 import { useAzureAppRegistrationCard } from "./hooks/useAzureAppRegistrationCard";
 import { useAzureSubscriptionCard } from "./hooks/useAzureSubscriptionCard";
@@ -18,7 +15,6 @@ import { useCreateDomainCard } from "./hooks/useCreateDomainCard";
 import { useCoreInfraCard } from "./hooks/useCoreInfraCard";
 import { useRemoteTerminalInfraCard } from "./hooks/useRemoteTerminalInfraCard";
 import { useBackendDeployCard } from "./hooks/useBackendDeployCard";
-import { useAccessPassCard } from "./hooks/useAccessPassCard";
 import { useAwsLoginCard } from "./hooks/useAwsLoginCard";
 import { useAwsSetupCard } from "./hooks/useAwsSetupCard";
 
@@ -33,10 +29,8 @@ import CoreInfraCard from "./cards/CoreInfraCard";
 import RemoteTerminalInfraCard from "./cards/RemoteTerminalInfraCard";
 import BackendDeployCard from "./cards/BackendDeployCard";
 import CreateDomainCard from "./cards/CreateDomainCard";
-import AccessPassCard from "./cards/AccessPassCard";
 import AwsLoginCard from "./cards/AwsLoginCard";
 import AwsSetupCard from "./cards/AwsSetupCard";
-import StageCard from "./cards/StageCard";
 
 import { withAITracking } from "@microsoft/applicationinsights-react-js";
 import { reactPlugin } from "./monitor/applicationInsights";
@@ -81,13 +75,6 @@ function AppDashboard() {
   );
 
   const awsLogin = addCard(useAwsLoginCard());
-
-  const azureAccessPass = addCard(
-    useAccessPassCard({
-      azureAccount: azureLogin.account,
-      confirmedTenantId: azureLogin.confirmedTenantId,
-    }),
-  );
 
   const azureSubscription = addCard(
     useAzureSubscriptionCard({
@@ -165,16 +152,6 @@ function AppDashboard() {
       tenantId: githubVariableValues.AZURE_TENANT_ID ?? "",
     }),
   );
-
-  const plan = useDeploymentPlan({
-    account: githubRepoEnv.repo.selectedAccount,
-    repoName: githubRepoEnv.repo.selectedRepo?.name ?? null,
-    pipeline: PIPELINE,
-    selectedEnv: githubRepoEnv.env.selectedEnv,
-    branches: githubRepoEnv.repo.branchList,
-    branchMatchError: githubRepoEnv.env.branchMatchError,
-    envReady: githubRepoEnv.done,
-  });
 
   // ── URL restore + sync ───────────────────────────────────────────────────────
   const urlRestore = useUrlRestore([
@@ -254,22 +231,6 @@ function AppDashboard() {
       onRequirementClick: openCard,
     };
   };
-
-  const stageCards = useCorpStageCards({
-    pipeline: PIPELINE,
-    plan,
-    allCards,
-    repoDone: githubRepoEnv.done,
-    repoDependencyLabel: githubRepoEnv.cardDependencyLabel,
-    expandedIds,
-    account: githubRepoEnv.repo.selectedAccount,
-    repoName: githubRepoEnv.repo.selectedRepo?.name ?? "",
-    selectedEnv: githubRepoEnv.env.selectedEnv,
-    variableValues: githubVariableValues,
-    onVariableConfirmed: githubVariables.onConfirmed,
-    onToggle: toggle,
-    onRequirementClick: openCard,
-  });
   // ── Render ────────────────────────────────────────────────────────────────
   return (
     <>
@@ -403,12 +364,6 @@ function AppDashboard() {
               selectedEnv={githubRepoEnv.env.selectedEnv}
               variables={githubVariables}
             />
-
-            {stageCards.map(({ key, ...stageCard }) => (
-              <StageCard key={key} {...stageCard} azureAccount={azureLogin.account} />
-            ))}
-
-            <AccessPassCard card={cardProps("access_pass")} accessPass={azureAccessPass} />
           </Box>
         </Box>
       </Box>

@@ -3,7 +3,7 @@ import { createRoot } from "react-dom/client";
 import { useEffect } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useAccessPassCard, type UseAccessPassCard } from "../hooks/useAccessPassCard";
-import type { AzureAccount } from "../types";
+import type { AzureAccount } from "../../types";
 
 const { apiMocks } = vi.hoisted(() => ({
   apiMocks: {
@@ -21,11 +21,11 @@ const { apiMocks } = vi.hoisted(() => ({
   },
 }));
 
-vi.mock("../api/msal", () => ({
+vi.mock("../../api/msal", () => ({
   getMsal: apiMocks.getMsal,
 }));
 
-vi.mock("../api/azureGraph", () => ({
+vi.mock("../../api/azureGraph", () => ({
   listUsersManagedBySignedInUser: apiMocks.listUsersManagedBySignedInUser,
   ensureTemporaryAccessPassEnabled: apiMocks.ensureTemporaryAccessPassEnabled,
   listUserAuthenticationMethods: apiMocks.listUserAuthenticationMethods,
@@ -35,19 +35,19 @@ vi.mock("../api/azureGraph", () => ({
   temporaryAccessPassMethodExists: apiMocks.temporaryAccessPassMethodExists,
 }));
 
-vi.mock("../logic/consent", () => ({
+vi.mock("../../logic/consent", () => ({
   isConsentError: apiMocks.isConsentError,
 }));
 
-vi.mock("../logic/password", () => ({
+vi.mock("../../logic/password", () => ({
   generateRandomPassword: apiMocks.generateRandomPassword,
 }));
 
-vi.mock("../monitor/telemetry", () => ({
+vi.mock("../../monitor/telemetry", () => ({
   logEvent: apiMocks.logEvent,
 }));
 
-vi.mock("../config/azureConfig", () => ({
+vi.mock("../../config/azureConfig", () => ({
   ACCESS_PASS_SCOPES: ["scope.a", "scope.b"],
 }));
 

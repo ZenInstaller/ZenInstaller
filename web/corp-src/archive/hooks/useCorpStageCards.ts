@@ -9,7 +9,7 @@ import type {
   PlanSummary,
   Stage,
   StageDefinition,
-} from "../types";
+} from "../../types";
 import type { UseDeploymentPlan } from "./useDeploymentPlan";
 import {
   getEffectiveStatus,
@@ -17,7 +17,7 @@ import {
   getStageSummaryText,
   hasVariableDiff,
   stageToCardStatus,
-} from "../logic/stage";
+} from "../../logic/stage";
 
 export type CorpStageCardModel = {
   key: string;

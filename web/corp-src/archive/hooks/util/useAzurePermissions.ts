@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
-import { getExistingSP, grantAdminConsent, listAppRoleAssignments } from "../../api/azureGraph";
-import type { AzureAccount } from "../../types";
+import { getExistingSP, grantAdminConsent, listAppRoleAssignments } from "../../../api/azureGraph";
+import type { AzureAccount } from "../../../types";
 
 export type UseAzurePermissionsParams = {
   azureAccount: AzureAccount | null;

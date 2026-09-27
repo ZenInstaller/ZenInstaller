@@ -1,8 +1,8 @@
 import { Box, Button, CircularProgress, Tooltip, Typography } from "@mui/material";
 import { ACTION_CONFIG } from "../config/stageConfig";
-import { getActionType } from "../logic/stage";
-import type { PlanItem, PlanSummary } from "../types";
-import { MONO as mono } from "../config/styles";
+import { getActionType } from "../../logic/stage";
+import type { PlanItem, PlanSummary } from "../../types";
+import { MONO as mono } from "../../config/styles";
 
 function SummaryPill({ label, count, color }: { label: string; count: number; color: string }) {
   return (

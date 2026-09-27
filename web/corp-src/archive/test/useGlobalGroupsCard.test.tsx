@@ -47,11 +47,11 @@ const { configMocks } = vi.hoisted(() => ({
   configMocks: { azureClientId: "client-id" },
 }));
 
-vi.mock("../api/msal", () => ({
+vi.mock("../../api/msal", () => ({
   getMsal: apiMocks.getMsal,
 }));
 
-vi.mock("../api/azureGraph", () => ({
+vi.mock("../../api/azureGraph", () => ({
   listGroups: apiMocks.listGroups,
   getGroupByName: apiMocks.getGroupByName,
   getGroupParents: apiMocks.getGroupParents,
@@ -63,11 +63,11 @@ vi.mock("../api/azureGraph", () => ({
   isGroupMember: apiMocks.isGroupMember,
 }));
 
-vi.mock("../logic/consent", () => ({
+vi.mock("../../logic/consent", () => ({
   isConsentError: apiMocks.isConsentError,
 }));
 
-vi.mock("../config/azureConfig", () => ({
+vi.mock("../../config/azureConfig", () => ({
   get AZURE_CLIENT_ID() {
     return configMocks.azureClientId;
   },

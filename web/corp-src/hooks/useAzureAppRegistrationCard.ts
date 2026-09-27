@@ -24,7 +24,7 @@ import type {
   CardStatus,
   SetupStep,
 } from "../types";
-import { PIPELINE } from "../logic/pipeline";
+import { VALID_ENVS } from "../config/githubConfig";
 import { getFederatedCredential, getImmutableRepoSegment } from "../logic/naming";
 import { setOidcImmutableSubject } from "../api";
 
@@ -90,7 +90,7 @@ export function useAzureAppRegistrationCard({
   manualTenantId,
 }: UseAzureAppRegistrationCardParams): UseAzureAppRegistrationCard {
   const [appName, setAppName] = useState("zeninstaller-github");
-  const defaultSelected = ["PROD", "TEST"].filter((e) => PIPELINE.validEnvs.includes(e));
+  const defaultSelected = ["PROD", "TEST"].filter((e) => VALID_ENVS.includes(e));
   const [environments, setEnvironments] = useState<string[]>(
     defaultSelected.length > 0 ? defaultSelected : ["PROD", "TEST"],
   );

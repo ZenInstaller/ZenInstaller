@@ -8,10 +8,10 @@ import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import RadioButtonCheckedIcon from "@mui/icons-material/RadioButtonChecked";
 import RadioButtonUncheckedIcon from "@mui/icons-material/RadioButtonUnchecked";
-import Card from "../components/Card";
-import RefreshButton from "../components/RefreshButton";
-import { useRefreshIndicator } from "../hooks/util/useRefreshIndicator";
-import type { CardChrome } from "../types";
+import Card from "../../components/Card";
+import RefreshButton from "../../components/RefreshButton";
+import { useRefreshIndicator } from "../../hooks/util/useRefreshIndicator";
+import type { CardChrome } from "../../types";
 import {
   isRowDirty,
   wouldCreateCycle,
@@ -19,7 +19,7 @@ import {
   type GroupRow,
   type GroupRowResult,
 } from "../hooks/useGlobalGroupsCard";
-import { MONO as mono } from "../config/styles";
+import { MONO as mono } from "../../config/styles";
 
 function RowStatusIcon({ row, result, dirty }: { row: GroupRow; result: GroupRowResult | undefined; dirty: boolean }) {
   const status = result?.status;

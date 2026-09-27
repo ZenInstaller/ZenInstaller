@@ -1,15 +1,15 @@
 import { useState } from "react";
 import { Box, Typography } from "@mui/material";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
-import type { Account, GhEnv, PendingSecret, SecretsStatus, UpsertStatus } from "../types";
-import { AZURE_SECRET_KEYS, AWS_SECRET_KEYS } from "../logic/variables";
-import { fetchPublicKey, upsertSecret } from "../api";
-import { encryptSecret } from "../logic/crypto";
-import SecretsCard from "../components/SecretsCard";
-import RefreshButton from "../components/RefreshButton";
-import SaveButton from "../components/SaveButton";
-import { useRefreshIndicator } from "../hooks/util/useRefreshIndicator";
-import { sectionLabelSx as sectionLabelBase } from "../config/styles";
+import type { Account, GhEnv, PendingSecret, SecretsStatus, UpsertStatus } from "../../types";
+import { AZURE_SECRET_KEYS, AWS_SECRET_KEYS } from "../../logic/variables";
+import { fetchPublicKey, upsertSecret } from "../../api";
+import { encryptSecret } from "../../logic/crypto";
+import SecretsCard from "../../components/SecretsCard";
+import RefreshButton from "../../components/RefreshButton";
+import SaveButton from "../../components/SaveButton";
+import { useRefreshIndicator } from "../../hooks/util/useRefreshIndicator";
+import { sectionLabelSx as sectionLabelBase } from "../../config/styles";
 
 // Muted variant of the shared section label (whose default is the darker #0f172a).
 const sectionLabelSx = { ...sectionLabelBase, color: "#94a3b8" };

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { getMsal } from "../cards/AzureLogin/msal";
-import { GROUPS_SCOPES, AZURE_CLIENT_ID } from "../config/azureConfig";
+import { getMsal } from "../../cards/AzureLogin/msal";
+import { GROUPS_SCOPES, AZURE_CLIENT_ID } from "../../config/azureConfig";
 import {
   listGroups,
   getGroupByName,
@@ -11,9 +11,9 @@ import {
   addGroupMember,
   removeGroupMember,
   isGroupMember,
-} from "../api/azureGraph";
-import { isConsentError } from "../logic/consent";
-import type { CardHook, CardRequirements, CardStatus, SetupStep, AzureAccount } from "../types";
+} from "../../api/azureGraph";
+import { isConsentError } from "../../logic/consent";
+import type { CardHook, CardRequirements, CardStatus, SetupStep, AzureAccount } from "../../types";
 
 export type GroupRow = {
   id: string; // Entra group id once created; a "new:<uuid>" placeholder before creation
@@ -305,11 +305,11 @@ export function useGlobalGroupsCard({
         prev.map((r) =>
           r.id === id
             ? {
-              ...r,
-              groupName: saved.displayName,
-              description: saved.description,
-              memberOfGroupNames: [...saved.memberOfGroupNames],
-            }
+                ...r,
+                groupName: saved.displayName,
+                description: saved.description,
+                memberOfGroupNames: [...saved.memberOfGroupNames],
+              }
             : r,
         ),
       );

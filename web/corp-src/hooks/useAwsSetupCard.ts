@@ -2,7 +2,7 @@ import { useCallback, useState } from "react";
 import { createOrUpdateGithubOidcRole, ensureGithubOidcProvider } from "../api/aws";
 import { getFederatedSubject } from "../logic/naming";
 import type { AwsCallerIdentity } from "../api/aws";
-import { PIPELINE } from "../logic/pipeline";
+import { VALID_ENVS } from "../config/githubConfig";
 import { AWS_VARIABLE_KEYS } from "../logic/variables";
 import type { CardHook, CardStatus } from "../types";
 
@@ -45,11 +45,9 @@ export function useAwsSetupCard({
   awsReady,
   awsAccount,
 }: UseAwsSetupCardParams): UseAwsSetupCard {
-  const defaultEnvs = ["PROD", "TEST"].filter((e) => PIPELINE.validEnvs.includes(e));
+  const defaultEnvs = ["PROD", "TEST"].filter((e) => VALID_ENVS.includes(e));
   const [roleName, setRoleName] = useState("zeninstaller-github");
-  const [environments, setEnvironments] = useState<string[]>(
-    defaultEnvs.length > 0 ? defaultEnvs : [...PIPELINE.validEnvs],
-  );
+  const [environments, setEnvironments] = useState<string[]>(defaultEnvs.length > 0 ? defaultEnvs : [...VALID_ENVS]);
   const [loading, setLoading] = useState(false);
   const [steps, setSteps] = useState<SetupStep[]>([]);
   const [roleArn, setRoleArn] = useState<string | null>(null);

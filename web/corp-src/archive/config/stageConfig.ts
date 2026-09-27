@@ -1,4 +1,4 @@
-import type { ActionType } from "../types";
+import type { ActionType } from "../../types";
 
 export const ACTION_CONFIG: Record<ActionType, { symbol: string; color: string }> = {
   create: { symbol: "+", color: "#16a34a" },

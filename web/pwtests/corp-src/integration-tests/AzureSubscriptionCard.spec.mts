@@ -1,3 +1,4 @@
+// UI component: ../../../corp-src/cards/AzureSubscriptionCard.tsx
 import { writeFile, } from "node:fs/promises";
 import { BrowserContext, expect, Locator, Page, test, } from "@playwright/test";
 import { restoreAzureSessionStorage, restoreGithubSessionStorage, } from "../util/setupHelper.mts";

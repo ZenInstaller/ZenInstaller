@@ -1,3 +1,4 @@
+// UI component: ../../../corp-src/cards/RepoDetail.tsx
 import { expect, test } from "@playwright/test";
 import { CORP_URL, GITHUB_API_URL, GITHUB_API_URL_REGEX, viewports, } from "../../testInit";
 import { createNewRepo } from "../util/testHelper.mts";

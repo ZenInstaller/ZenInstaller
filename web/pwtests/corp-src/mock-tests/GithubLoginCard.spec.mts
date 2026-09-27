@@ -1,3 +1,4 @@
+// UI component: ../../../corp-src/cards/GithubLoginCard.tsx
 import { expect, test } from "@playwright/test";
 import { CORP_URL, viewports } from "../../testInit";
 import { expectSnapshot } from "../../util/testHelper.ts";

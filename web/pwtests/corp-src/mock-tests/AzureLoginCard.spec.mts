@@ -1,3 +1,4 @@
+// UI component: ../../../corp-src/cards/AzureLogin/AzureLoginCard.tsx
 import { expect, test } from "@playwright/test";
 import { installMockAzure, signInMockAzure } from "../util/mockTestHelper.mts";
 import { CORP_URL, viewports } from "../../testInit";

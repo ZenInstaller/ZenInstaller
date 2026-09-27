@@ -1,3 +1,4 @@
+// UI component: ../../../corp-src/cards/AzureAppRegistrationCard.tsx
 import { expect, test } from "@playwright/test";
 import { CORP_URL, viewports } from "../../testInit";
 import { createNewRepo } from "../util/testHelper.mts";

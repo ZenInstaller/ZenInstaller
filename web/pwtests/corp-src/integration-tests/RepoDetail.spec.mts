@@ -1,3 +1,4 @@
+// UI component: ../../../corp-src/cards/RepoDetail.tsx
 import { expect, test } from "@playwright/test";
 import { restoreGithubSessionStorage } from "../util/setupHelper.mts";
 import { CORP_URL, TEST_REPO_FROM_PROD, TEST_REPO_MAIN, TEST_REPO_NO_ENV, viewports, } from "../../testInit";

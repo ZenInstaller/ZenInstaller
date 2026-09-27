@@ -1,3 +1,4 @@
+// UI component: ../../../corp-src/cards/AzureAppRegistrationCard.tsx
 import { expect, test } from "@playwright/test";
 import { restoreAzureSessionStorage, restoreGithubSessionStorage } from "../util/setupHelper.mts";
 import { checkRepoExists, chooseExistingRepo, createNewRepo } from "../util/testHelper.mts";

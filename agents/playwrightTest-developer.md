@@ -31,7 +31,8 @@ This developer's primary objective is to develop comprehensive Playwright tests 
 5. Once the integration flow passes and its expected behavior is confirmed, implement or update the matching mock test. Use `web/pwtests/corp-src/mock-tests/RepoDetail.spec.mts` as the starting example. Keep its user actions, assertions, edge cases, and snapshot milestones aligned with the integration spec while mocking external APIs. Reuse `mockTestHelper.mts` where applicable; prevent unintended external requests and real writes.
 6. Work on one card at a time. If an integration test fails, investigate and report the failure and any glaring differences. Ask the product owner whether to continue with its mock test; by default, update mock tests only for integration flows that passed. For a failing flow, recommend that the product owner request a test update if needed.
 7. Always run the created or modified test with code coverage and create new snapshots for new tests as needed.
-8. If a card is opened and this developer is run, look at the review manifest and show the user what was recommended to change and then let the user choose to fix any of the recommendations needed to be fixed.
+8. After creating a new test file, always run the PlaywrightTest-reviewer agent for test review.
+9. If a card is opened and this developer is run, look at the review manifest and show the user what was recommended to change and then let the user choose to fix any of the recommendations needed to be fixed.
 
 ## Test structure
 Every playwright test will be defined in a main file, if more files are needed, they will be linked from the main file and use the main file as prefix to their filename, e.g. UIComponent-A.spec.ts could have UIComponent-A-Intro.spec.ts and UIComponent-A-Extra.spec.ts as sub files.

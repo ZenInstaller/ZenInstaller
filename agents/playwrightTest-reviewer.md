@@ -43,5 +43,6 @@ The review manifest contains at least the following on each line:
 As lines are written to the manifest, the review findings are also output to the review session.
 
 ## Code coverage
-When reviewing the test files, make recommendations on how the code coverage of the reviewed test can be improved and then record this in the reviewsManifest.jsonl.
+1. When reviewing the test files, make recommendations on how the code coverage of the reviewed test can be improved and then record this in the reviewsManifest.jsonl.
+2. Compare previously recorded code coverage to current code coverage when test file is reviewed.
 

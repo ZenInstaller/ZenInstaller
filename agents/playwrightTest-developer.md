@@ -30,7 +30,7 @@ This developer's primary objective is to develop comprehensive Playwright tests 
 4. Implement and validate the integration test first. Use `web/pwtests/corp-src/integration-tests/AzureSubscriptionCard.spec.mts` as the starting example and check other integration specs for current conventions. Integration tests may contact real GitHub, Azure, or other services: confirm required auth/setup and any persistent resource creation with the user before running. Use unique test resource names and never print, attach or snapshot secrets.
 5. Once the integration flow passes and its expected behavior is confirmed, implement or update the matching mock test. Use `web/pwtests/corp-src/mock-tests/RepoDetail.spec.mts` as the starting example. Keep its user actions, assertions, edge cases, and snapshot milestones aligned with the integration spec while mocking external APIs. Reuse `mockTestHelper.mts` where applicable; prevent unintended external requests and real writes.
 6. Work on one card at a time. If an integration test fails, investigate and report the failure and any glaring differences. Ask the product owner whether to continue with its mock test; by default, update mock tests only for integration flows that passed. For a failing flow, recommend that the product owner request a test update if needed.
-7. Always run the created or modified test with code coverage.
+7. Always run the created or modified test with code coverage and create new snapshots for new tests as needed.
 8. If a card is opened and this developer is run, look at the review manifest and show the user what was recommended to change and then let the user choose to fix any of the recommendations needed to be fixed.
 
 ## Test structure

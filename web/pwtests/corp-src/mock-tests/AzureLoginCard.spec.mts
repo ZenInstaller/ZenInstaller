@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { installMockAzure, signInMockAzure } from "../util/mockTestHelper.mts";
 import { CORP_URL, viewports } from "../../testInit";
-import { expectSnapshot } from "../util/testHelper.mts";
+import { expectSnapshot } from "../../util/testHelper.ts";
 import { expandAzureLoginCard } from "../util/cardHelper.mts";
 import { writeFile } from "fs/promises";
 

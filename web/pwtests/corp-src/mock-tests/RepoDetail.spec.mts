@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { CORP_URL, GITHUB_API_URL, GITHUB_API_URL_REGEX, viewports, } from "../../testInit";
-import { createNewRepo, logMockAPI, expectSnapshot, expectVisibleWithin } from "../util/testHelper.mts";
+import { createNewRepo } from "../util/testHelper.mts";
+import { expectSnapshot, expectVisibleWithin, logMockAPI } from "../../util/testHelper.ts";
 import { installMockGitHub } from "../util/mockTestHelper.mts";
 import { expandRepoCard } from "../util/cardHelper.mts";
 import { writeFile } from "fs/promises";

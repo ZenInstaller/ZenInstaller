@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { CORP_URL, viewports } from "../../testInit";
-import { createNewRepo, expectSnapshot, safePathSegment,} from "../util/testHelper.mts";
+import { createNewRepo } from "../util/testHelper.mts";
+import { expectSnapshot, safePathSegment } from "../../util/testHelper.ts";
 import { installMockAzure, installMockGitHub, prepareMockAzureSubscription, signInMockAzure } from "../util/mockTestHelper.mts";
 import { expandAzureAppRegistrationCard, expandAzureLoginCard, expandAzureSubscriptionCard, expandRepoCard } from "../util/cardHelper.mts";
 import { writeFile } from "fs/promises";

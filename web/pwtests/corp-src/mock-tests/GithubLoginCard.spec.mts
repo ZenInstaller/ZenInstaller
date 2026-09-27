@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { CORP_URL, viewports } from "../../testInit";
-import { expectSnapshot } from "../util/testHelper.mts";
+import { expectSnapshot } from "../../util/testHelper.ts";
 import { installMockGitHub } from "../util/mockTestHelper.mts";
 import { expandGithubLoginCard } from "../util/cardHelper.mts";
 import { writeFile } from "fs/promises";

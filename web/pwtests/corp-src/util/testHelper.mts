@@ -1,5 +1,6 @@
 import { expect, type Locator, type Page, type Route, type TestInfo } from "@playwright/test";
 import path from "node:path";
+import { expectVisibleWithin, waitForLocatorContentLoaded } from "../../util/testHelper";
 
 export type PageSnapshotOptions = {
 	userId: string;
@@ -8,9 +9,6 @@ export type PageSnapshotOptions = {
 	mask?: Locator[];
   	stabilizeAuth?: boolean;
 };
-
-// printing debug and API info when running test
-const isDebugEnabled = process.env.DEBUG?.includes('pw:api') || process.env.NODE_ENV === 'development';
 
 // Returns sensitive identity fields contained by the supplied page or locator.
 export function sensitiveTextMasks(root: Page | Locator,): Locator[] {
@@ -149,35 +147,5 @@ export async function createNewRepo(page: Page, card: Locator, reponame: string)
 	await expectVisibleWithin(card.getByText("Pick the environment to configure."), "Text: Pick the environment to configure", 500_000,);
 }
 
-export async function logMockAPI(page: Page, route: Route, status: number, body: unknown) {
-	const message = `Mock Route Method : ${route.request().method()} , URL : ${route.request().url()} | Fulfilled with ${status} | Body: ${body}`;
-	if (isDebugEnabled) { console.log(message) }
-}
-
-export async function expectVisibleWithin(locator: Locator, label: string, timeoutMs = 500,) {
-	const start = performance.now();
-	try {
-		await expect(locator,).toBeVisible({ timeout: timeoutMs, });
-	} finally {
-		const elapsedMs = performance.now() - start;
-		console.log(`${label} visible in ${elapsedMs.toFixed(1)}ms (timeout ${timeoutMs}ms)`,);
-	}
-}
-
-export async function waitForLocatorContentLoaded(locator: Locator, emptyPlaceholder = "No options", label: string, timeoutMs = 500,) {
-	await expect.poll(async () => {
-		const texts = (await locator.allTextContents()).map((value,) => value.trim()).filter(Boolean,);
-		if (!texts.length) {
-			return false;
-		}
-		if (texts.length === 1 && texts[0] === emptyPlaceholder) {
-			return false;
-		}
-		return true;
-	}, {
-		timeout: timeoutMs,
-		message: `${label} content did not load`,
-	}).toBeTruthy();
-}
 
 

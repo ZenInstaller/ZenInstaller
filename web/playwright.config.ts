@@ -22,6 +22,8 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
   reporter: [
+    // A terminal reporter is what streams worker stdout/stderr (incl. pw:api) to the console.
+    ["line"],
     ["html", { outputFolder: './pwtests/playwright-report', open: "never" }],
     ["./pwtests/coverage/report-after-tests.mts"],
   ],

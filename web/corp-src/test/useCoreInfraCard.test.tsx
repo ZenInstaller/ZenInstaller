@@ -82,7 +82,7 @@ vi.mock("../config/azureConfig", () => ({
 	APP_SCOPES: ["app.scope"],
 }));
 
-vi.mock("../api/msal", () => ({
+vi.mock("../cards/AzureLogin/msal", () => ({
 	ensureScopeConsent: apiMocks.ensureScopeConsent,
 }));
 

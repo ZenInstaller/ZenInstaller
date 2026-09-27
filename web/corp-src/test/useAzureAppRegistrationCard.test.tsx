@@ -43,7 +43,7 @@ const { apiMocks } = vi.hoisted(() => ({
 	},
 }));
 
-vi.mock("../api/msal", () => ({
+vi.mock("../cards/AzureLogin/msal", () => ({
 	getMsal: apiMocks.getMsal,
 	ensureScopeConsent: apiMocks.ensureScopeConsent,
 }));

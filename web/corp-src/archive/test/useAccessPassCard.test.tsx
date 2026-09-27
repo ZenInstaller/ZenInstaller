@@ -43,7 +43,7 @@ vi.mock("../logic/password", () => ({
   generateRandomPassword: apiMocks.generateRandomPassword,
 }));
 
-vi.mock("../monitor/telemetry", () => ({
+vi.mock("../../monitor/telemetry", () => ({
   logEvent: apiMocks.logEvent,
 }));
 

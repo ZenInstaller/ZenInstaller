@@ -2,7 +2,7 @@
  * @license SPDX-FileCopyrightText: © 2025 Zenme Pty Ltd <info@zenme.com.au>
  * @license SPDX-License-Identifier: MIT
  */
-import { getAppInsights } from "../../monitor/applicationInsights";
+import { getAppInsights } from "./applicationInsights";
 import _ from "lodash";
 
 export const logPageView = (name: string, properties?: Record<string, any>) => {

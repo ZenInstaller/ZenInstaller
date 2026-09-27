@@ -15,7 +15,7 @@ import {
 import type { CardChrome, SetupStep } from "../../types";
 import type { UseAccessPassCard } from "../hooks/useAccessPassCard";
 import StepRow from "../../cards/StepRow";
-import { logEvent } from "../monitor/telemetry";
+import { logEvent } from "../../monitor/telemetry";
 import Card from "../../components/Card";
 import CopyRow from "../components/CopyRow";
 import ViewLink from "../../components/ViewLink";

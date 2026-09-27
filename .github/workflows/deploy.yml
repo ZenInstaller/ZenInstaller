@@ -35,6 +35,8 @@ jobs:
           VITE_AZURE_CLIENT_ID: ${{ vars.VITE_AZURE_CLIENT_ID }}
           VITE_GITHUB_CLIENT_ID: ${{ vars.VITE_GITHUB_CLIENT_ID }}
           VITE_APPINSIGHTS_CONNECTION_STRING: ${{ vars.VITE_APPINSIGHTS_CONNECTION_STRING }}
+          # Temporary: terminal endpoints only; remove once they share the main Function App.
+          VITE_TERMINAL_API_URL: ${{ vars.VITE_TERMINAL_API_URL }}
 
       - name: Build VitePress docs
         run: pnpm run docs:build

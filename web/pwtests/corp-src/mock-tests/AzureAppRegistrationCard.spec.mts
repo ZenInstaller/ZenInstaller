@@ -1,6 +1,8 @@
+// UI component: ../../../corp-src/cards/AzureAppRegistrationCard.tsx
 import { expect, test } from "@playwright/test";
-import { CORP_URL, viewports } from "../../testInit";
-import { createNewRepo, expectSnapshot, safePathSegment,} from "../util/testHelper.mts";
+import { CORP_URL, GITHUB_API_URL, viewports } from "../../testInit";
+import { createNewRepo } from "../util/testHelper.mts";
+import { expectSnapshot, safePathSegment } from "../../util/testHelper.ts";
 import { installMockAzure, installMockGitHub, prepareMockAzureSubscription, signInMockAzure } from "../util/mockTestHelper.mts";
 import { expandAzureAppRegistrationCard, expandAzureLoginCard, expandAzureSubscriptionCard, expandRepoCard } from "../util/cardHelper.mts";
 import { writeFile } from "fs/promises";
@@ -176,6 +178,85 @@ for (const [viewportName, viewport] of Object.entries(viewports)) {
 				"existing-app-reused",
 				viewportName,
 			);
+		});
+
+		test("Edge case - warns when the saved app registration is missing", async ({ page, context }, testInfo) => {
+			await context.addInitScript(() => {
+				localStorage.setItem(
+					"zeninstaller_azure_result",
+					JSON.stringify({ clientId: "mock-app-id", tenantId: "00000000-0000-0000-0000-000000000001", subscriptionIds: ["mock-subscription"] }),
+				);
+			});
+			await prepareMockAzureSubscription(page, context, `mock-app-missing-sp-${viewportName.toLowerCase()}`, {
+				initialVariables: {
+					AZURE_TENANT_ID: "00000000-0000-0000-0000-000000000001",
+					AZURE_SUBSCRIPTION_ID: "mock-subscription",
+					AZURE_CLIENT_ID: "mock-app-id",
+					AZURE_PLAN_CLIENT_ID: "mock-app-id",
+				},
+			});
+			const card = await expandAzureAppRegistrationCard(page);
+
+			await expect(
+				card.getByText("This app registration doesn't exist in the selected tenant — create a new one.", { exact: true }),
+			).toBeVisible();
+			await expect(card.locator('svg[data-testid="ErrorOutlineIcon"]')).toHaveCount(2);
+			await expectSnapshot(page, card, testInfo, "saved-app-missing", viewportName);
+		});
+
+		test("Edge case - warns when the saved app registration has no subscription role", async ({ page, context }, testInfo) => {
+			await context.addInitScript(() => {
+				localStorage.setItem(
+					"zeninstaller_azure_result",
+					JSON.stringify({ clientId: "mock-app-id", tenantId: "00000000-0000-0000-0000-000000000001", subscriptionIds: ["mock-subscription"] }),
+				);
+			});
+			const prepared = await prepareMockAzureSubscription(
+				page,
+				context,
+				`mock-app-missing-role-${viewportName.toLowerCase()}`,
+				{
+					initialVariables: {
+						AZURE_TENANT_ID: "00000000-0000-0000-0000-000000000001",
+						AZURE_SUBSCRIPTION_ID: "mock-subscription",
+						AZURE_CLIENT_ID: "mock-app-id",
+						AZURE_PLAN_CLIENT_ID: "mock-app-id",
+					},
+				},
+			);
+			prepared.azure.servicePrincipalCreated = true;
+			await page.reload();
+			const card = await expandAzureAppRegistrationCard(page);
+
+			await expect(card.getByText(/Missing on the selected subscription:/)).toContainText("Reader");
+			await expect(card.getByRole("button", { name: "Grant access on this subscription" })).toBeVisible();
+			await expectSnapshot(page, card, testInfo, "saved-app-role-missing", viewportName);
+		});
+
+		test("Edge case - reports when connection details fail to auto-save", async ({ page, context }, testInfo) => {
+			const prepared = await prepareMockAppRegistrationCard(
+				page,
+				context,
+				`mock-app-autosave-error-${viewportName.toLowerCase()}`,
+			);
+			let failedWrites = 0;
+			await page.route(`${GITHUB_API_URL}/repos/**/environments/PROD/variables`, async (route) => {
+				if (route.request().method() !== "POST") {
+					await route.fallback();
+					return;
+				}
+				failedWrites += 1;
+				await route.fulfill({ status: 500, contentType: "application/json", body: JSON.stringify({ message: "mock failure" }) });
+			});
+			const appNameInput = prepared.appRegistrationCard.locator("input:visible").first();
+			await appNameInput.fill(`mock-autosave-${viewportName.toLowerCase()}`);
+			await prepared.appRegistrationCard.getByRole("button", { name: "Create app registration" }).click();
+			await expect(prepared.appRegistrationCard.getByText("Running...", { exact: true })).toBeHidden();
+			await expect(
+				prepared.appRegistrationCard.getByText("Some connection details failed to save — check below.", { exact: true }),
+			).toBeVisible();
+			expect(failedWrites).toBe(2);
+			await expectSnapshot(page, prepared.appRegistrationCard, testInfo, "connection-details-save-failed", viewportName);
 		});
 	});
 }

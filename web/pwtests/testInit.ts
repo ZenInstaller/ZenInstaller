@@ -25,8 +25,6 @@ export const TEST_REPO_MAIN = "pwtests"; // creating repo with env variables
 export const TEST_REPO_NO_ENV = "pwtests-no-env"; // creating repo with no env variables
 export const TEST_REPO_FROM_PROD = "pwtests-test-from-prod"; // creating test branch from existing prod branch
 
-
-
 export const viewports = {
   Desktop: { width: 1280, height: 720, },
   Mobile: { width: 414, height: 896, },

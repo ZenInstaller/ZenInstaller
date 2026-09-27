@@ -1,6 +1,8 @@
+// UI component: ../../../corp-src/cards/AzureAppRegistrationCard.tsx
 import { expect, test } from "@playwright/test";
 import { restoreAzureSessionStorage, restoreGithubSessionStorage } from "../util/setupHelper.mts";
-import {checkRepoExists, chooseExistingRepo, createNewRepo, expectSnapshot, expectVisibleWithin, safePathSegment} from "../util/testHelper.mts";
+import { checkRepoExists, chooseExistingRepo, createNewRepo } from "../util/testHelper.mts";
+import { expectSnapshot, safePathSegment,  expectVisibleWithin } from "../../util/testHelper.ts";
 import { CORP_URL, SUBSCRIPTION_ID, TEST_REPO_MAIN, viewports } from "../../testInit";
 import { expandAzureAppRegistrationCard, expandAzureLoginCard, expandAzureSubscriptionCard, expandRepoCard } from "../util/cardHelper.mts";
 import { writeFile } from "fs/promises";

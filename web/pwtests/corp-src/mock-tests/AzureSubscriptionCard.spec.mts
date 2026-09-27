@@ -1,6 +1,8 @@
+// UI component: ../../../corp-src/cards/AzureSubscriptionCard.tsx
 import { expect, test } from "@playwright/test";
 import { CORP_URL, viewports } from "../../testInit";
-import { createNewRepo, expectSnapshot } from "../util/testHelper.mts";
+import { createNewRepo } from "../util/testHelper.mts";
+import { expectSnapshot } from "../../util/testHelper.ts";
 import { installMockAzure, installMockGitHub, mockSubscriptionId, prepareMockAzureSubscription, savedAzureVariables, signInMockAzure } from "../util/mockTestHelper.mts";
 import { expandAzureLoginCard, expandAzureSubscriptionCard, expandRepoCard } from "../util/cardHelper.mts";
 import { writeFile } from "fs/promises";

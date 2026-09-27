@@ -35,11 +35,7 @@ async function json(route: Route, body: unknown, status = 200) {
 	});
 }
 
-export async function installMockGitHub(
-	page: Page,
-	context: BrowserContext,
-	options: MockGitHubOptions = {},
-): Promise<MockGitHubState> {
+export async function installMockGitHub(page: Page, context: BrowserContext, options: MockGitHubOptions = {}): Promise<MockGitHubState> {
 	await context.addInitScript(() => {
 		sessionStorage.setItem("zeninstaller_github_auth", JSON.stringify({ mode: "direct", token: "ghp_mock" }));
 	});
@@ -377,7 +373,4 @@ export async function prepareMockAzureSubscription(
 	};
 }
 
-export const savedAzureVariables = {
-	AZURE_TENANT_ID: mockTenantId,
-	AZURE_SUBSCRIPTION_ID: mockSubscriptionId,
-};
+export const savedAzureVariables = { AZURE_TENANT_ID: mockTenantId, AZURE_SUBSCRIPTION_ID: mockSubscriptionId };

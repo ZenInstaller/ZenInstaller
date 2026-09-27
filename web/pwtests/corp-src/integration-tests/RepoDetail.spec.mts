@@ -1,7 +1,9 @@
+// UI component: ../../../corp-src/cards/RepoDetail.tsx
 import { expect, test } from "@playwright/test";
 import { restoreGithubSessionStorage } from "../util/setupHelper.mts";
 import { CORP_URL, TEST_REPO_FROM_PROD, TEST_REPO_MAIN, TEST_REPO_NO_ENV, viewports, } from "../../testInit";
-import { checkRepoExists, chooseExistingRepo, createNewRepo, expectVisibleWithin, expectSnapshot, safePathSegment, waitForLocatorContentLoaded } from "../util/testHelper.mts";
+import { checkRepoExists, chooseExistingRepo, createNewRepo } from "../util/testHelper.mts";
+import { expectSnapshot, safePathSegment, expectVisibleWithin, waitForLocatorContentLoaded } from "../../util/testHelper.ts";
 import { expandRepoCard } from "../util/cardHelper.mts";
 import { writeFile } from "fs/promises";
 

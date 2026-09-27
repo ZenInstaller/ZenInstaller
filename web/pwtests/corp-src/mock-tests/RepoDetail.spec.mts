@@ -1,6 +1,8 @@
+// UI component: ../../../corp-src/cards/RepoDetail.tsx
 import { expect, test } from "@playwright/test";
 import { CORP_URL, GITHUB_API_URL, GITHUB_API_URL_REGEX, viewports, } from "../../testInit";
-import { createNewRepo, logMockAPI, expectSnapshot, expectVisibleWithin } from "../util/testHelper.mts";
+import { createNewRepo } from "../util/testHelper.mts";
+import { expectSnapshot, expectVisibleWithin, logMockAPI } from "../../util/testHelper.ts";
 import { installMockGitHub } from "../util/mockTestHelper.mts";
 import { expandRepoCard } from "../util/cardHelper.mts";
 import { writeFile } from "fs/promises";
@@ -266,6 +268,43 @@ for (const [viewportName, viewport] of Object.entries(viewports)) {
 			await expect(repoCard.getByRole("button", { name: "Clone Repository", })).toHaveCount(0);
 
 			await expectSnapshot(page, repoCard, testInfo, "valid-repo-no-env-mock", viewportName);
+		});
+
+		test("Shows an error when cloning the template fails", async ({ page, }, testInfo) => {
+			const repoName = `mock-clone-failure-${viewportName.toLowerCase()}`;
+			let cloneRequests = 0;
+			await page.route(`${GITHUB_API_URL}/repos/ZenMe-AU/ZenbloxCore/generate`, async (route) => {
+				cloneRequests++;
+				expect(route.request().method()).toBe("POST");
+				expect(route.request().postDataJSON()).toMatchObject({
+					name: repoName,
+					private: true,
+					include_all_branches: false,
+				});
+				await route.fulfill({
+					status: 500,
+					contentType: "application/json",
+					body: JSON.stringify({ message: "Mock template generation failure" }),
+				});
+			});
+
+			const repoCard = await expandRepoCard(page);
+			const repoInput = repoCard.getByRole("combobox", { name: "Select or type repo name..." });
+			await repoInput.click();
+			await repoInput.fill(repoName);
+			const cloneOption = page.getByRole("option", {
+				name: new RegExp(`^Clone as ["'“‘]${repoName}["'”’]$`),
+			});
+			await expect(cloneOption).toBeVisible();
+			await cloneOption.click();
+			await expect(cloneOption).toBeHidden();
+
+			const cloneButton = repoCard.getByRole("button", { name: "Clone Repository" });
+			await cloneButton.click();
+			await expect(repoCard.getByText("Clone failed", { exact: true })).toBeVisible();
+			await expect(cloneButton).toBeEnabled();
+			expect(cloneRequests).toBe(1);
+			await expectSnapshot(page, repoCard, testInfo, "clone-failed", viewportName);
 		});
 
 		test("Creates PROD branch, then creates TEST from PROD", async ({ page, }, testInfo) => {

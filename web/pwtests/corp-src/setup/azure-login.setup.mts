@@ -11,9 +11,10 @@ async function selectAzureTenant(page: Page, azureCard: Locator, tenantId: strin
   await expect(tenantSelect.or(tenantInput)).toBeVisible({ timeout: 120_000 });
 
   if (await tenantSelect.isVisible()) {
+    //TODO: Do not auto select a value here, let the user select a value and then save that value to the config file for future tests.
     await tenantSelect.click();
-    const tenantOption = page.getByRole("option").filter({ hasText: tenantId });
-    await expect(tenantOption).toBeVisible({ timeout: 30_000 }); //TODO: This is often failing even when the function seem to work.
+    const tenantOption = page.getByRole("option").filter({ hasText: tenantId }).first();
+    await expect(tenantOption).toBeVisible({ timeout: 30_000 }); 
     await tenantOption.click();
   } else {
     await tenantInput.fill(tenantId);
@@ -60,8 +61,8 @@ setup("Manual setup for corp Azure auth tests", async ({ page, context }) => {
     }
   }
 
-  await expect(page.locator("#card-azure_login").getByText(/Signed in as/i)).toBeVisible({ timeout: 120_000 });
-  const authenticatedAzureCard = page.locator("#card-azure_login");
+  const authenticatedAzureCard = await page.locator("#card-azure_login");
+  await expect(authenticatedAzureCard.getByText(/Signed in as/i)).toBeVisible({ timeout: 120_000 });
   console.log(`Selecting tenant "${TENANT_ID}" automatically.`);
   await selectAzureTenant(page, authenticatedAzureCard, TENANT_ID);
 

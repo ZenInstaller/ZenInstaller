@@ -16,7 +16,7 @@ import { useCoreInfraCard } from "./hooks/useCoreInfraCard";
 import { useRemoteTerminalInfraCard } from "./hooks/useRemoteTerminalInfraCard";
 import { useBackendDeployCard } from "./hooks/useBackendDeployCard";
 
-import NavBar from "./components/NavBar";
+import Header from "./components/Header";
 import RestoreToast from "./components/RestoreToast";
 import GithubLoginCard from "./cards/GithubLoginCard";
 import RepoCard from "./cards/RepoCard";
@@ -219,18 +219,7 @@ function AppDashboard() {
       <Box
         sx={{ minHeight: "100vh", background: "#f8fafc", color: "#0f172a", fontFamily: "'IBM Plex Sans', sans-serif" }}
       >
-        <NavBar
-          authLoading={githubLogin.loggingIn}
-          user={githubLogin.account}
-          selectedRepo={githubRepoEnv.repo.selectedRepo}
-          siblingPages={[
-            { label: "Access Pass", href: "/accessPass.html" },
-            { label: "Private Account", href: "/privAccount.html" },
-            { label: "AWS Hosting", href: "/awsHosting.html", carryQuery: true },
-            { label: "Cost Management", href: "/costManagement.html", carryQuery: true },
-            { label: "User Access", href: "/userAccess.html", carryQuery: true },
-          ]}
-        />
+        <Header />
 
         <Box sx={{ maxWidth: EXPANDED_W, mx: "auto", px: { xs: 2, sm: 4 }, py: { xs: 3, sm: 5 } }}>
           {/* Intro */}

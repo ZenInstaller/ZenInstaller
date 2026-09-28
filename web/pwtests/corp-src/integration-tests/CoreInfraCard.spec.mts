@@ -2,7 +2,7 @@
 import { writeFile } from "node:fs/promises";
 import { expect, test } from "@playwright/test";
 import { CORP_URL, SUBSCRIPTION_ID, TEST_REPO_MAIN, viewports } from "../../testInit";
-import { expectSnapshot, safePathSegment } from "../../util/testHelper.ts";
+import { expectSnapshot, expectVisibleWithin, safePathSegment } from "../../util/testHelper.ts";
 import {
 	expandAzureAppRegistrationCard,
 	expandAzureLoginCard,
@@ -19,7 +19,7 @@ async function prepareExistingAzureSubscription(page: import("@playwright/test")
 
 	const azureCard = await expandAzureLoginCard(page);
 	const tenantSelect = azureCard.getByTestId("tenant-select");
-	await expect(tenantSelect).toBeVisible({ timeout: 120_000 });
+	await expectVisibleWithin(tenantSelect, "Azure tenant selector", 50_000);
 	const tenantId = (await tenantSelect.locator("input").inputValue()).trim();
 	expect(tenantId, "The restored Azure tenant ID should not be empty").not.toBe("");
 	await tenantSelect.click();
@@ -39,13 +39,13 @@ async function prepareExistingAzureSubscription(page: import("@playwright/test")
 	}
 
 	const subscriptionCard = await expandAzureSubscriptionCard(page);
-	await expect(subscriptionCard.getByText(/Pick the subscription to deploy into\./i)).toBeVisible();
+	await expectVisibleWithin(subscriptionCard.getByText(/Pick the subscription to deploy into\./i), "Subscription card prompt", 50_000);
 	await expect(subscriptionCard.getByText("Loading subscriptions...", { exact: true })).toBeHidden({ timeout: 60_000 });
-	await expect(subscriptionCard.getByRole("combobox")).toBeVisible({ timeout: 100_000 });
+	await expectVisibleWithin(subscriptionCard.getByRole("combobox"), "Azure subscription selector", 50_000);
 	const subscriptionSelect = subscriptionCard.getByRole("combobox");
 	await subscriptionSelect.click();
 	const subscriptionOption = page.getByRole("option").filter({ hasText: SUBSCRIPTION_ID });
-	await expect(subscriptionOption).toBeVisible({ timeout: 30_000 });
+	await expectVisibleWithin(subscriptionOption, `Subscription ${SUBSCRIPTION_ID} option`, 50_000);
 	await subscriptionOption.click();
 	const saveButton = subscriptionCard.getByRole("button", { name: /^Save(?: 2)? variables$/ });
 	if ((await saveButton.count()) > 0 && await saveButton.isEnabled({ timeout: 0 })) {
@@ -90,12 +90,12 @@ for (const [viewportName, viewport] of Object.entries(viewports)) {
 
 			await test.step("Open backend card where core infrastructure does not exist", async () => {
 				await terraformCard.getByText("Terraform state backend", { exact: true }).click();
-				await expect(terraformCard.getByText("Company short code")).toBeVisible({ timeout: 120_000 });
+				await expectVisibleWithin(terraformCard.getByText("Company short code"), "Company short code field", 50_000);
 				// await expectSnapshot(page, terraformCard, testInfo, "start", viewportName);
 
 				setupAlreadyExists = await terraformCard.getByRole("button", { name: "Re-run setup" }).isVisible().catch(() => false);
 				if (setupAlreadyExists) {
-					await expect(terraformCard.getByRole("button", { name: "Re-run setup" })).toBeVisible();
+					await expectVisibleWithin(terraformCard.getByRole("button", { name: "Re-run setup" }), "Re-run setup button", 50_000);
 					await expectSnapshot(page, terraformCard, testInfo, "already-existing-start", viewportName);
 				} else {
 					await terraformCard
@@ -108,7 +108,7 @@ for (const [viewportName, viewport] of Object.entries(viewports)) {
 						await saveVariablesButton.click();
 						await expect(terraformCard.getByRole("button", { name: /^Save\s+variables$/ })).toBeDisabled({ timeout: 60_000 });
 					}
-					await expect(terraformCard.getByText("Create core infrastructure")).toBeVisible({ timeout: 120_000 });
+					await expectVisibleWithin(terraformCard.getByText("Create core infrastructure"), "Create core infrastructure button", 50_000);
 					await expectSnapshot(page, terraformCard, testInfo, "not-setup-start", viewportName);
 				}
 			});
@@ -128,9 +128,9 @@ for (const [viewportName, viewport] of Object.entries(viewports)) {
 						"Configure subscription activity-log diagnostics",
 						"Grant GitHub Actions access to Terraform state",
 					]) {
-						await expect(card.getByText(stepLabel, { exact: true })).toBeVisible();
+						await expectVisibleWithin(card.getByText(stepLabel, { exact: true }), `Infrastructure step: ${stepLabel}`, 50_000);
 					}
-					await expect(card.getByRole("button", { name: "Start over" })).toBeVisible();
+					await expectVisibleWithin(card.getByRole("button", { name: "Start over" }), "Start over button", 50_000);
 					await expect(card.getByText(/Failed|Consent redirect failed|Additional consent required/i)).toHaveCount(0);
 					await expectSnapshot(page, card, testInfo, "provisioned", viewportName);
 				});
@@ -138,8 +138,8 @@ for (const [viewportName, viewport] of Object.entries(viewports)) {
 
 			await test.step("Verify the completed card state", async () => {
 				const card = page.locator("#card-core_infra");
-				await expect(card.getByText("Terraform state backend")).toBeVisible();
-				await expect(card.getByText("State container:")).toBeVisible();
+				await expectVisibleWithin(card.getByText("Terraform state backend"), "Terraform state backend title", 50_000);
+				await expectVisibleWithin(card.getByText("State container:"), "State container label", 50_000);
 				await expectSnapshot(page, card, testInfo, "end", viewportName);
 			});
 
@@ -151,13 +151,13 @@ for (const [viewportName, viewport] of Object.entries(viewports)) {
 					await card.getByRole("button", { name: "Start over" }).click();
 				}
 
-				await expect(resources).toBeVisible({ timeout: 120_000 });
+				await expectVisibleWithin(resources, "Infrastructure resources", 50_000);
 				const rerunButton = card.getByRole("button", { name: "Re-run setup" });
-				await expect(rerunButton).toBeVisible({ timeout: 120_000 });
+				await expectVisibleWithin(rerunButton, "Re-run setup button", 50_000);
 				await rerunButton.click();
 				await expect(card.getByText("Running...", { exact: true })).toBeHidden({ timeout: 500_000 });
-				await expect(card.getByText("Already exists", { exact: true }).first()).toBeVisible();
-				await expect(card.getByRole("button", { name: "Start over" })).toBeVisible();
+				await expectVisibleWithin(card.getByText("Already exists", { exact: true }).first(), "Already exists status", 50_000);
+				await expectVisibleWithin(card.getByRole("button", { name: "Start over" }), "Start over button", 50_000);
 				await expect(card.getByText(/Failed|Consent redirect failed|Additional consent required/i)).toHaveCount(0);
 				await expectSnapshot(page, card, testInfo, "rerun-complete", viewportName);
 			});

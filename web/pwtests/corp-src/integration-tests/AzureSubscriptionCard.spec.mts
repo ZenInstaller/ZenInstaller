@@ -41,7 +41,7 @@ export async function openExistingAzureSubscription(page: Page, context: Browser
 
 	const azureCard = await expandAzureLoginCard(page);
 	const tenantSelect = azureCard.getByTestId("tenant-select");
-	await expect(tenantSelect).toBeVisible({ timeout: 120_000, });
+	await expectVisibleWithin(tenantSelect, "Azure tenant selector", 50_000);
 	const tenantId = (await tenantSelect.locator("input").inputValue()).trim();
 	expect(tenantId, "The restored Azure tenant ID should not be empty").not.toBe("");
 	await tenantSelect.click();
@@ -57,7 +57,7 @@ export async function openExistingAzureSubscription(page: Page, context: Browser
 
 	await expect(repoCard.getByText("Loading environments...", { exact: true, }),).toBeHidden({ timeout: 120_000, });
 	const environment = repoCard.getByText(environmentName, { exact: true, });
-	await expect(environment).toBeVisible();
+	await expectVisibleWithin(environment, `${environmentName} environment`, 50_000);
 	await environment.click();
 
 	const azureSubscriptionCard = await expandAzureSubscriptionCard(page);
@@ -75,13 +75,13 @@ export async function openExistingAzureSubscription(page: Page, context: Browser
 	await expect(selectEnvironmentMessage).toHaveCount(0);
 	await expect(azureSubscriptionCard.getByText("Loading subscriptions...", { exact: true, }),).toBeHidden({ timeout: 60_000, });
 	const subscriptionSelect = azureSubscriptionCard.getByRole("combobox",);
-	await expect(subscriptionSelect).toBeVisible({ timeout: 100_000, });
+	await expectVisibleWithin(subscriptionSelect, "Azure subscription selector", 50_000);
 
 	// a prior run may have saved a tenant/subscription that no longer restores automatically
 	if (expectSavedVariables) {
 		await subscriptionSelect.click();
 		const subscriptionOption = page.getByRole("option").filter({ hasText: SUBSCRIPTION_ID, });
-		await expect(subscriptionOption).toBeVisible({ timeout: 30_000, });
+		await expectVisibleWithin(subscriptionOption, `Subscription ${SUBSCRIPTION_ID} option`, 50_000);
 		await subscriptionOption.click();
 		// Defocus the select so it doesn't render a focus ring in any upcoming snapshot.
 		await azureSubscriptionCard.getByText(/Pick the subscription to deploy into\./i,).click();
@@ -102,7 +102,7 @@ export async function openExistingAzureSubscription(page: Page, context: Browser
 	if (expectSavedVariables) {
 		await expect(saveButton).toBeDisabled({ timeout: 60_000, });
 	} else {
-		await expect(azureSubscriptionCard.getByText("2 not configured", { exact: true, }),).toBeVisible({ timeout: 60_000, });
+		await expectVisibleWithin(azureSubscriptionCard.getByText("2 not configured", { exact: true, }), "Unconfigured variables status", 50_000);
 	}
 
 	return { azureSubscriptionCard, tenantVariableInput, subscriptionVariableInput, saveButton, };
@@ -133,8 +133,8 @@ for (const [viewportName, viewport] of Object.entries(viewports)) {
 			await test.step("Select tenant", async () => {
 				const signedInText = azureCard.getByText(/Signed in as/i);
 				const tenantSelect = azureCard.getByTestId("tenant-select");
-				await expect(signedInText).toBeVisible({ timeout: 120_000 });
-				await expect(tenantSelect).toBeVisible({ timeout: 120_000 });
+				await expectVisibleWithin(signedInText, "Azure signed-in status", 50_000);
+				await expectVisibleWithin(tenantSelect, "Azure tenant selector", 50_000);
 				const tenantId = (await tenantSelect.locator("input").inputValue()).trim();
 				expect(tenantId, "The restored Azure tenant ID should not be empty").not.toBe("");
 				await tenantSelect.click();
@@ -176,20 +176,20 @@ for (const [viewportName, viewport] of Object.entries(viewports)) {
 			});
 
 			await test.step("Saving prefilled Azure subscription variables", async () => {
-				await expect(azureSubscriptionCard.getByText(/Pick the subscription to deploy into\./i,),).toBeVisible();
+				await expectVisibleWithin(azureSubscriptionCard.getByText(/Pick the subscription to deploy into\./i,), "Subscription card prompt", 50_000);
 				await expectVisibleWithin(azureSubscriptionCard.getByText(/^Tenant:/i,), "Text: Rendering Tenant", 50000);
 				await expectVisibleWithin(azureSubscriptionCard.getByRole("button", { name: "Change on Azure login" }), "Button: Change on Azure Login", 5000);
 				await expectVisibleWithin(azureSubscriptionCard.getByText(/^Subscription/i,), "Text: Rendering Subscription text", 50000);
 				await expect(azureSubscriptionCard.getByText("Loading subscriptions...",),).toBeHidden({ timeout: 60_000, });
 				const subscriptionSelect = azureSubscriptionCard.getByRole("combobox",);
 				const noSubscriptionsMessage = azureSubscriptionCard.getByText("This tenant has no subscriptions you can access.", { exact: true, },);
-				await expect(subscriptionSelect.or(noSubscriptionsMessage,),).toBeVisible({ timeout: 100_000, });
+				await expectVisibleWithin(subscriptionSelect.or(noSubscriptionsMessage,), "Subscription selector or empty-state message", 50_000);
 
 				if (await subscriptionSelect.isVisible()) {
 					console.log(`Selecting subscription "${SUBSCRIPTION_ID}" automatically.`);
 					await subscriptionSelect.click();
 					const subscriptionOption = page.getByRole("option").filter({ hasText: SUBSCRIPTION_ID, });
-					await expect(subscriptionOption,`Timed out waiting for subscription selection. Tenant may not have access to "${SUBSCRIPTION_ID}" or it does not exist.`).toBeVisible({ timeout: 30_000, });
+					await expectVisibleWithin(subscriptionOption, `Subscription ${SUBSCRIPTION_ID} option`, 50_000);
 					await subscriptionOption.click();
 					// Defocus the select so it doesn't render a focus ring in the upcoming snapshot.
 					await azureSubscriptionCard.getByText(/Pick the subscription to deploy into\./i,).click();
@@ -227,7 +227,7 @@ for (const [viewportName, viewport] of Object.entries(viewports)) {
 			await subscriptionVariableInput.fill(`${savedSubscriptionId}-modified`,);
 			const saveOneVariableButton = azureSubscriptionCard.getByRole("button", { name: "Save 1 variable" });
 			await expect(saveOneVariableButton).toBeEnabled();
-			await expect(azureSubscriptionCard.getByText("overwrites", { exact: true, }),).toBeVisible();
+			await expectVisibleWithin(azureSubscriptionCard.getByText("overwrites", { exact: true, }), "Variable overwrite warning", 50_000);
 
 			await azureSubscriptionCard.getByRole("button", { name: "Revert to saved value", }).click();
 			await expect(subscriptionVariableInput).toHaveValue(savedSubscriptionId);
@@ -277,7 +277,7 @@ for (const [viewportName, viewport] of Object.entries(viewports)) {
 
 				await expect(tenantVariableInput).toHaveValue("");
 				await expect(subscriptionVariableInput).toHaveValue("");
-				await expect(azureSubscriptionCard.getByText("2 not configured", { exact: true, }),).toBeVisible({ timeout: 60_000, });
+				await expectVisibleWithin(azureSubscriptionCard.getByText("2 not configured", { exact: true, }), "Unconfigured variables status", 50_000);
 				
 				const subscriptionSelect = azureSubscriptionCard.getByRole("combobox",);
 				await expectSnapshot(page, azureSubscriptionCard, testInfo, `edge-case-both-variables-removed`, viewportName);

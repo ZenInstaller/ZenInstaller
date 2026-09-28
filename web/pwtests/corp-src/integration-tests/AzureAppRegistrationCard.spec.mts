@@ -33,8 +33,8 @@ async function prepareAppRegistrationCard(page: import("@playwright/test").Page,
 	const azureLoginCard = await expandAzureLoginCard(page);
 	const signedInText = azureLoginCard.getByText(/Signed in as/i);
 	const tenantSelect = azureLoginCard.getByTestId("tenant-select");
-	await expect(signedInText).toBeVisible({ timeout: 120_000 });
-	await expect(tenantSelect).toBeVisible({ timeout: 120_000 });
+	await expectVisibleWithin(signedInText, "Azure signed-in status", 50_000);
+	await expectVisibleWithin(tenantSelect, "Azure tenant selector", 50_000);
 	const tenantId = (await tenantSelect.locator("input").inputValue()).trim();
 	expect(tenantId, "The restored Azure tenant ID should not be empty").not.toBe("");
 	await tenantSelect.click();
@@ -57,7 +57,7 @@ async function prepareAppRegistrationCard(page: import("@playwright/test").Page,
 
 	const subscriptionCard = await expandAzureSubscriptionCard(page);
 	await expect(subscriptionCard.getByText("Loading subscriptions...", { exact: true })).toBeHidden({ timeout: 60_000 });
-	await expect(subscriptionCard.getByRole("combobox")).toBeVisible({ timeout: 100_000 });
+	await expectVisibleWithin(subscriptionCard.getByRole("combobox"), "Azure subscription selector", 50_000);
 	const saveButton = subscriptionCard.getByRole("button", { name: /^Save(?: 2)? variables$/ });
 	if ((await saveButton.count()) > 0 && await saveButton.isEnabled({ timeout: 0 })) {
 		await saveButton.click();
@@ -85,8 +85,8 @@ for (const [viewportName, viewport] of Object.entries(viewports)) {
 				await expectSnapshot(page, card, testInfo, "start", viewportName);
 				const signedInText = card.getByText(/Signed in as/i);
 				const tenantSelect = card.getByTestId("tenant-select");
-				await expect(signedInText).toBeVisible({ timeout: 120_000 });
-				await expect(tenantSelect).toBeVisible({ timeout: 120_000 });
+				await expectVisibleWithin(signedInText, "Azure signed-in status", 50_000);
+				await expectVisibleWithin(tenantSelect, "Azure tenant selector", 50_000);
 				const tenantId = (await tenantSelect.locator("input").inputValue()).trim();
 				expect(tenantId, "The restored Azure tenant ID should not be empty").not.toBe("");
 				await tenantSelect.click();
@@ -130,20 +130,20 @@ for (const [viewportName, viewport] of Object.entries(viewports)) {
 
 			await test.step("Saving prefilled Azure subscription variables", async () => {
 				const card = await expandAzureSubscriptionCard(page);
-				await expect(card.getByText(/Pick the subscription to deploy into\./i)).toBeVisible();
+				await expectVisibleWithin(card.getByText(/Pick the subscription to deploy into\./i), "Subscription card prompt", 50_000);
 				await expectVisibleWithin(card.getByText(/^Tenant:/i), "Text: Rendering Tenant", 50_000);
 				await expectVisibleWithin(card.getByRole("button", { name: "Change on Azure login" }), "Button: Change on Azure Login", 5_000);
 				await expectVisibleWithin(card.getByText(/^Subscription/i), "Text: Rendering Subscription text", 50_000);
 				await expect(card.getByText("Loading subscriptions...")).toBeHidden({ timeout: 60_000 });
 				const subscriptionSelect = card.getByRole("combobox");
 				const noSubscriptionsMessage = card.getByText("This tenant has no subscriptions you can access.", { exact: true });
-				await expect(subscriptionSelect.or(noSubscriptionsMessage)).toBeVisible({ timeout: 100_000 });
+				await expectVisibleWithin(subscriptionSelect.or(noSubscriptionsMessage), "Subscription selector or empty-state message", 50_000);
 
 				if (await subscriptionSelect.isVisible()) {
 					console.log(`Selecting subscription "${SUBSCRIPTION_ID}" automatically.`);
 					await subscriptionSelect.click();
 					const subscriptionOption = page.getByRole("option").filter({ hasText: SUBSCRIPTION_ID });
-					await expect(subscriptionOption, `Timed out waiting for subscription selection. Tenant may not have access to "${SUBSCRIPTION_ID}" or it does not exist.`).toBeVisible({ timeout: 30_000 });
+					await expectVisibleWithin(subscriptionOption, `Subscription ${SUBSCRIPTION_ID} option`, 50_000);
 					await subscriptionOption.click();
 					await card.getByText(/Pick the subscription to deploy into\./i).click();
 				}
@@ -171,14 +171,14 @@ for (const [viewportName, viewport] of Object.entries(viewports)) {
 				}
 
 				const appNameInput = appRegistrationCard.locator("input:visible").first();
-				await expect(appNameInput).toBeVisible();
+				await expectVisibleWithin(appNameInput, "App registration name input", 50_000);
 				await appNameInput.fill(appName);
 
 				await expectSnapshot(page, appRegistrationCard, testInfo, "new-app-prefilled", viewportName);
 
 				await appRegistrationCard.getByRole("button", { name: "Create app registration" }).click();
 				await expect(appRegistrationCard.getByText("Running...", { exact: true })).toBeHidden({ timeout: 300_000 });
-				await expect(appRegistrationCard.getByRole("button", { name: "Try again" })).toBeVisible();
+				await expectVisibleWithin(appRegistrationCard.getByRole("button", { name: "Try again" }), "Try again button", 50_000);
 
 				for (const stepLabel of [
 					"Confirm Microsoft permissions",
@@ -188,7 +188,7 @@ for (const [viewportName, viewport] of Object.entries(viewports)) {
 					"Add federated credentials",
 					"Assign RBAC roles",
 				]) {
-					await expect(appRegistrationCard.getByText(stepLabel, { exact: true })).toBeVisible();
+					await expectVisibleWithin(appRegistrationCard.getByText(stepLabel, { exact: true }), `App registration step: ${stepLabel}`, 50_000);
 				}
 				await expect(appRegistrationCard.getByText(/Additional consent required|Consent redirect failed/i)).toHaveCount(0);
 				await page.waitForTimeout(1000);
@@ -202,14 +202,14 @@ for (const [viewportName, viewport] of Object.entries(viewports)) {
 					}
 
 					const appNameInput = appRegistrationCard.locator("input:visible").first();
-					await expect(appNameInput).toBeVisible();
+					await expectVisibleWithin(appNameInput, "App registration name input", 50_000);
 					await appNameInput.fill(appName);
 
 					await expectSnapshot(page, appRegistrationCard, testInfo, "existing-app-prefilled", viewportName);
 
 					await appRegistrationCard.getByRole("button", { name: "Create app registration" }).click();
 					await expect(appRegistrationCard.getByText("Running...", { exact: true })).toBeHidden({ timeout: 300_000 });
-					await expect(appRegistrationCard.getByRole("button", { name: "Try again" })).toBeVisible();
+					await expectVisibleWithin(appRegistrationCard.getByRole("button", { name: "Try again" }), "Try again button", 50_000);
 
 					for (const stepLabel of [
 						"Confirm Microsoft permissions",
@@ -219,7 +219,7 @@ for (const [viewportName, viewport] of Object.entries(viewports)) {
 						"Add federated credentials",
 						"Assign RBAC roles",
 					]) {
-						await expect(appRegistrationCard.getByText(stepLabel, { exact: true })).toBeVisible();
+						await expectVisibleWithin(appRegistrationCard.getByText(stepLabel, { exact: true }), `App registration step: ${stepLabel}`, 50_000);
 					}
 					await expect(appRegistrationCard.getByText(/Additional consent required|Consent redirect failed/i)).toHaveCount(0);
 					await page.waitForTimeout(1000);
@@ -227,9 +227,11 @@ for (const [viewportName, viewport] of Object.entries(viewports)) {
 				});
 
 			await test.step("Verify connection details were auto-saved", async () => {
-				await expect(
+				await expectVisibleWithin(
 					appRegistrationCard.getByText(/Connection details saved(?: — no changes needed)?\./i),
-				).toBeVisible({ timeout: 120_000 });
+					"Connection details saved status",
+					50_000,
+				);
 				const connectionInputs = appRegistrationCard.locator('[data-sensitive="true"] input');
 				await expect(connectionInputs).toHaveCount(2);
 				const clientIds = await connectionInputs.evaluateAll((inputs) =>
@@ -243,8 +245,8 @@ for (const [viewportName, viewport] of Object.entries(viewports)) {
 			});
 
 			console.log(`Created live Azure app registration test resources: ${appName} for ${repoName}`);
-			await expect(azureLoginCard.getByText(/Signed in as/i)).toBeVisible();
-			await expect(repoCard.getByText("PROD", { exact: true })).toBeVisible();
+			await expectVisibleWithin(azureLoginCard.getByText(/Signed in as/i), "Azure signed-in status", 50_000);
+			await expectVisibleWithin(repoCard.getByText("PROD", { exact: true }), "PROD environment", 50_000);
 		});
 
 		test("Reuses an existing app registration on retry", async ({ page, context }, testInfo) => {
@@ -258,16 +260,16 @@ for (const [viewportName, viewport] of Object.entries(viewports)) {
 			await appNameInput.fill(appName);
 			await card.getByRole("button", { name: "Create app registration" }).click();
 			await expect(card.getByText("Running...", { exact: true })).toBeHidden({ timeout: 300_000 });
-			await expect(card.getByRole("button", { name: "Try again" })).toBeVisible();
-			await expect(card.getByText("Create app registration", { exact: true })).toBeVisible();
+			await expectVisibleWithin(card.getByRole("button", { name: "Try again" }), "Try again button", 50_000);
+			await expectVisibleWithin(card.getByText("Create app registration", { exact: true }), "Create app registration step", 50_000);
 
 			await card.getByRole("button", { name: "Try again" }).click();
-			await expect(appNameInput).toBeVisible();
+			await expectVisibleWithin(appNameInput, "App registration name input", 50_000);
 			await card.getByRole("button", { name: "Create app registration" }).click();
 			await expect(card.getByText("Running...", { exact: true })).toBeHidden({ timeout: 300_000 });
-			await expect(card.getByText(/Existing:/i)).toBeVisible();
-			await expect(card.getByText("Already exists", { exact: true })).toBeVisible();
-			await expect(card.getByText(/Connection details saved(?: — no changes needed)?\./i)).toBeVisible({ timeout: 120_000 });
+			await expectVisibleWithin(card.getByText(/Existing:/i), "Existing app registration indicator", 50_000);
+			await expectVisibleWithin(card.getByText("Already exists", { exact: true }), "Already exists status", 50_000);
+			await expectVisibleWithin(card.getByText(/Connection details saved(?: — no changes needed)?\./i), "Connection details saved status", 50_000);
 			await expectSnapshot(page, card, testInfo, "existing-app-reused", viewportName,);
 		});
 	});

@@ -18,7 +18,7 @@ const { urlMocks } = vi.hoisted(() => ({
 	},
 }));
 
-vi.mock("../hooks/useAzureAccount", () => ({
+vi.mock("../cards/AzureLogin/useAzureAccount", () => ({
 	useAzureAccount: mockHooks.useAzureAccount,
 }));
 

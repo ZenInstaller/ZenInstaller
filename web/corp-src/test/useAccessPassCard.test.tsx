@@ -2,7 +2,7 @@ import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { useEffect } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { useAccessPassCard, type UseAccessPassCard } from "../hooks/useAccessPassCard";
+import { useAccessPassCard, type UseAccessPassCard } from "../cards/AccessPass/useAccessPassCard";
 import type { AzureAccount } from "../types";
 
 const { apiMocks } = vi.hoisted(() => ({
@@ -21,7 +21,7 @@ const { apiMocks } = vi.hoisted(() => ({
   },
 }));
 
-vi.mock("../api/msal", () => ({
+vi.mock("../auth/msal", () => ({
   getMsal: apiMocks.getMsal,
 }));
 
@@ -39,11 +39,11 @@ vi.mock("../logic/consent", () => ({
   isConsentError: apiMocks.isConsentError,
 }));
 
-vi.mock("../logic/password", () => ({
+vi.mock("../cards/AccessPass/password", () => ({
   generateRandomPassword: apiMocks.generateRandomPassword,
 }));
 
-vi.mock("../monitor/telemetry", () => ({
+vi.mock("../cards/AccessPass/telemetry", () => ({
   logEvent: apiMocks.logEvent,
 }));
 

@@ -4,7 +4,7 @@ import type { Account, Branch, GhEnv, PullRequest, Repo, StageReport, WorkflowRu
 import { toStageReport } from "../logic/stage";
 import { getStoredToken } from "../logic/tokenStore";
 import { GITHUB_TOKEN_KEYS } from "../config/githubConfig";
-import { requireMsToken } from "../cards/AzureLogin/msal";
+import { requireMsToken } from "../auth/msal";
 import { readBlobWithProgress, type DownloadProgress } from "../logic/download";
 import type { RemoteLoginDispatch } from "./github";
 import { REMOTE_TERMINAL_TTL_SECONDS } from "../config/remoteTerminal";

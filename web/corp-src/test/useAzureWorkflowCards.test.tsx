@@ -2,10 +2,10 @@ import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { useEffect } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { useAccessPassCard, type UseAccessPassCard } from "../hooks/useAccessPassCard";
-import { useAzureAppRegistrationCard, type UseAzureAppRegistrationCard } from "../hooks/useAzureAppRegistrationCard";
-import { useCoreInfraCard, type UseCoreInfraCard } from "../hooks/useCoreInfraCard";
-import { useCreateDomainCard, type UseCreateDomainCard } from "../hooks/useCreateDomainCard";
+import { useAccessPassCard, type UseAccessPassCard } from "../cards/AccessPass/useAccessPassCard";
+import { useAzureAppRegistrationCard, type UseAzureAppRegistrationCard } from "../cards/AzureAppRegistration/useAzureAppRegistrationCard";
+import { useCoreInfraCard, type UseCoreInfraCard } from "../cards/CoreInfra/useCoreInfraCard";
+import { useCreateDomainCard, type UseCreateDomainCard } from "../cards/CreateDomain/useCreateDomainCard";
 import type { AzureAccount } from "../types";
 
 const { apiMocks } = vi.hoisted(() => ({
@@ -46,7 +46,7 @@ const { apiMocks } = vi.hoisted(() => ({
 	},
 }));
 
-vi.mock("../api/msal", () => ({
+vi.mock("../auth/msal", () => ({
 	getMsal: apiMocks.getMsal,
 }));
 
@@ -104,7 +104,7 @@ vi.mock("../config/azureConfig", () => ({
 	GRAPH_PERMISSIONS: { DomainReadWriteAll: "Domain.ReadWrite.All" },
 }));
 
-vi.mock("../hooks/util/useRbacCheck", () => ({
+vi.mock("../cards/AzureAppRegistration/useRbacCheck", () => ({
 	useRbacCheck: vi.fn(() => ({ status: "ready", missingRoles: [] })),
 }));
 

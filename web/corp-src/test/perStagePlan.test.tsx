@@ -11,7 +11,7 @@ const apiMocks = vi.hoisted(() => ({
 }));
 vi.mock("../api", () => apiMocks);
 
-const { useDeploymentPlan } = await import("../hooks/useDeploymentPlan");
+const { useDeploymentPlan } = await import("../cards/Stage/useDeploymentPlan");
 type Plan = ReturnType<typeof useDeploymentPlan>;
 
 const ACCOUNT = { login: "org-one", type: "Organization", id: 1 } as Account;

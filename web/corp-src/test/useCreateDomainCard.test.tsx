@@ -2,7 +2,7 @@ import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { useEffect } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { useCreateDomainCard, type UseCreateDomainCard } from "../hooks/useCreateDomainCard";
+import { useCreateDomainCard, type UseCreateDomainCard } from "../cards/CreateDomain/useCreateDomainCard";
 import type { AzureAccount } from "../types";
 
 async function waitFor(assertion: () => void, timeoutMs = 2000) {
@@ -48,7 +48,7 @@ const { configMocks } = vi.hoisted(() => ({
 	},
 }));
 
-vi.mock("../api/msal", () => ({
+vi.mock("../auth/msal", () => ({
 	getMsal: apiMocks.getMsal,
 	ensureScopeConsent: apiMocks.ensureScopeConsent,
 }));

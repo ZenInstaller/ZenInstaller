@@ -2,7 +2,7 @@ import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { useEffect } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { useCoreInfraCard, type UseCoreInfraCard } from "../hooks/useCoreInfraCard";
+import { useCoreInfraCard, type UseCoreInfraCard } from "../cards/CoreInfra/useCoreInfraCard";
 import type { AzureAccount } from "../types";
 
 async function waitFor(assertion: () => void, timeoutMs = 2000) {
@@ -82,7 +82,7 @@ vi.mock("../config/azureConfig", () => ({
 	APP_SCOPES: ["app.scope"],
 }));
 
-vi.mock("../api/msal", () => ({
+vi.mock("../auth/msal", () => ({
 	ensureScopeConsent: apiMocks.ensureScopeConsent,
 }));
 

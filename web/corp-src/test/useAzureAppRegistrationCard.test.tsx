@@ -6,7 +6,7 @@ import type { AzureAccount } from "../types";
 import {
 	useAzureAppRegistrationCard,
 	type UseAzureAppRegistrationCard,
-} from "../hooks/useAzureAppRegistrationCard";
+} from "../cards/AzureAppRegistration/useAzureAppRegistrationCard";
 
 async function waitFor(assertion: () => void, timeoutMs = 1500) {
 	const start = Date.now();
@@ -43,7 +43,7 @@ const { apiMocks } = vi.hoisted(() => ({
 	},
 }));
 
-vi.mock("../api/msal", () => ({
+vi.mock("../auth/msal", () => ({
 	getMsal: apiMocks.getMsal,
 	ensureScopeConsent: apiMocks.ensureScopeConsent,
 }));
@@ -66,7 +66,7 @@ vi.mock("../logic/consent", () => ({
 	isConsentError: apiMocks.isConsentError,
 }));
 
-vi.mock("../hooks/util/useRbacCheck", () => ({
+vi.mock("../cards/AzureAppRegistration/useRbacCheck", () => ({
 	useRbacCheck: vi.fn(() => ({ status: apiMocks.rbacStatus, missingRoles: apiMocks.rbacMissingRoles })),
 }));
 

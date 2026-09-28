@@ -10,7 +10,7 @@ import {
   type UseGlobalGroupsCard,
   type GroupRow,
   type SavedGroup,
-} from "../hooks/useGlobalGroupsCard";
+} from "../cards/GlobalGroups/useGlobalGroupsCard";
 
 async function waitFor(assertion: () => void, timeoutMs = 2000) {
   const start = Date.now();
@@ -47,7 +47,7 @@ const { configMocks } = vi.hoisted(() => ({
   configMocks: { azureClientId: "client-id" },
 }));
 
-vi.mock("../api/msal", () => ({
+vi.mock("../auth/msal", () => ({
   getMsal: apiMocks.getMsal,
 }));
 

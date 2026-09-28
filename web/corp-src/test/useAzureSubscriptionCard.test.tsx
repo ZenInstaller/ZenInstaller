@@ -2,7 +2,7 @@ import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { useEffect } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { useAzureSubscriptionCard, type UseAzureSubscriptionCard } from "../hooks/useAzureSubscriptionCard";
+import { useAzureSubscriptionCard, type UseAzureSubscriptionCard } from "../cards/AzureSubscription/useAzureSubscriptionCard";
 import type { AzureAccount } from "../types";
 
 async function waitFor(assertion: () => void, timeoutMs = 1000) {

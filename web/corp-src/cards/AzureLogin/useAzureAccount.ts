@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { getMsal, MSA_TENANT } from "./msal";
+import { getMsal, MSA_TENANT } from "../../auth/msal";
 import { LOGIN_SCOPES, ARM_SCOPES } from "../../config/azureConfig";
 import { listTenants } from "../../api/azureGraph";
 import type { AzureTenant } from "../../types";
-import { getToken } from "./msal";
+import { getToken } from "../../auth/msal";
 import { createResultStorage } from "../../logic/resultStorage";
 import type { AzureAccount, LoginHook } from "../../types";
 

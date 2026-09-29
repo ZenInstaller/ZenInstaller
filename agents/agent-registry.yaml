@@ -1,0 +1,12 @@
+agents:
+  - id: playwright-reviewer
+    nickname: TR
+    paths:
+      - web/
+    file: agents/playwrightTest-reviewer.md
+
+  - id: playwright-developer
+    nickname: TD
+    paths:
+      - web/
+    file: agents/playwrightTest-developer.md

@@ -16,7 +16,7 @@ if [ ! -f "$MANIFEST" ]; then
 fi
 
 echo "Cross-cutting analysis on reviewManifest.jsonl"
-echo "=============================================="
+echo "============================================="
 echo ""
 
 # 1. All mock-test findings, flattened (one finding per line)
@@ -72,6 +72,6 @@ jq -r 'if (.integrationTest.findings | length) > 0 then
        else empty end' "$MANIFEST" | head -10
 echo ""
 
-echo "=============================================="
+echo "============================================="
 echo "Tip: Pipe these outputs to 'sort', 'uniq -c', or 'awk' for further analysis."
 echo "Tip: For a single component, use ptr-get-component.sh instead."

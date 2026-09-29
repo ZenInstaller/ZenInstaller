@@ -36,7 +36,7 @@ Every UI component will have exactly one Mock test which can be found within the
 
 ## Review manifest
 This agent's root folder is the folder where this definition file is found.
-This agent outputs review results into a subfolder from this file where the subfolder is named reviews.
+This agent outputs review results into a subfolder from this file where the subfolder is named: PTR.
 This agent maintains a review manifest called reviewManifest.jsonl in the reviews subfolder. This manifest tracks every UI component that has been reviewed as a line of jsonl.
 Git blob SHA (called gitHash in the manifest) is used to identify whether a file has changed since its last review. It is obtained using: git hash-object "file path"
 After inserting new reviews, any old review of the same file is deleted, so that the manifest always contain max one review per UI component.

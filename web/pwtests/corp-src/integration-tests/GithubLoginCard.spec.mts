@@ -33,6 +33,7 @@ for (const [viewportName, viewport] of Object.entries(viewports)) {
 			
 			const githubCard = await test.step("Expand Unauthenticated Github Login Card", async () => {
 				const githubCard = await expandGithubLoginCard(page,);
+				await expect(githubCard.getByRole("button", { name: "Login with GitHub" })).toBeVisible();
 				await expectSnapshot(page, githubCard, testInfo, "start", viewportName);
 				return githubCard;
 			});

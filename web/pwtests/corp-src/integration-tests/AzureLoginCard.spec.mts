@@ -33,6 +33,7 @@ for (const [viewportName, viewport] of Object.entries(viewports)) {
 
             const azureCard = await test.step("Expand Unauthenticated Azure Login Card", async () => {
                 const azureCard = await expandAzureLoginCard(page);
+                await expect(azureCard.getByRole("button", { name: "Sign in with Azure" })).toBeVisible();
                 await expectSnapshot(page, azureCard, testInfo, "start", viewportName);
                 return azureCard;
             });
@@ -46,6 +47,22 @@ for (const [viewportName, viewport] of Object.entries(viewports)) {
               await expect(azureCard.getByRole("button", { name: "Sign in with Azure", exact: true })).toHaveCount(0);
               await expectVisibleWithin(azureCard.getByText(/^Tenant/), "Tenant label", 50_000);
               await expectVisibleWithin(azureCard.getByRole("combobox"), "Stored tenant selector", 50_000);
+
+              // re-selects tenant to actually confirm correctly selected id
+              const tenantSelect = azureCard.getByTestId("tenant-select");
+              await expect.poll(async () => (await tenantSelect.locator("input").inputValue()).trim(), { timeout: 50_000 }).not.toBe("");
+              const tenantId = (await tenantSelect.locator("input").inputValue()).trim();
+              await tenantSelect.click();
+              await page.getByRole("option").filter({ hasText: tenantId }).click();
+              await expect(tenantSelect.locator("input")).toHaveValue(tenantId);
+
+              const subscriptionCard = page.locator("#card-azure_subscription");
+              const requirements = subscriptionCard.getByText("Complete these first");
+              if (!(await requirements.isVisible())) {
+                await subscriptionCard.getByText("Choose Azure subscription").click();
+              }
+              await expect(requirements).toBeVisible();
+              await expect(subscriptionCard.getByText("Select a tenant")).toHaveCount(0, { timeout: 50_000 });
 
               await expectSnapshot(page, azureCard, testInfo, "end", viewportName);
 

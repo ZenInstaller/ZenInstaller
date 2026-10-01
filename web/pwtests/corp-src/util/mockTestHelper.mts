@@ -1,4 +1,4 @@
-import { expect, type BrowserContext, type Page, type Route } from "@playwright/test";
+import { expect, type BrowserContext, type Locator, type Page, type Route } from "@playwright/test";
 import { AZURE_MANAGEMENT_SCOPE, AZURE_MANAGEMENT_URL, CORP_URL, GITHUB_API_URL, GRAPH_APPLICATION_SCOPE, GRAPH_APP_ROLE_ASSIGNMENT_SCOPE, MICROSOFT_GRAPH_URL, MICROSOFT_LOGIN_URL, MOCK_BACKEND_URL } from "../../testInit";
 import { expandAzureLoginCard, expandAzureSubscriptionCard, expandRepoCard,} from "./cardHelper.mts";
 import { createNewRepo,} from "./testHelper.mts";
@@ -33,6 +33,115 @@ async function json(route: Route, body: unknown, status = 200) {
 		contentType: "application/json",
 		body: JSON.stringify(body),
 	});
+}
+
+export function coreInfraStepLabels(companyShortCode: string) {
+	return [
+		"Confirm Microsoft permissions",
+		"Register required Azure resource providers",
+		`Create resource group root-${companyShortCode}`,
+		"Grant GitHub Actions access to the resource group",
+		`Create Log Analytics workspace ${companyShortCode}-law`,
+		"Configure subscription activity-log diagnostics",
+		`Create Application Insights ${companyShortCode}-appinsights`,
+		`Create storage account ${companyShortCode}pvt`,
+		"Create terraformstate container",
+		"Grant GitHub Actions access to Terraform state",
+	];
+}
+
+export async function expectSuccessfulSteps(card: Locator, labels: string[]) {
+	for (const label of labels) {
+		const row = card.getByText(label, { exact: true }).locator("../..");
+		await expect(row.locator('svg[data-testid="CheckCircleOutlineIcon"], svg[data-testid="RemoveCircleOutlineIcon"]')).toHaveCount(1);
+		await expect(row.locator('svg[data-testid="ErrorOutlineIcon"]')).toHaveCount(0);
+		await expect(row.getByRole("progressbar")).toHaveCount(0);
+	}
+}
+
+export type CoreInfraAzureMockState = {
+	createdResources: Set<string>;
+	roleAssignments: Map<string, Set<string>>;
+};
+
+export async function installCoreInfraAzureMock(page: Page): Promise<CoreInfraAzureMockState> {
+	const state: CoreInfraAzureMockState = {
+		createdResources: new Set(),
+		roleAssignments: new Map(),
+	};
+
+	const resourceKey = (path: string) => {
+		if (/^\/subscriptions\/[^/]+\/resourcegroups\/root-pwtests$/i.test(path)) return "resource-group";
+		if (/\/workspaces\/pwtests-law$/i.test(path)) return "log-analytics";
+		if (/\/diagnosticsettings\/standard-diagnostics-setting$/i.test(path)) return "diagnostics";
+		if (/\/components\/pwtests-appinsights$/i.test(path)) return "app-insights";
+		if (/\/storageaccounts\/pwtestspvt$/i.test(path)) return "storage-account";
+		if (/\/containers\/terraformstate$/i.test(path)) return "storage-container";
+		return null;
+	};
+
+	await page.route(`${AZURE_MANAGEMENT_URL}/**`, async (route) => {
+		const request = route.request();
+		const path = new URL(request.url()).pathname;
+		const normalizedPath = path.toLowerCase();
+		const method = request.method();
+
+		if (normalizedPath.endsWith("/locations") && method === "GET") {
+			return json(route, {
+				value: [{ name: "australiaeast", displayName: "Australia East", metadata: { regionType: "Physical" } }],
+			});
+		}
+
+		if (/^\/subscriptions\/[^/]+\/providers\/microsoft\.[^/]+$/i.test(path)) {
+			return json(route, { registrationState: "Registered" });
+		}
+
+		if (normalizedPath.endsWith("/checknameavailability") && method === "POST") {
+			return json(route, { nameAvailable: true });
+		}
+
+		const roleAssignmentsMarker = "/providers/microsoft.authorization/roleassignments";
+		const roleAssignmentsIndex = normalizedPath.indexOf(roleAssignmentsMarker);
+		if (roleAssignmentsIndex >= 0) {
+			const scope = normalizedPath.slice(0, roleAssignmentsIndex);
+			if (method === "GET") {
+				const roleIds = state.roleAssignments.get(scope) ?? new Set<string>();
+				return json(route, {
+					value: [...roleIds].map((roleId) => ({
+						properties: { roleDefinitionId: `/providers/Microsoft.Authorization/roleDefinitions/${roleId}` },
+					})),
+				});
+			}
+			if (method === "PUT") {
+				const body = request.postDataJSON() as { properties?: { roleDefinitionId?: string } };
+				const roleId = body.properties?.roleDefinitionId?.split("/").pop()?.toLowerCase();
+				if (roleId) {
+					const roleIds = state.roleAssignments.get(scope) ?? new Set<string>();
+					roleIds.add(roleId);
+					state.roleAssignments.set(scope, roleIds);
+				}
+				return json(route, {});
+			}
+		}
+
+		const key = resourceKey(normalizedPath);
+		if (key) {
+			if (method === "GET") {
+				if (!state.createdResources.has(key)) {
+					return json(route, { error: { code: "ResourceNotFound" } }, 404);
+				}
+				return json(route, { id: path, properties: { provisioningState: "Succeeded" } });
+			}
+			if (method === "PUT") {
+				state.createdResources.add(key);
+				return json(route, { id: path, properties: { provisioningState: "Succeeded" } });
+			}
+		}
+
+		return route.fallback();
+	});
+
+	return state;
 }
 
 export async function installMockGitHub(page: Page, context: BrowserContext, options: MockGitHubOptions = {}): Promise<MockGitHubState> {

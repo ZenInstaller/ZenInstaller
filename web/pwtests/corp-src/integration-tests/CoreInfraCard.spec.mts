@@ -11,6 +11,7 @@ import {
 } from "../util/cardHelper.mts";
 import { checkRepoExists, chooseExistingRepo } from "../util/testHelper.mts";
 import { restoreAzureSessionStorage, restoreGithubSessionStorage } from "../util/setupHelper.mts";
+import { coreInfraStepLabels, expectSuccessfulSteps } from "../util/mockTestHelper.mts";
 
 async function prepareExistingAzureSubscription(page: import("@playwright/test").Page, context: import("@playwright/test").BrowserContext, viewportName: string) {
 	await restoreGithubSessionStorage(context);
@@ -47,11 +48,37 @@ async function prepareExistingAzureSubscription(page: import("@playwright/test")
 	const subscriptionOption = page.getByRole("option").filter({ hasText: SUBSCRIPTION_ID });
 	await expectVisibleWithin(subscriptionOption, `Subscription ${SUBSCRIPTION_ID} option`, 50_000);
 	await subscriptionOption.click();
-	const saveButton = subscriptionCard.getByRole("button", { name: /^Save(?: 2)? variables$/ });
-	if ((await saveButton.count()) > 0 && await saveButton.isEnabled({ timeout: 0 })) {
-		await saveButton.click();
-		await expect(subscriptionCard.getByRole("button", { name: /^Save\s+variables$/ })).toBeDisabled({ timeout: 60_000 });
+	await expect(subscriptionCard.getByRole("progressbar")).toHaveCount(0, { timeout: 60_000 });
+	const pendingSave = subscriptionCard.getByRole("button", { name: /^Save [12] variables?$/ });
+	const cleanSave = subscriptionCard.getByRole("button", { name: "Save variables", exact: true });
+	if (await pendingSave.count()) {
+		await pendingSave.click();
 	}
+	await expect(cleanSave).toBeDisabled({ timeout: 60_000 });
+
+	const appRegistrationCard = await expandAzureAppRegistrationCard(page);
+	const coreInfraCard = page.locator("#card-core_infra");
+	await coreInfraCard.getByText("Terraform state backend", { exact: true }).click();
+	const appRegistrationRequirement = coreInfraCard.getByText("Complete the Azure app registration", { exact: true });
+	const connectionInputs = appRegistrationCard.locator('[data-sensitive="true"] input');
+	await expect(connectionInputs).toHaveCount(2, { timeout: 50_000 });
+	await expect.poll(async () =>
+		!(await appRegistrationRequirement.isVisible()) ||
+		await appRegistrationCard.getByText(/\d+ not configured|doesn't exist in the selected tenant|Missing on the selected subscription|doesn't match AZURE_CLIENT_ID/i).count() > 0,
+	{ timeout: 60_000 }).toBe(true);
+	if (await appRegistrationRequirement.isVisible()) {
+		const appNameInput = appRegistrationCard.locator("input:visible").first();
+		await expectVisibleWithin(appNameInput, "App registration name input", 50_000);
+		await appNameInput.fill(safePathSegment(`zeninstaller-${repoName}-${Date.now().toString(36)}`));
+		await appRegistrationCard.getByRole("button", { name: /^(?:Create app registration|Grant access on this subscription)$/ }).click();
+		await expectVisibleWithin(appRegistrationCard.getByRole("button", { name: "Try again" }), "App registration completion", 300_000);
+		await expectVisibleWithin(
+			appRegistrationCard.getByText(/Connection details saved(?: — no changes needed)?\./i),
+			"Saved app registration connection details",
+			60_000,
+		);
+	}
+	await expect(appRegistrationRequirement).toBeHidden({ timeout: 60_000 });
 }
 
 test.beforeEach(async ({ page }) => {
@@ -83,15 +110,10 @@ for (const [viewportName, viewport] of Object.entries(viewports)) {
 				await prepareExistingAzureSubscription(page, context, viewportName);
 			});
 
-            const terraformCard = await test.step("Expand the Terraform state backend card", async() => {
-				const terraformCard = page.locator("#card-core_infra");
-				return terraformCard;
-			})
+			const terraformCard = page.locator("#card-core_infra");
 
 			await test.step("Open backend card where core infrastructure does not exist", async () => {
-				await terraformCard.getByText("Terraform state backend", { exact: true }).click();
 				await expectVisibleWithin(terraformCard.getByText("Company short code"), "Company short code field", 50_000);
-				// await expectSnapshot(page, terraformCard, testInfo, "start", viewportName);
 
 				setupAlreadyExists = await terraformCard.getByRole("button", { name: "Re-run setup" }).isVisible().catch(() => false);
 				if (setupAlreadyExists) {
@@ -121,15 +143,7 @@ for (const [viewportName, viewport] of Object.entries(viewports)) {
 					await card.getByRole("button", { name: "Create core infrastructure" }).click();
 					await expect(card.getByText("Running...", { exact: true })).toBeHidden({ timeout: 500_000 });
 
-					for (const stepLabel of [
-						"Confirm Microsoft permissions",
-						"Register required Azure resource providers",
-						"Grant GitHub Actions access to the resource group",
-						"Configure subscription activity-log diagnostics",
-						"Grant GitHub Actions access to Terraform state",
-					]) {
-						await expectVisibleWithin(card.getByText(stepLabel, { exact: true }), `Infrastructure step: ${stepLabel}`, 50_000);
-					}
+					await expectSuccessfulSteps(card, coreInfraStepLabels(companyShortCode));
 					await expectVisibleWithin(card.getByRole("button", { name: "Start over" }), "Start over button", 50_000);
 					await expect(card.getByText(/Failed|Consent redirect failed|Additional consent required/i)).toHaveCount(0);
 					await expectSnapshot(page, card, testInfo, "provisioned", viewportName);
@@ -137,9 +151,19 @@ for (const [viewportName, viewport] of Object.entries(viewports)) {
 			}
 
 			await test.step("Verify the completed card state", async () => {
-				const card = page.locator("#card-core_infra");
+				let card = page.locator("#card-core_infra");
+				const resources = card.getByText("Resources", { exact: true });
+				if (!(await resources.isVisible().catch(() => false))) {
+					await card.getByRole("button", { name: "Start over" }).click();
+					await page.reload();
+					card = page.locator("#card-core_infra");
+					if (!(await card.getByText("Company short code").isVisible().catch(() => false))) {
+						await card.getByText("Terraform state backend", { exact: true }).click();
+					}
+				}
 				await expectVisibleWithin(card.getByText("Terraform state backend"), "Terraform state backend title", 50_000);
-				await expectVisibleWithin(card.getByText("State container:"), "State container label", 50_000);
+				await expectVisibleWithin(card.getByText("Location:"), "State container label", 50_000);
+				await expectVisibleWithin(card.getByRole("button", { name: "Re-run setup" }), "Re-run setup button", 50_000);
 				await expectSnapshot(page, card, testInfo, "end", viewportName);
 			});
 
@@ -156,6 +180,7 @@ for (const [viewportName, viewport] of Object.entries(viewports)) {
 				await expectVisibleWithin(rerunButton, "Re-run setup button", 50_000);
 				await rerunButton.click();
 				await expect(card.getByText("Running...", { exact: true })).toBeHidden({ timeout: 500_000 });
+				await expectSuccessfulSteps(card, coreInfraStepLabels("pwtests"));
 				await expectVisibleWithin(card.getByText("Already exists", { exact: true }).first(), "Already exists status", 50_000);
 				await expectVisibleWithin(card.getByRole("button", { name: "Start over" }), "Start over button", 50_000);
 				await expect(card.getByText(/Failed|Consent redirect failed|Additional consent required/i)).toHaveCount(0);

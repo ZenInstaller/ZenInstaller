@@ -65,6 +65,7 @@ for (const [viewportName, viewport] of Object.entries(viewports)) {
 				if (await missingProdBranch.isVisible()) {
 					const createProdButton = repoCard.getByRole("button", { name: "Create New Branch: PROD", });
 					await expectVisibleWithin(createProdButton, "Button: Create New Branch: PROD", 50_000);
+					await expect(createProdButton).toBeEnabled();
 					await createProdButton.click();
 					await expect(createProdButton).toBeHidden({ timeout: 50_000, });
 					await expect(missingProdBranch).toHaveCount(0);
@@ -87,6 +88,7 @@ for (const [viewportName, viewport] of Object.entries(viewports)) {
 				if (await missingTestBranch.isVisible()) {
 					const createTestButton = repoCard.getByRole("button", { name: "Create New Branch: TEST", });
 					await expectVisibleWithin(createTestButton, "Button: Create New Branch: TEST", 50_000);
+					await expect(createTestButton).toBeEnabled();
 					await createTestButton.click();
 					await expect(createTestButton).toBeHidden({ timeout: 30_000, });
 					await expect(missingTestBranch).toHaveCount(0);
@@ -99,7 +101,7 @@ for (const [viewportName, viewport] of Object.entries(viewports)) {
 		});
 
 
-		test("Edge Integrated - Creates valid repo with no environments", async ({ page, context}, testInfo) => {
+		test("Creates valid repo with no environments", async ({ page, context}, testInfo) => {
 			await restoreGithubSessionStorage(context);
 			await page.goto(CORP_URL);
 			const reponame = safePathSegment(`${TEST_REPO_NO_ENV}-${viewportName}`);
@@ -146,7 +148,7 @@ for (const [viewportName, viewport] of Object.entries(viewports)) {
 			await expectSnapshot(page, repoCard, testInfo, "repo-no-env", viewportName);
 		});
 
-		test("Edge Integrated - Creates PROD branch, then creates TEST from PROD", async ({ page, context}, testInfo) => {
+		test("Creates PROD branch, then creates TEST from PROD", async ({ page, context}, testInfo) => {
 			test.setTimeout(300_000);
 			const repoName = safePathSegment(`${TEST_REPO_FROM_PROD}-${viewportName}`,);
 			await restoreGithubSessionStorage(context);
@@ -154,7 +156,12 @@ for (const [viewportName, viewport] of Object.entries(viewports)) {
 			const repoCard = await expandRepoCard(page,);
 			const repoInput = repoCard.getByRole("combobox", { name: "Select or type repo name...", });
 
+			const repoExists = await checkRepoExists(page, repoCard, repoName);
+			if (repoExists) {
+				throw new Error(`The repo "${repoName}" already exists. Please delete it from your GitHub account before running this test.`);
+			}
 			await createNewRepo(page, repoCard, repoName);
+			await chooseExistingRepo(page, repoCard, repoName);
 			await expect(repoInput).toHaveValue(repoName);
 			const PROD = repoCard.getByText("PROD", { exact: true, });
 			const TEST = repoCard.getByText("TEST", { exact: true, });

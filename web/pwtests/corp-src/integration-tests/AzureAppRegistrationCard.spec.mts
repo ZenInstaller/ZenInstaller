@@ -41,6 +41,9 @@ async function prepareAppRegistrationCard(page: import("@playwright/test").Page,
 	await page.getByRole("option").filter({ hasText: tenantId }).click();
 
 	const repoCard = await expandRepoCard(page);
+	if (!(await checkRepoExists(page, repoCard, repoName))) {
+		await createNewRepo(page, repoCard, repoName);
+	}
 	await chooseExistingRepo(page, repoCard, repoName);
 
 	await expect(repoCard.getByText("Loading environments...", { exact: true })).toBeHidden({ timeout: 120_000 });
@@ -50,12 +53,23 @@ async function prepareAppRegistrationCard(page: import("@playwright/test").Page,
 	}
 	await prodEnvironment.click();
 	const createProdButton = repoCard.getByRole("button", { name: "Create New Branch: PROD" });
+	const subscriptionCard = await expandAzureSubscriptionCard(page);
+	const selectEnvironmentMessage = subscriptionCard.getByText(
+		"Select a repository & environment to save the tenant and subscription to GitHub.",
+		{ exact: true },
+	);
+	await expect.poll(async () => await createProdButton.isVisible() || await selectEnvironmentMessage.count() === 0, {
+		timeout: 30_000,
+		message: "PROD branch state did not finish loading",
+	}).toBeTruthy();
 	if (await createProdButton.isVisible()) {
+		await expect(createProdButton).toBeEnabled();
 		await createProdButton.click();
 		await expect(createProdButton).toBeHidden({ timeout: 30_000 });
+		await expect(repoCard.getByText("Failed to create branch", { exact: true })).toHaveCount(0);
 	}
 
-	const subscriptionCard = await expandAzureSubscriptionCard(page);
+	await expect(selectEnvironmentMessage).toHaveCount(0);
 	await expect(subscriptionCard.getByText("Loading subscriptions...", { exact: true })).toBeHidden({ timeout: 60_000 });
 	await expectVisibleWithin(subscriptionCard.getByRole("combobox"), "Azure subscription selector", 50_000);
 	const saveButton = subscriptionCard.getByRole("button", { name: /^Save(?: 2)? variables$/ });
@@ -120,14 +134,26 @@ for (const [viewportName, viewport] of Object.entries(viewports)) {
 				const prodEnvironment = card.getByText("PROD", { exact: true });
 				await prodEnvironment.click();
 				const createProdButton = card.getByRole("button", { name: "Create New Branch: PROD" });
+				const subscriptionCard = await expandAzureSubscriptionCard(page);
+				const selectEnvironmentMessage = subscriptionCard.getByText(
+					"Select a repository & environment to save the tenant and subscription to GitHub.",
+					{ exact: true },
+				);
+				await expect.poll(async () => await createProdButton.isVisible() || await selectEnvironmentMessage.count() === 0, {
+					timeout: 30_000,
+					message: "PROD branch state did not finish loading",
+				}).toBeTruthy();
 				if (await createProdButton.isVisible()) {
+					await expect(createProdButton).toBeEnabled();
 					await createProdButton.click();
 					await expect(createProdButton).toBeHidden({ timeout: 30_000 });
+					await expect(card.getByText("Failed to create branch", { exact: true })).toHaveCount(0);
 				}
+				await expect(selectEnvironmentMessage).toHaveCount(0);
 				await expectSnapshot(page, card, testInfo, "existing-repo", viewportName);
 			});
 
-
+			//TODO: check if tenant has subscriptions they can access (throw error if not)
 			await test.step("Saving prefilled Azure subscription variables", async () => {
 				const card = await expandAzureSubscriptionCard(page);
 				await expectVisibleWithin(card.getByText(/Pick the subscription to deploy into\./i), "Subscription card prompt", 50_000);

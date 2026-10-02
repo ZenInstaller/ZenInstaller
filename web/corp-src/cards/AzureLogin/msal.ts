@@ -46,8 +46,11 @@ export async function ensureScopeConsent(
     await msal.acquireTokenSilent(request);
     return false;
   } catch (err) {
+    //TODO: Interpret the error to identify what went wrong and better communicate it to the user.
+    // https://learn.microsoft.com/en-us/javascript/api/@azure/msal-node/interactionrequiredautherror?view=msal-js-latest
     if (!(err instanceof InteractionRequiredAuthError)) throw err;
   }
+  //TODO: Improve the handover from silent to interactive by writing a message to the UI, and showing a popup instead of replacing the window with a crypting message from EntraID.
 
   // Navigates away; nothing after this runs. The user re-runs the card on their way back.
   await msal.acquireTokenRedirect(request);

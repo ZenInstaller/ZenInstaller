@@ -2,7 +2,6 @@ import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { useEffect } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { useAccessPassCard, type UseAccessPassCard } from "../cards/AccessPass/useAccessPassCard";
 import {
   useAzureAppRegistrationCard,
   type UseAzureAppRegistrationCard,

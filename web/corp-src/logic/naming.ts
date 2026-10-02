@@ -25,6 +25,16 @@ export function getTerminalStorageAccountName(corpName: string): string {
   return `${corpName}term`.toLowerCase();
 }
 
+// Static site hosting needs anonymous public reads, so it never shares an account with state.
+export function getWebStorageAccountName(corpName: string): string {
+  return `${corpName}pvtweb`.toLowerCase();
+}
+
+// The private installer's own sign-in app, so consent happens in the customer's tenant.
+export function getPrivateInstallerAppName(): string {
+  return "Zeninstaller Private";
+}
+
 export function getTerminalWebPubSubName(corpName: string): string {
   return `${corpName}-wpubsub`;
 }

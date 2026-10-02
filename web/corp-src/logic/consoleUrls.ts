@@ -31,6 +31,12 @@ export function getEntraOverviewUrl(): string {
   return `${ENTRA}/#view/Microsoft_AAD_IAM/TenantOverview.ReactView`;
 }
 
+// Tenant-wide consent for everything the app declares — the one step the installer cannot do itself,
+// since granting consent needs a privilege the person running the cards may not have.
+export function getAdminConsentUrl(tenantId: string, clientId: string): string {
+  return `https://login.microsoftonline.com/${tenantId}/adminconsent?client_id=${clientId}`;
+}
+
 export function getEntraUsersUrl(): string {
   return `${ENTRA}/#view/Microsoft_AAD_UsersAndTenants/UserManagementMenuBlade/~/AllUsers`;
 }

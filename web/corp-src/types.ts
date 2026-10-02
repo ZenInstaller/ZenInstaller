@@ -14,6 +14,7 @@ export type CardId =
   | "core_infra"
   | "remote_terminal_infra"
   | "backend_deploy"
+  | "web_deploy"
   | "create_domain"
   | "access_pass"
   | "global_groups"

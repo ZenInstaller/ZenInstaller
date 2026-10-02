@@ -8,6 +8,7 @@ import {
   GRANT_CONSENT_SCOPES,
   ACCESS_PASS_SCOPES,
   GROUPS_SCOPES,
+  ROLE_MANAGEMENT_SCOPES,
 } from "../config/azureConfig";
 import { RBAC_ROLE_IDS } from "../config/azureConfig";
 import { deterministicUuid } from "../logic/crypto";
@@ -108,6 +109,54 @@ export async function createAppRegistration(
   const data = await gFetch(token, GRAPH, "/applications", {
     method: "POST",
     body: JSON.stringify(body),
+  });
+  return { appId: data.appId, id: data.id };
+}
+
+/*
+ * requiredResourceAccess identifies a permission by guid, and those differ per resource and per
+ * cloud — so they are read off each resource's own service principal by name rather than hardcoded.
+ */
+async function delegatedScopeIds(token: string, resourceAppId: string, scopeNames: readonly string[]) {
+  const data = await gFetch(
+    token,
+    GRAPH,
+    `/servicePrincipals?$filter=appId eq '${resourceAppId}'&$select=oauth2PermissionScopes`,
+  );
+  const published: { id: string; value: string }[] = data.value?.[0]?.oauth2PermissionScopes ?? [];
+  return scopeNames.map((wanted) => {
+    const scope = published.find((p) => p.value === wanted);
+    if (!scope) throw new Error(`${resourceAppId} publishes no delegated scope named "${wanted}"`);
+    return { id: scope.id, type: "Scope" as const };
+  });
+}
+
+// A browser app signing in users: delegated permissions only, and redirect URIs under "spa" so the
+// authorization code flow with PKCE is allowed without a client secret.
+export async function createSpaAppRegistration(
+  account: AzureAccount,
+  displayName: string,
+  redirectUris: string[],
+  delegated: Record<string, readonly string[]>,
+  overrideTenantId?: string,
+): Promise<{ appId: string; id: string }> {
+  const token = await getToken(account, APP_SCOPES, overrideTenantId);
+  const requiredResourceAccess = await Promise.all(
+    Object.entries(delegated).map(async ([resourceAppId, scopes]) => ({
+      resourceAppId,
+      resourceAccess: await delegatedScopeIds(token, resourceAppId, scopes),
+    })),
+  );
+
+  const data = await gFetch(token, GRAPH, "/applications", {
+    method: "POST",
+    body: JSON.stringify({
+      displayName,
+      signInAudience: "AzureADandPersonalMicrosoftAccount",
+      api: { requestedAccessTokenVersion: 2 },
+      spa: { redirectUris },
+      requiredResourceAccess,
+    }),
   });
   return { appId: data.appId, id: data.id };
 }
@@ -278,7 +327,7 @@ export async function revokeOAuth2Grants(
   const grantsRes = await gFetch(token, GRAPH, `/oauth2PermissionGrants?$filter=clientId eq '${spId}'`);
   const ids: string[] = (grantsRes?.value ?? []).map((g: { id: string }) => g.id);
   await Promise.all(
-    ids.map((id) => gFetch(token, GRAPH, `/oauth2PermissionGrants/${id}`, { method: "DELETE" }).catch(() => { })),
+    ids.map((id) => gFetch(token, GRAPH, `/oauth2PermissionGrants/${id}`, { method: "DELETE" }).catch(() => {})),
   );
 }
 
@@ -647,7 +696,9 @@ export async function getGroupByName(
 
 export async function createGroup(
   account: AzureAccount,
-  params: { displayName: string; description: string; mailNickname: string },
+  // isAssignableToRole cannot be changed later, so a group that may ever hold a directory role
+  // has to be born with it. Setting it also requires the caller to be a privileged role admin.
+  params: { displayName: string; description: string; mailNickname: string; isAssignableToRole?: boolean },
   overrideTenantId?: string,
 ): Promise<EntraGroup> {
   const token = await getToken(account, GROUPS_SCOPES, overrideTenantId);
@@ -659,6 +710,7 @@ export async function createGroup(
       mailNickname: params.mailNickname,
       mailEnabled: false,
       securityEnabled: true,
+      ...(params.isAssignableToRole && { isAssignableToRole: true }),
     }),
   });
   return { id: data.id, displayName: data.displayName, description: data.description ?? params.description };
@@ -692,4 +744,50 @@ export async function isGroupMember(
     body: JSON.stringify({ groupIds: [groupId] }),
   });
   return !!(data?.value ?? []).includes(groupId);
+}
+
+// ── PIM for Entra roles ───────────────────────────────────────────────────────
+
+/*
+ * Eligible, not active: members of the group hold nothing until they activate the role, and the
+ * activation expires. Reading it back is a plain filter; creating it goes through a request object.
+ */
+export async function hasRoleEligibility(
+  account: AzureAccount,
+  principalId: string,
+  roleDefinitionId: string,
+  overrideTenantId?: string,
+): Promise<boolean> {
+  const token = await getToken(account, ROLE_MANAGEMENT_SCOPES, overrideTenantId);
+  const filter = `principalId eq '${principalId}' and roleDefinitionId eq '${roleDefinitionId}'`;
+  const data = await gFetch(
+    token,
+    GRAPH,
+    `/roleManagement/directory/roleEligibilitySchedules?$filter=${encodeURIComponent(filter)}`,
+  );
+  return (data?.value ?? []).length > 0;
+}
+
+export async function ensureRoleEligibility(
+  account: AzureAccount,
+  principalId: string,
+  roleDefinitionId: string,
+  justification: string,
+  overrideTenantId?: string,
+): Promise<"created" | "exists"> {
+  if (await hasRoleEligibility(account, principalId, roleDefinitionId, overrideTenantId)) return "exists";
+
+  const token = await getToken(account, ROLE_MANAGEMENT_SCOPES, overrideTenantId);
+  await gFetch(token, GRAPH, "/roleManagement/directory/roleEligibilityScheduleRequests", {
+    method: "POST",
+    body: JSON.stringify({
+      action: "adminAssign",
+      justification,
+      roleDefinitionId,
+      principalId,
+      directoryScopeId: "/",
+      scheduleInfo: { startDateTime: new Date().toISOString(), expiration: { type: "noExpiration" } },
+    }),
+  });
+  return "created";
 }

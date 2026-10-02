@@ -22,6 +22,11 @@ export function getVariablesUrl(repoFullName: string): string {
   return `https://github.com/${repoFullName}/settings/variables/actions`;
 }
 
+// Where to look before a build has ever reported — the workflow's own run history.
+export function getWorkflowUrl(repoFullName: string, workflowId: string): string {
+  return `https://github.com/${repoFullName}/actions/workflows/${workflowId}`;
+}
+
 export function getWorkflowRunUrl(repoFullName: string, runId: string): string {
   return `https://github.com/${repoFullName}/actions/runs/${runId}`;
 }

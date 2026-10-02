@@ -5,9 +5,12 @@ import {
   ensureFlexFunctionApp,
   ensureFlexServicePlan,
   ensureLogAnalyticsWorkspace,
+  ensureBlobCors,
   ensureRbacRoleAtScope,
   ensureResourceGroup,
   ensureStorageAccount,
+  getAppInsightsConnectionString,
+  getStaticWebsiteUrl,
   ensureStorageContainer,
   ensureStorageTable,
   ensureWebPubSub,
@@ -18,6 +21,7 @@ import {
 } from "../../api/azureArm";
 import {
   createAppRegistration,
+  createSpaAppRegistration,
   createServicePrincipal,
   ensureFederatedCredential,
   getExistingApp,
@@ -36,10 +40,14 @@ import {
   getRootResourceGroupName,
   getTerminalPipelineAppName,
   getTerminalStorageAccountName,
+  getPrivateInstallerAppName,
+  getWebStorageAccountName,
   getTerminalWebPubSubName,
   getFederatedCredential,
 } from "../../logic/naming";
-import { REMOTE_TERMINAL_PROVIDERS } from "../../config/azureConfig";
+import { PRIVATE_INSTALLER_DELEGATED, REMOTE_TERMINAL_PROVIDERS, STORAGE_SCOPES } from "../../config/azureConfig";
+import { enableStaticWebsite } from "../../api/azureBlob";
+import { ensureScopeConsent } from "../../auth/msal";
 import { createResultStorage } from "../../logic/resultStorage";
 import { VALID_ENVS } from "../../config/githubConfig";
 import type { Account, AzureConfigHook, AzureTarget, CardHook, CardStatus, SetupStep } from "../../types";
@@ -52,6 +60,8 @@ export type RemoteTerminalInfraResult = {
   hubName: string;
   pipelineClientId: string;
   pipelineTenantId: string;
+  installerClientId: string;
+  appInsightsConnectionString: string;
 };
 
 export interface UseRemoteTerminalInfraCardParams extends AzureTarget {
@@ -72,6 +82,9 @@ export interface UseRemoteTerminalInfraCard extends CardHook, AzureConfigHook {
   webPubSubName: string;
   functionAppName: string;
   storageAccountName: string;
+  webStorageAccountName: string;
+  lawName: string;
+  appInsightsName: string;
   hubName: string;
   pipelineAppName: string;
   result: RemoteTerminalInfraResult | null;
@@ -107,6 +120,7 @@ export function useRemoteTerminalInfraCard({
   const lawName = getTerminalLogAnalyticsWorkspaceName(corpName);
   const appInsightsName = getTerminalAppInsightsName(corpName);
   const storageAccountName = getTerminalStorageAccountName(corpName);
+  const webStorageAccountName = getWebStorageAccountName(corpName);
   const webPubSubName = getTerminalWebPubSubName(corpName);
   const functionAppName = getTerminalFunctionAppName(corpName);
   const planName = `${functionAppName}-plan`;
@@ -158,13 +172,24 @@ export function useRemoteTerminalInfraCard({
       { id: "storage", label: `Create storage account ${storageAccountName}`, status: "pending" },
       { id: "table", label: `Create ${TERMINAL_SESSION_TABLE} table`, status: "pending" },
       { id: "container", label: `Create ${TERMINAL_DEPLOY_CONTAINER} container`, status: "pending" },
+      { id: "webStorage", label: `Create storage account ${webStorageAccountName}`, status: "pending" },
+      { id: "webCors", label: "Allow this page to reach the blob service", status: "pending" },
+      { id: "webConsent", label: "Consent to the storage data plane", status: "pending" },
+      { id: "webStatic", label: "Enable static website hosting", status: "pending" },
+      { id: "webRbac", label: "Grant yourself Storage Blob Data Contributor on it", status: "pending" },
+      { id: "installerApp", label: `Create app registration ${getPrivateInstallerAppName()}`, status: "pending" },
+      {
+        id: "installerSp",
+        label: `List ${getPrivateInstallerAppName()} under enterprise applications`,
+        status: "pending",
+      },
       { id: "wps", label: `Create Web PubSub ${webPubSubName}`, status: "pending" },
       { id: "hub", label: `Configure hub ${TERMINAL_HUB}`, status: "pending" },
       { id: "plan", label: "Create Flex Consumption plan", status: "pending" },
       { id: "app", label: `Create Function App ${functionAppName}`, status: "pending" },
       { id: "rbac", label: "Grant the Function App its data-plane roles", status: "pending" },
       { id: "pipelineApp", label: `Create app registration ${pipelineAppName}`, status: "pending" },
-      { id: "pipelineSp", label: "Create its service principal", status: "pending" },
+      { id: "pipelineSp", label: `List ${pipelineAppName} under enterprise applications`, status: "pending" },
       { id: "pipelineCreds", label: `Add GitHub OIDC credentials for ${environments.join(", ")}`, status: "pending" },
       { id: "pipelineRbac", label: "Grant it Web PubSub Service Owner", status: "pending" },
     ];
@@ -249,6 +274,83 @@ export function useRemoteTerminalInfraCard({
           tenantId,
         ),
       );
+
+      updateStep("webStorage", "running");
+      mark(
+        "webStorage",
+        await ensureStorageAccount(
+          azureAccount,
+          subscriptionId,
+          resourceGroupName,
+          webStorageAccountName,
+          location,
+          tenantId,
+        ),
+      );
+
+      updateStep("webCors", "running");
+      await ensureBlobCors(
+        azureAccount,
+        subscriptionId,
+        resourceGroupName,
+        webStorageAccountName,
+        allowedOrigins,
+        tenantId,
+      );
+      updateStep("webCors", "done", allowedOrigins.join(", "));
+
+      // Navigates away when consent is missing, so nothing below runs until the user comes back.
+      updateStep("webConsent", "running");
+      const promptedStorage = await ensureScopeConsent(azureAccount, [...STORAGE_SCOPES], tenantId);
+      if (promptedStorage) return;
+      updateStep("webConsent", "skipped", "Already granted");
+
+      updateStep("webStatic", "running");
+      await enableStaticWebsite(azureAccount, webStorageAccountName, tenantId);
+      updateStep("webStatic", "done");
+
+      // Owner does not reach the blob data plane, so the browser needs this to upload the built site.
+      updateStep("webRbac", "running");
+      mark(
+        "webRbac",
+        await ensureRbacRoleAtScope(
+          azureAccount,
+          storageAccountScope(subscriptionId, resourceGroupName, webStorageAccountName),
+          azureAccount.localAccountId,
+          "Storage Blob Data Contributor",
+          tenantId,
+          "User",
+        ),
+      );
+
+      // The redirect uri is the site this card just created, so the app is registered after it.
+      updateStep("installerApp", "running");
+      const siteUrl = await getStaticWebsiteUrl(
+        azureAccount,
+        subscriptionId,
+        resourceGroupName,
+        webStorageAccountName,
+        tenantId,
+      );
+      if (!siteUrl) throw new Error("The site's web endpoint is not available yet");
+      const existingInstaller = await getExistingApp(azureAccount, getPrivateInstallerAppName(), tenantId);
+      const installerApp =
+        existingInstaller ??
+        (await createSpaAppRegistration(
+          azureAccount,
+          getPrivateInstallerAppName(),
+          [siteUrl],
+          PRIVATE_INSTALLER_DELEGATED,
+          tenantId,
+        ));
+      mark("installerApp", existingInstaller ? "exists" : "created");
+
+      // Without a service principal the app has no enterprise application entry, so there is nothing
+      // for an administrator to consent to and nothing to hold a permission grant.
+      updateStep("installerSp", "running");
+      const existingInstallerSp = await getExistingSP(azureAccount, installerApp.appId, tenantId);
+      if (!existingInstallerSp) await createServicePrincipal(azureAccount, installerApp.appId, tenantId);
+      mark("installerSp", existingInstallerSp ? "exists" : "created");
 
       updateStep("wps", "running");
       mark(
@@ -368,6 +470,14 @@ export function useRemoteTerminalInfraCard({
         hubName: TERMINAL_HUB,
         pipelineClientId: app.appId,
         pipelineTenantId: tenantId || azureAccount.tenantId,
+        installerClientId: installerApp.appId,
+        appInsightsConnectionString: await getAppInsightsConnectionString(
+          azureAccount,
+          subscriptionId,
+          resourceGroupName,
+          appInsightsName,
+          tenantId,
+        ),
       };
       setResult(finished);
       saveResult(finished);
@@ -424,6 +534,9 @@ export function useRemoteTerminalInfraCard({
     webPubSubName,
     functionAppName,
     storageAccountName,
+    webStorageAccountName,
+    lawName,
+    appInsightsName,
     hubName: TERMINAL_HUB,
     pipelineAppName,
     cardRequirements: ["azure_login", "azure_subscription", "core_infra"],

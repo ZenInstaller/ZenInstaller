@@ -1,27 +1,24 @@
 import { useCallback, useEffect, useState } from "react";
+import JSZip from "jszip";
 import { fetchArtifactZip, fetchStageReport, triggerWorkflow } from "../../api";
-import {
-  deployZipToFunctionApp,
-  fetchDeployedBackend,
-  updateFunctionAppSettings,
-  type DeployedBackend,
-} from "../../api/azureArm";
-import { getRootResourceGroupName, getTerminalFunctionAppName } from "../../logic/naming";
-import { BACKEND_VERSION_KEYS } from "../../config/azureConfig";
+import { getStaticWebsiteUrl } from "../../api/azureArm";
+import { readDeployedSite, recordDeployedSite, uploadStaticSite, type DeployedSite } from "../../api/azureBlob";
+import { getRootResourceGroupName, getWebStorageAccountName } from "../../logic/naming";
 import { useStepRunner } from "../../hooks/util/useStepRunner";
 import type { Account, AzureConfigHook, CardHook, CardRequirements, CardStatus, GhEnv } from "../../types";
 
 // What the build workflow recorded, as the card reads it back off the Deployments API.
-type BackendBuild = {
+type WebBuild = {
   version: string;
   sha: string;
   runId: string;
   artifactId: number | null;
-  artifactUrl?: string;
   builtAt: number;
+  // What the workflow baked in, so drift since then is visible without rebuilding to find out.
+  vars?: Record<string, string>;
 };
 
-export interface UseBackendDeployCardParams {
+export interface UseWebDeployCardParams {
   azureAccount: import("../../types").AzureAccount | null;
   subscriptionId: string;
   tenantId?: string;
@@ -29,21 +26,27 @@ export interface UseBackendDeployCardParams {
   githubAccount: Account | null;
   repoName: string;
   selectedEnv: GhEnv | null;
+  variableValues: Record<string, string>;
 }
 
-const BUILD_WORKFLOW = "buildBackend.yml";
+const BUILD_WORKFLOW = "buildFrontend.yml";
 
-export interface UseBackendDeployCard extends CardHook, AzureConfigHook {
-  readonly cardId: "backend_deploy";
-  appName: string;
-  latest: BackendBuild | null;
-  deployed: DeployedBackend | null;
+export interface UseWebDeployCard extends CardHook, AzureConfigHook {
+  readonly cardId: "web_deploy";
+  storageAccountName: string;
+  siteUrl: string | null;
+  latest: WebBuild | null;
+  deployed: DeployedSite | null;
   loadingDeployed: boolean;
   loadingLatest: boolean;
   building: boolean;
   build: () => Promise<void>;
   buildWorkflow: string;
   updateAvailable: boolean;
+  // The built site bakes this in, so a build without it ships a broken sign-in.
+  missingGithubClientId: boolean;
+  // Variables whose value no longer matches what the latest build used.
+  staleVariables: string[];
   error: string | null;
   cardRequirements: CardRequirements;
   cardDependencyLabel: string;
@@ -53,11 +56,11 @@ export interface UseBackendDeployCard extends CardHook, AzureConfigHook {
 const POLL_DELAYS_MS = [30_000, 30_000, 45_000, 60_000, 60_000, 90_000];
 
 /*
- * Publishes the corp backend to the terminal relay's Function App: the workflow builds a package,
- * this card downloads that artifact and pushes it to Kudu itself. The sha of what was pushed is
- * remembered, so a package that is already live is not uploaded twice.
+ * The frontend half of Private Zeninstaller Backend: the workflow builds the site, this card
+ * downloads that artifact and writes the files into the $web container itself. What is live is
+ * kept on the container's metadata, so a build already up there is not uploaded twice.
  */
-export function useBackendDeployCard({
+export function useWebDeployCard({
   azureAccount,
   subscriptionId,
   tenantId,
@@ -65,23 +68,27 @@ export function useBackendDeployCard({
   githubAccount,
   repoName,
   selectedEnv,
-}: UseBackendDeployCardParams): UseBackendDeployCard {
+  variableValues,
+}: UseWebDeployCardParams): UseWebDeployCard {
   const { steps, setSteps, running, setRunning, updateStep, resetSteps } = useStepRunner();
-  const [latest, setLatest] = useState<BackendBuild | null>(null);
-  const [deployed, setDeployed] = useState<DeployedBackend | null>(null);
+  const [latest, setLatest] = useState<WebBuild | null>(null);
+  const [deployed, setDeployed] = useState<DeployedSite | null>(null);
+  const [siteUrl, setSiteUrl] = useState<string | null>(null);
   const [loadingDeployed, setLoadingDeployed] = useState(false);
   const [loadingLatest, setLoadingLatest] = useState(false);
   const [building, setBuilding] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const appName = corpName ? getTerminalFunctionAppName(corpName) : "";
+  const storageAccountName = corpName ? getWebStorageAccountName(corpName) : "";
   const resourceGroup = corpName ? getRootResourceGroupName(corpName) : "";
-  const ready = !!azureAccount && !!githubAccount && !!repoName && !!selectedEnv && !!corpName;
+  const missingGithubClientId = !(variableValues.VITE_GITHUB_CLIENT_ID ?? "").trim();
+  const ready =
+    !!azureAccount && !!githubAccount && !!repoName && !!selectedEnv && !!corpName && !missingGithubClientId;
 
-  const readLatest = useCallback(async (): Promise<BackendBuild | null> => {
+  const readLatest = useCallback(async (): Promise<WebBuild | null> => {
     if (!githubAccount || !repoName || !selectedEnv) return null;
-    const report = await fetchStageReport(githubAccount, repoName, selectedEnv.name, "backend", "build");
-    return (report?.stage as unknown as BackendBuild) ?? null;
+    const report = await fetchStageReport(githubAccount, repoName, selectedEnv.name, "frontend", "build");
+    return (report?.stage as unknown as WebBuild) ?? null;
   }, [githubAccount, repoName, selectedEnv]);
 
   useEffect(() => {
@@ -104,18 +111,19 @@ export function useBackendDeployCard({
   }, [githubAccount, repoName, selectedEnv, readLatest]);
 
   const readDeployed = useCallback(async () => {
-    if (!azureAccount || !appName || !subscriptionId) return;
+    if (!azureAccount || !storageAccountName || !subscriptionId) return;
     setLoadingDeployed(true);
     try {
-      setDeployed(
-        await fetchDeployedBackend(azureAccount, subscriptionId, resourceGroup, appName, tenantId || undefined),
-      );
+      // Before the environment card runs there is no account to ask, which is not an error here.
+      const url = await getStaticWebsiteUrl(azureAccount, subscriptionId, resourceGroup, storageAccountName, tenantId);
+      setSiteUrl(url);
+      setDeployed(url ? await readDeployedSite(azureAccount, storageAccountName, tenantId) : null);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not read the deployed version");
+      setError(e instanceof Error ? e.message : "Could not read what is live");
     } finally {
       setLoadingDeployed(false);
     }
-  }, [azureAccount, subscriptionId, resourceGroup, appName, tenantId]);
+  }, [azureAccount, subscriptionId, resourceGroup, storageAccountName, tenantId]);
 
   // Deferred so the loading flag is not set during the render that schedules this.
   useEffect(() => {
@@ -147,17 +155,17 @@ export function useBackendDeployCard({
   }, [githubAccount, repoName, selectedEnv, latest, readLatest]);
 
   const run = useCallback(async () => {
-    if (!azureAccount || !githubAccount || !repoName || !latest || !appName) return;
+    if (!azureAccount || !githubAccount || !repoName || !latest || !storageAccountName) return;
     if (latest.artifactId == null) {
-      setError("The latest build did not publish a package artifact.");
+      setError("The latest build did not publish a site artifact.");
       return;
     }
     setRunning(true);
     setError(null);
     setSteps([
-      { id: "download", label: "Download the built package", status: "pending" },
-      { id: "upload", label: `Upload it to ${appName}`, status: "pending" },
-      { id: "deploy", label: "Wait for the Function App to unpack it", status: "pending" },
+      { id: "download", label: "Download the built site", status: "pending" },
+      { id: "unpack", label: "Unpack it", status: "pending" },
+      { id: "upload", label: `Upload it to ${storageAccountName}`, status: "pending" },
     ]);
     try {
       updateStep("download", "running");
@@ -167,33 +175,33 @@ export function useBackendDeployCard({
           "download",
           "running",
           total ? `${mb(received)} / ${mb(total)} MB` : `${mb(received)} MB`,
-          // Undefined without a Content-Length, which leaves the row with text but no bar.
           total ? received / total : undefined,
         ),
       );
       updateStep("download", "done", `${mb(zip.size)} MB`);
 
-      await deployZipToFunctionApp(azureAccount, subscriptionId, resourceGroup, appName, zip, tenantId, (phase) => {
-        if (phase === "uploading") updateStep("upload", "running");
-        else {
-          updateStep("upload", "done");
-          updateStep("deploy", "running");
-        }
-      });
-      updateStep("deploy", "done");
+      updateStep("unpack", "running");
+      const archive = await JSZip.loadAsync(zip);
+      const files = await Promise.all(
+        Object.values(archive.files)
+          .filter((f) => !f.dir)
+          .map(async (f) => ({ path: f.name, body: await f.async("blob") })),
+      );
+      if (files.length === 0) throw new Error("The artifact contained no files");
+      updateStep("unpack", "done", `${files.length} files`);
 
-      // Recorded on the app rather than in this browser, so any machine can see what is live.
-      await updateFunctionAppSettings(
+      updateStep("upload", "running");
+      await uploadStaticSite(azureAccount, storageAccountName, files, tenantId, (uploaded, total) =>
+        updateStep("upload", "running", `${uploaded} / ${total} files`, uploaded / total),
+      );
+      updateStep("upload", "done", `${files.length} files`);
+
+      // Recorded on the container rather than in this browser, so any machine sees what is live.
+      await recordDeployedSite(
         azureAccount,
-        subscriptionId,
-        resourceGroup,
-        appName,
-        {
-          [BACKEND_VERSION_KEYS.version]: latest.version,
-          [BACKEND_VERSION_KEYS.sha]: latest.sha,
-          [BACKEND_VERSION_KEYS.builtAt]: String(latest.builtAt),
-        },
-        tenantId || undefined,
+        storageAccountName,
+        { version: latest.version, sha: latest.sha, builtAt: latest.builtAt },
+        tenantId,
       );
       await readDeployed();
     } catch (e) {
@@ -208,9 +216,7 @@ export function useBackendDeployCard({
     githubAccount,
     repoName,
     latest,
-    subscriptionId,
-    resourceGroup,
-    appName,
+    storageAccountName,
     tenantId,
     readDeployed,
     setRunning,
@@ -225,21 +231,28 @@ export function useBackendDeployCard({
   }, [resetSteps, readDeployed]);
 
   // Compared on version
+  const staleVariables = Object.entries(latest?.vars ?? {})
+    .filter(([key, builtWith]) => (variableValues[key] ?? "") !== builtWith)
+    .map(([key]) => key);
+
   const done = !!deployed && !!latest && deployed.version === latest.version;
   const updateAvailable = !!latest && !done;
 
   const status: CardStatus = !ready ? "idle" : done ? "complete" : "warning";
-  const summary = !ready
-    ? "Unavailable"
-    : done
-      ? `Deployed ${latest?.sha.slice(0, 7)}`
-      : updateAvailable
-        ? "Update available"
-        : "Build the backend";
+  const summary = missingGithubClientId
+    ? "Set VITE_GITHUB_CLIENT_ID first"
+    : !ready
+      ? "Unavailable"
+      : done
+        ? `Deployed ${latest?.sha.slice(0, 7)}`
+        : updateAvailable
+          ? "Update available"
+          : "Build the frontend";
 
   return {
-    cardId: "backend_deploy" as const,
-    appName,
+    cardId: "web_deploy" as const,
+    storageAccountName,
+    siteUrl,
     latest,
     deployed,
     loadingDeployed,
@@ -248,6 +261,8 @@ export function useBackendDeployCard({
     build,
     buildWorkflow: BUILD_WORKFLOW,
     updateAvailable,
+    missingGithubClientId,
+    staleVariables,
     error,
     steps,
     running,
@@ -257,6 +272,6 @@ export function useBackendDeployCard({
     run,
     reset,
     cardRequirements: ["github_login", "repo", "azure_login", "remote_terminal_infra"],
-    cardDependencyLabel: "Deploy the backend",
+    cardDependencyLabel: "Deploy the frontend",
   };
 }

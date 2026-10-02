@@ -15,6 +15,7 @@ import { useCreateDomainCard } from "./cards/CreateDomain/useCreateDomainCard";
 import { useCoreInfraCard } from "./cards/CoreInfra/useCoreInfraCard";
 import { useRemoteTerminalInfraCard } from "./cards/RemoteTerminalInfra/useRemoteTerminalInfraCard";
 import { useBackendDeployCard } from "./cards/BackendDeploy/useBackendDeployCard";
+import { useWebDeployCard } from "./cards/WebDeploy/useWebDeployCard";
 
 import Header from "./components/Header";
 import RestoreToast from "./components/RestoreToast";
@@ -26,6 +27,7 @@ import AzureSubscriptionCard from "./cards/AzureSubscription/AzureSubscriptionCa
 import CoreInfraCard from "./cards/CoreInfra/CoreInfraCard";
 import RemoteTerminalInfraCard from "./cards/RemoteTerminalInfra/RemoteTerminalInfraCard";
 import BackendDeployCard from "./cards/BackendDeploy/BackendDeployCard";
+import WebDeployCard from "./cards/WebDeploy/WebDeployCard";
 import CreateDomainCard from "./cards/CreateDomain/CreateDomainCard";
 
 import { withAITracking } from "@microsoft/applicationinsights-react-js";
@@ -115,6 +117,18 @@ function AppDashboard() {
   );
   const backendDeploy = addCard(
     useBackendDeployCard({
+      azureAccount: azureLogin.account,
+      subscriptionId: azureSubscription.selectedSubscriptionId,
+      tenantId: githubVariableValues.AZURE_TENANT_ID ?? "",
+      corpName,
+      githubAccount: githubRepoEnv.repo.selectedAccount,
+      repoName: githubRepoEnv.repo.selectedRepo?.name ?? "",
+      selectedEnv: githubRepoEnv.env.selectedEnv,
+    }),
+  );
+  const webDeploy = addCard(
+    useWebDeployCard({
+      variableValues: githubVariableValues,
       azureAccount: azureLogin.account,
       subscriptionId: azureSubscription.selectedSubscriptionId,
       tenantId: githubVariableValues.AZURE_TENANT_ID ?? "",
@@ -317,6 +331,21 @@ function AppDashboard() {
             <BackendDeployCard
               card={cardProps("backend_deploy")}
               backend={backendDeploy}
+              repoFullName={
+                githubRepoEnv.repo.selectedAccount && githubRepoEnv.repo.selectedRepo
+                  ? `${githubRepoEnv.repo.selectedAccount.login}/${githubRepoEnv.repo.selectedRepo.name}`
+                  : null
+              }
+            />
+
+            <WebDeployCard
+              card={cardProps("web_deploy")}
+              web={webDeploy}
+              githubAccount={githubRepoEnv.repo.selectedAccount}
+              repoName={githubRepoEnv.repo.selectedRepo?.name ?? ""}
+              selectedEnv={githubRepoEnv.env.selectedEnv}
+              variables={githubVariables}
+              githubUrl={githubRepoEnv.githubEnvUrl}
               repoFullName={
                 githubRepoEnv.repo.selectedAccount && githubRepoEnv.repo.selectedRepo
                   ? `${githubRepoEnv.repo.selectedAccount.login}/${githubRepoEnv.repo.selectedRepo.name}`

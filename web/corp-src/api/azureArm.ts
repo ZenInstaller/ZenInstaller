@@ -45,6 +45,45 @@ export type DeployedBackend = {
   deployedAt: number | null;
 };
 
+const DEPLOY_TIMEOUT_MS = 600_000;
+// Published through ARM, not the app's own scm host, which a site with public access denied never answers.
+const ONEDEPLOY_API = "2026-03-15";
+
+/*
+ * The deployment history, which is where the verdict is read from. extensions/onedeploy also answers
+ * but its 200 has no documented schema and nothing to read until a one-deploy has happened; this one
+ * returns a defined Deployment: status 4 succeeded, 3 failed, end_time when it went live.
+ */
+async function latestDeployment(
+  token: string,
+  subscriptionId: string,
+  resourceGroup: string,
+  name: string,
+): Promise<{ status?: number; message?: string; end_time?: string } | null> {
+  const res = await fetch(
+    `${ARM}/subscriptions/${subscriptionId}/resourceGroups/${resourceGroup}/providers/Microsoft.Web/sites/${name}/deployments?api-version=${WEB_API}`,
+    { headers: { Authorization: `Bearer ${token}` } },
+  );
+  if (!res.ok) return null;
+
+  const text = await res.text();
+  const markup = text.search(/<!DOCTYPE|<html/i);
+  let items: { properties?: { status?: number; message?: string; end_time?: string } }[] = [];
+  try {
+    items = JSON.parse(markup === -1 ? text : text.slice(0, markup))?.value ?? [];
+  } catch {
+    return null;
+  }
+  return (
+    items
+      .map((d) => d.properties ?? {})
+      .sort(
+        (a: { end_time?: string }, b: { end_time?: string }) =>
+          Date.parse(b.end_time ?? "") - Date.parse(a.end_time ?? "") || 0,
+      )[0] ?? null
+  );
+}
+
 export async function fetchDeployedBackend(
   account: AzureAccount,
   subscriptionId: string,
@@ -58,15 +97,9 @@ export async function fetchDeployedBackend(
 
   const token = await getToken(account, ARM_SCOPES, overrideTenantId);
 
-  // Kudu owns when it went live; the stamp only knows what was sent.
   let deployedAt: number | null = null;
-  const latest = await fetch(`https://${name}.scm.azurewebsites.net/api/deployments/latest`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  if (latest.ok) {
-    const ms = Date.parse((await latest.json())?.end_time ?? "");
-    if (!Number.isNaN(ms)) deployedAt = Math.floor(ms / 1000);
-  }
+  const ms = Date.parse((await latestDeployment(token, subscriptionId, resourceGroup, name))?.end_time ?? "");
+  if (!Number.isNaN(ms)) deployedAt = Math.floor(ms / 1000);
   return {
     version,
     sha: settings[BACKEND_VERSION_KEYS.sha] ?? "",
@@ -77,17 +110,19 @@ export async function fetchDeployedBackend(
 
 export async function deployZipToFunctionApp(
   account: AzureAccount,
+  subscriptionId: string,
+  resourceGroup: string,
   appName: string,
   zip: Blob,
   overrideTenantId?: string,
   onProgress?: (phase: "uploading" | "deploying") => void,
 ): Promise<void> {
   const token = await getToken(account, ARM_SCOPES, overrideTenantId);
-  const scm = `https://${appName}.scm.azurewebsites.net`;
+  const url = `${ARM}/subscriptions/${subscriptionId}/resourceGroups/${resourceGroup}/providers/Microsoft.Web/sites/${appName}/extensions/onedeploy?api-version=${ONEDEPLOY_API}`;
 
   onProgress?.("uploading");
-  const res = await fetch(`${scm}/api/publish?type=zip`, {
-    method: "POST",
+  const res = await fetch(url, {
+    method: "PUT",
     headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/zip" },
     body: zip,
   });
@@ -97,22 +132,18 @@ export async function deployZipToFunctionApp(
 
   // One-deploy returns as soon as the package is accepted; the unpack happens afterwards.
   onProgress?.("deploying");
-  const start = Date.now();
-  for (; ;) {
+  const startedAt = Date.now();
+  const deadline = startedAt + DEPLOY_TIMEOUT_MS;
+  while (Date.now() < deadline) {
     await new Promise((r) => setTimeout(r, 5000));
-    const status = await fetch(`${scm}/api/deployments/latest`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    if (status.ok) {
-      const data = await status.json();
-      if (data?.complete === true) {
-        // Kudu's status: 3 is failed, 4 is success.
-        if (data.status === 3) throw new Error(`Deployment failed: ${data.status_text || data.progress || "unknown"}`);
-        return;
-      }
+    const latest = await latestDeployment(token, subscriptionId, resourceGroup, appName);
+    // Older entries are still listed, so only one that finished after the upload is this deployment.
+    if (latest?.end_time && Date.parse(latest.end_time) >= startedAt) {
+      if (latest.status === 3) throw new Error(`Deployment failed: ${latest.message || "unknown"}`);
+      if (latest.status === 4) return;
     }
-    if (Date.now() - start > 600_000) throw new Error("Deployment did not finish within 10 minutes");
   }
+  throw new Error(`Deployment did not finish within ${DEPLOY_TIMEOUT_MS / 60_000} minutes`);
 }
 
 // ── Shared helpers ─────────────────────────────────────────────────────────────
@@ -144,7 +175,7 @@ async function pollProvisioning(
   timeoutMs = 120_000,
 ): Promise<void> {
   const start = Date.now();
-  for (; ;) {
+  for (;;) {
     const state = await fetchState();
     if (state === "Succeeded") return;
     if (state === "Failed" || state === "Canceled") throw new Error(`${resourceLabel} provisioning ${state}`);
@@ -299,6 +330,20 @@ export async function ensureSubscriptionDiagnostics(
 
 // ── Application Insights ───────────────────────────────────────────────────────
 
+// The browser needs the whole connection string, not just the key, and it is only on the resource.
+export async function getAppInsightsConnectionString(
+  account: AzureAccount,
+  subscriptionId: string,
+  resourceGroup: string,
+  name: string,
+  overrideTenantId?: string,
+): Promise<string> {
+  const token = await getToken(account, ARM_SCOPES, overrideTenantId);
+  const path = `/subscriptions/${subscriptionId}/resourceGroups/${resourceGroup}/providers/Microsoft.Insights/components/${name}?api-version=2020-02-02`;
+  const component = await armGet(token, path);
+  return (component?.properties as { ConnectionString?: string } | undefined)?.ConnectionString ?? "";
+}
+
 export async function ensureAppInsights(
   account: AzureAccount,
   subscriptionId: string,
@@ -396,6 +441,51 @@ export async function ensureStorageAccount(
     return (await armGet(t, path))?.properties?.provisioningState;
   }, "Storage account");
   return "created";
+}
+
+export async function ensureBlobCors(
+  account: AzureAccount,
+  subscriptionId: string,
+  resourceGroup: string,
+  name: string,
+  allowedOrigins: string[],
+  overrideTenantId?: string,
+): Promise<void> {
+  const token = await getToken(account, ARM_SCOPES, overrideTenantId);
+  const path = `/subscriptions/${subscriptionId}/resourceGroups/${resourceGroup}/providers/Microsoft.Storage/storageAccounts/${name}/blobServices/default?api-version=2023-01-01`;
+  await gFetch(token, ARM, path, {
+    method: "PUT",
+    body: JSON.stringify({
+      properties: {
+        cors: {
+          corsRules: [
+            {
+              allowedOrigins,
+              allowedMethods: ["GET", "HEAD", "OPTIONS", "PUT"],
+              allowedHeaders: ["*"],
+              exposedHeaders: ["*"],
+              maxAgeInSeconds: 3600,
+            },
+          ],
+        },
+      },
+    }),
+  });
+}
+
+// The web endpoint's host is assigned by Azure, so it is read back rather than composed.
+export async function getStaticWebsiteUrl(
+  account: AzureAccount,
+  subscriptionId: string,
+  resourceGroup: string,
+  name: string,
+  overrideTenantId?: string,
+): Promise<string | null> {
+  const token = await getToken(account, ARM_SCOPES, overrideTenantId);
+  const path = `/subscriptions/${subscriptionId}/resourceGroups/${resourceGroup}/providers/Microsoft.Storage/storageAccounts/${name}?api-version=2023-01-01`;
+  const sa = await armGet(token, path);
+  const web = (sa?.properties as { primaryEndpoints?: { web?: string } } | undefined)?.primaryEndpoints?.web;
+  return web ? web.replace(/\/+$/, "") : null;
 }
 
 export async function ensureStorageContainer(

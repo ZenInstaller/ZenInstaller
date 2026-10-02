@@ -5,7 +5,7 @@ import type { UseRemoteTerminalInfraCard } from "./useRemoteTerminalInfraCard";
 import StepRow from "../StepRow";
 import Card from "../../components/Card";
 import ViewLink from "../../components/ViewLink";
-import { getAzureResourceUrl } from "../../logic/consoleUrls";
+import { getAdminConsentUrl, getAzureResourceUrl } from "../../logic/consoleUrls";
 import { resourceGroupScope } from "../../api/azureArm";
 import { MONO as mono, labelSx } from "../../config/styles";
 import CloudVariableDetail from "../CloudVariableDetail";
@@ -60,7 +60,9 @@ export default function RemoteTerminalInfraCard({
           WEBPUBSUB_ENDPOINT: infra.result.webPubSubHost,
           WEBPUBSUB_CLIENT_ID: infra.result.pipelineClientId,
           WEBPUBSUB_TENANT_ID: infra.result.pipelineTenantId,
-          BACKEND_API: infra.result.apiUrl,
+          VITE_API_URL: infra.result.apiUrl,
+          VITE_AZURE_CLIENT_ID: infra.result.installerClientId,
+          VITE_APPINSIGHTS_CONNECTION_STRING: infra.result.appInsightsConnectionString,
         }
       : undefined;
 
@@ -78,10 +80,15 @@ export default function RemoteTerminalInfraCard({
             <Box sx={{ borderLeft: "2px solid #e2e8f0", pl: 1.5, display: "flex", flexDirection: "column", gap: 0.25 }}>
               {[
                 ["Resource group", infra.resourceGroupName],
+                ["Log Analytics", infra.lawName],
+                ["Application Insights", infra.appInsightsName],
+                ["Storage account", infra.storageAccountName],
+                ["Site storage account", infra.webStorageAccountName],
                 ["Web PubSub", infra.webPubSubName],
                 ["Hub", infra.hubName],
                 ["Function App", infra.functionAppName],
-                ["Storage account", infra.storageAccountName],
+                ["App registration", infra.pipelineAppName],
+                ["Sign-in app registration", "Zeninstaller Private"],
               ].map(([label, value]) => (
                 <Typography key={label} sx={{ fontSize: "0.75rem", color: "#64748b", ...mono }}>
                   {label}:{" "}
@@ -123,6 +130,31 @@ export default function RemoteTerminalInfraCard({
             )}
           </Button>
         </Box>
+
+        {infra.result && infra.resultMatches && (
+          <Box>
+            <Typography sx={{ ...labelSx, mb: 0.75 }}>Admin consent</Typography>
+            <Typography sx={{ fontSize: "0.72rem", color: "#475569", mb: 0.5 }}>
+              An administrator opens this once so everyone else can sign in without being prompted.
+            </Typography>
+            <Typography
+              component="a"
+              href={getAdminConsentUrl(infra.result.pipelineTenantId, infra.result.installerClientId)}
+              target="_blank"
+              rel="noopener noreferrer"
+              sx={{
+                fontSize: "0.72rem",
+                ...mono,
+                color: "#1d4ed8",
+                wordBreak: "break-all",
+                textDecoration: "none",
+                "&:hover": { textDecoration: "underline" },
+              }}
+            >
+              {getAdminConsentUrl(infra.result.pipelineTenantId, infra.result.installerClientId)}
+            </Typography>
+          </Box>
+        )}
 
         {infra.steps.length > 0 && (
           <Box sx={{ display: "flex", flexDirection: "column", gap: 0.25 }}>

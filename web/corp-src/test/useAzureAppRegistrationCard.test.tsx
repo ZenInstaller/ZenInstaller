@@ -9,20 +9,19 @@ import {
 } from "../cards/AzureAppRegistration/useAzureAppRegistrationCard";
 
 async function waitFor(assertion: () => void, timeoutMs = 1500) {
-  const start = Date.now();
-  for (;;) {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
     try {
       assertion();
       return;
-    } catch (error) {
-      if (Date.now() - start >= timeoutMs) {
-        throw error;
-      }
+    } catch {
       await act(async () => {
         await new Promise((resolve) => setTimeout(resolve, 0));
       });
     }
   }
+  // Out of time: one last go, so what surfaces is the assertion's own error.
+  assertion();
 }
 
 const { apiMocks } = vi.hoisted(() => ({

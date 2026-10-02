@@ -6,7 +6,7 @@ import { tenantDisplayName } from "../../logic/tenant";
 import { findIgnoreCase } from "../../logic/search";
 import { INITIAL_URL_PARAMS, type UrlRestoreField } from "../../hooks/useUrlStateManager";
 import { useAzureAccount, type UseAzureAccount } from "./useAzureAccount";
-import { setActiveAzureIdentity } from "./msal";
+import { setActiveAzureIdentity } from "../../auth/msal";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 

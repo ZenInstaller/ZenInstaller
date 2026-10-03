@@ -1,8 +1,8 @@
 import { act, useEffect } from "react";
 import { createRoot } from "react-dom/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { clearGithubToken } from "../hooks/useGithubLoginCard";
-import { readGithubAuthRecord, useGithubLoginCard, type UseGithubLoginCard } from "../hooks/useGithubLoginCard";
+import { clearGithubToken } from "../cards/GithubLogin/useGithubLoginCard";
+import { readGithubAuthRecord, useGithubLoginCard, type UseGithubLoginCard } from "../cards/GithubLogin/useGithubLoginCard";
 
 const { apiMocks } = vi.hoisted(() => ({
   apiMocks: {

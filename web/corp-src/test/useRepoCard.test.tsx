@@ -2,7 +2,7 @@ import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { useEffect } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { useRepoCard, type UseRepoCard } from "../hooks/useRepoCard";
+import { useRepoCard, type UseRepoCard } from "../cards/Repo/useRepoCard";
 import type { CardStatus } from "../types";
 
 const { mockHooks } = vi.hoisted(() => ({
@@ -12,11 +12,11 @@ const { mockHooks } = vi.hoisted(() => ({
 	},
 }));
 
-vi.mock("../hooks/useGithubRepo", () => ({
+vi.mock("../cards/Repo/useGithubRepo", () => ({
 	useGithubRepo: mockHooks.useGithubRepo,
 }));
 
-vi.mock("../hooks/useGithubEnvironment", () => ({
+vi.mock("../cards/Repo/useGithubEnvironment", () => ({
 	useGithubEnvironment: mockHooks.useGithubEnvironment,
 }));
 

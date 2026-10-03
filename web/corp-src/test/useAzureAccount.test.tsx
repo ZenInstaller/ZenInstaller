@@ -30,7 +30,7 @@ const { apiMocks } = vi.hoisted(() => ({
   },
 }));
 
-vi.mock("../cards/AzureLogin/msal", () => ({
+vi.mock("../auth/msal", () => ({
   getMsal: apiMocks.getMsal,
   getToken: apiMocks.getToken,
   MSA_TENANT: "msa-tenant",

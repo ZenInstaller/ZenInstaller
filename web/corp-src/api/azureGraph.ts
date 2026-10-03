@@ -1,4 +1,4 @@
-import { getToken } from "../cards/AzureLogin/msal";
+import { getToken } from "../auth/msal";
 import { azFetch as gFetch, ARM, GRAPH } from "./azureFetch";
 import {
   APP_SCOPES,

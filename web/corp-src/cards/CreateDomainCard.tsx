@@ -79,7 +79,7 @@ export default function CreateDomainCard({
 
   return (
     <Card
-      title="Corp domain"
+      title="Core domain"
       action={
         <Action
           resourceId={
@@ -101,7 +101,7 @@ export default function CreateDomainCard({
           envName={selectedEnv?.name ?? null}
           keys={DNS_KEYS}
           variables={variables}
-          title="Corp domain"
+          title="Core domain"
           githubUrl={githubUrl}
         />
 
@@ -173,7 +173,7 @@ export default function CreateDomainCard({
                 "&.Mui-disabled": { background: "#f1f5f9", color: "#cbd5e1" },
               }}
             >
-              {resourcesDone ? "Re-run setup" : "Set up corp domain"}
+              {resourcesDone ? "Re-run setup" : "Set up core DNS domain"}
             </Button>
           </Box>
         )}

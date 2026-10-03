@@ -25,7 +25,7 @@ export const AWS_SECRET_KEYS = ["AWS_CLIENT_SECRET"];
 
 const VARIABLE_DISPLAY_NAMES: Record<string, string> = {
   NAME: "COMPANY_SHORT_CODE",
-  DNS: "DNS_DOMAIN",
+  DNS: "DNS Domain",
 };
 
 // Returns the UI label for a variable key, falling back to the key itself

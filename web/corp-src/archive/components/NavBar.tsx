@@ -15,7 +15,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import MenuIcon from "@mui/icons-material/Menu";
 import { useState } from "react";
-import type { RepoOption, User } from "../types";
+import type { RepoOption, User } from "../../types";
 
 type SiblingPage = { label: string; href: string; carryQuery?: boolean };
 

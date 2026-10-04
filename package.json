@@ -1,7 +1,7 @@
 {
   "name": "zeninstaller-monorepo",
   "version": "1.0.0",
-  "description": "Zen Installer - Monorepo for web and backend",
+  "description": "Zen Installer Public - Monorepo",
   "private": true,
   "type": "module",
   "scripts": {
@@ -9,8 +9,8 @@
     "dev:all": "pnpm -r dev",
     "build": "pnpm --filter web build",
     "build:all": "pnpm -r build",
-    "lint": "pnpm --filter web lint",
-    "lint:all": "pnpm -r lint",
+    "lint": "pnpm exec eslint",
+    "lint:all": "pnpm exec eslint",
     "test": "pnpm --filter web test",
     "test:all": "pnpm -r test",
     "test:watch": "pnpm --filter web test:watch",
@@ -23,9 +23,9 @@
     "install-all": "pnpm install -r",
     "knip": "knip"
   },
-
   "devDependencies": {
     "@eslint/js": "^9.39.5",
+    "eslint": "^9.39.5",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-license-header": "^0.8.0",
     "eslint-plugin-prettier": "^5.5.6",

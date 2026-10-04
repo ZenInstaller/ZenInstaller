@@ -50,10 +50,10 @@ export async function openExistingAzureSubscription(page: Page, context: Browser
 	const repoCard = await expandRepoCard(page);
 	const repoName = safePathSegment(`${TEST_REPO_MAIN}-${viewportName}`,);
 	const repoExists = await checkRepoExists(page, repoCard, repoName);
-	if (repoExists) {
-		await chooseExistingRepo(page, repoCard, repoName);
+	if (!repoExists) {
+		await createNewRepo(page, repoCard, repoName);
 	}
-	expect(repoExists, `Expected the repository "${repoName}" to already exist`).toBe(true);
+	await chooseExistingRepo(page, repoCard, repoName);
 
 	await expect(repoCard.getByText("Loading environments...", { exact: true, }),).toBeHidden({ timeout: 120_000, });
 	const environment = repoCard.getByText(environmentName, { exact: true, });
@@ -169,9 +169,19 @@ for (const [viewportName, viewport] of Object.entries(viewports)) {
 				const prodEnvironment = card.getByText("PROD", { exact: true });
 				await prodEnvironment.click();
 				const createProdButton = card.getByRole("button", { name: "Create New Branch: PROD" });
+				const selectEnvironmentMessage = azureSubscriptionCard.getByText(
+					"Select a repository & environment to save the tenant and subscription to GitHub.",
+					{ exact: true },
+				);
+				await expect.poll(async () => await createProdButton.isVisible() || await selectEnvironmentMessage.count() === 0, {
+					timeout: 30_000,
+					message: "PROD branch state did not finish loading",
+				}).toBeTruthy();
 				if (await createProdButton.isVisible()) {
+					await expect(createProdButton).toBeEnabled();
 					await createProdButton.click();
 					await expect(createProdButton).toBeHidden({ timeout: 30_000 });
+					await expect(card.getByText("Failed to create branch", { exact: true })).toHaveCount(0);
 				}
 			});
 

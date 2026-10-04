@@ -9,7 +9,7 @@ import {
 	expandAzureSubscriptionCard,
 	expandRepoCard,
 } from "../util/cardHelper.mts";
-import { checkRepoExists, chooseExistingRepo } from "../util/testHelper.mts";
+import { checkRepoExists, chooseExistingRepo, createNewRepo } from "../util/testHelper.mts";
 import { restoreAzureSessionStorage, restoreGithubSessionStorage } from "../util/setupHelper.mts";
 import { coreInfraStepLabels, expectSuccessfulSteps } from "../util/mockTestHelper.mts";
 
@@ -28,18 +28,31 @@ async function prepareExistingAzureSubscription(page: import("@playwright/test")
 
 	const repoCard = await expandRepoCard(page);
 	const repoName = safePathSegment(`${TEST_REPO_MAIN}-${viewportName}`);
-	expect(await checkRepoExists(page, repoCard, repoName), `Expected the repository "${repoName}" to already exist`).toBe(true);
+	if (!(await checkRepoExists(page, repoCard, repoName))) {
+		await createNewRepo(page, repoCard, repoName);
+	}
 	await chooseExistingRepo(page, repoCard, repoName);
 
 	await expect(repoCard.getByText("Loading environments...", { exact: true })).toBeHidden({ timeout: 120_000 });
 	await repoCard.getByText("PROD", { exact: true }).click();
 	const createBranchButton = repoCard.getByRole("button", { name: "Create New Branch: PROD" });
+	const subscriptionCard = await expandAzureSubscriptionCard(page);
+	const selectEnvironmentMessage = subscriptionCard.getByText(
+		"Select a repository & environment to save the tenant and subscription to GitHub.",
+		{ exact: true },
+	);
+	await expect.poll(async () => await createBranchButton.isVisible() || await selectEnvironmentMessage.count() === 0, {
+		timeout: 30_000,
+		message: "PROD branch state did not finish loading",
+	}).toBeTruthy();
 	if (await createBranchButton.isVisible()) {
+		await expect(createBranchButton).toBeEnabled();
 		await createBranchButton.click();
 		await expect(createBranchButton).toBeHidden({ timeout: 30_000 });
+		await expect(repoCard.getByText("Failed to create branch", { exact: true })).toHaveCount(0);
 	}
 
-	const subscriptionCard = await expandAzureSubscriptionCard(page);
+	await expect(selectEnvironmentMessage).toHaveCount(0);
 	await expectVisibleWithin(subscriptionCard.getByText(/Pick the subscription to deploy into\./i), "Subscription card prompt", 50_000);
 	await expect(subscriptionCard.getByText("Loading subscriptions...", { exact: true })).toBeHidden({ timeout: 60_000 });
 	await expectVisibleWithin(subscriptionCard.getByRole("combobox"), "Azure subscription selector", 50_000);

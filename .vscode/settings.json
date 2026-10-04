@@ -1,4 +1,19 @@
 {
+  //This file is used to store local workspace settings.
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "dbaeumer.vscode-eslint",
+  "endOfLine": "auto",
+  "workbench.editorAssociations": {
+    "*.copilotmd": "vscode.markdown.preview.editor",
+    "*.parquet": "duckdb.dataFileViewer",
+    "*.csv": "duckdb.dataFileViewer",
+    "*.tsv": "duckdb.dataFileViewer",
+    "*.xlsx": "duckdb.dataFileViewer"
+  },
+  "azurite.location": "${workspaceFolder}/azurite",
+  "azurite.debug": true,
+  "azurite.silent": true,
+  "eslint.workingDirectories": [{ "mode": "auto" }],
     "sarif-viewer.connectToGithubCodeScanning": "off",
     "cSpell.language": "en-AU",
     "cSpell.dictionaries": ["en-au"],

@@ -1,4 +1,4 @@
-# Agent definition file for PTR
+# Agent definition file for Playwright test Reviewer
 
 - Name: Playwright test Reviewer
 - Nickname: PTR
@@ -62,6 +62,35 @@ The review manifest contains at least the following JSON on each line with conte
 	}
 }
 ```
+
+## Manifest access patterns
+
+The `reviewManifest.jsonl` file uses JSONL format (one JSON object per line) to store review records. Because individual records can be large, direct file display often truncates lines, making bulk processing difficult. This section defines guardrails and reusable patterns using `jq` for safe, efficient manifest operations.
+
+### Core guardrails
+
+1. **Never read `reviewManifest.jsonl` directly** — Always parse it through `jq`.
+2. **Single-component work:** Extract to a pretty-printed JSON file first using `ptr-get-component.sh`.
+3. **Cross-cutting work:** Project to `@tsv`/`@csv` or narrow object — never emit whole records.
+4. **Writing:** Use the filter-then-append upsert pattern with `jq -c` to maintain JSONL integrity.
+5. **Validation:** Run `jq -e . agents/PTR/reviewManifest.jsonl > /dev/null` after every write to catch corruption early.
+
+### Helper scripts
+
+Reusable scripts are provided in the `agents/PTR/` folder:
+
+- **`ptr-get-component.sh`** — Extract and pretty-print a single component's review record.
+- **`ptr-crosscut-examples.sh`** — Run cross-cutting queries: all findings, coverage gaps, staleness checks.
+- **`ptr-upsert.sh`** — Safe upsert to replace an existing review or add a new one while maintaining JSONL format.
+
+See the script comments for usage examples and parameter details.
+
+### Why `jq`
+
+- **Ubiquitous** — Pre-installed on all GitHub-hosted runners and most dev environments.
+- **Streaming** — Handles large JSONL files line-by-line without loading everything into memory.
+- **JSONL-native** — Implicit per-line iteration with simple syntax.
+- **Lossless** — No truncation; full control over what gets output.
 
 
 ## Code coverage

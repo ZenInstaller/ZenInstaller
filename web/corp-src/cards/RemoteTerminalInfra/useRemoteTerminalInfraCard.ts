@@ -539,7 +539,7 @@ export function useRemoteTerminalInfraCard({
     appInsightsName,
     hubName: TERMINAL_HUB,
     pipelineAppName,
-    cardRequirements: ["azure_login", "azure_subscription", "core_infra"],
+    cardRequirements: ["azure_login", "azure_subscription"],
     cardDependencyLabel: "Set up the private zeninstaller environment",
   };
 }

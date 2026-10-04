@@ -9,12 +9,8 @@ import { useRepoCard } from "./cards/Repo/useRepoCard";
 import { useGithubVariables } from "./hooks/useGithubVariables";
 import { useUrlRestore, useUrlSync } from "./hooks/useUrlStateManager";
 import { useAzureLoginCard } from "./cards/AzureLogin/useAzureLoginCard";
-import { useAzureAppRegistrationCard } from "./cards/AzureAppRegistration/useAzureAppRegistrationCard";
 import { useAzureSubscriptionCard } from "./cards/AzureSubscription/useAzureSubscriptionCard";
-import { useCreateDomainCard } from "./cards/CreateDomain/useCreateDomainCard";
-import { useCoreInfraCard } from "./cards/CoreInfra/useCoreInfraCard";
 import { useRemoteTerminalInfraCard } from "./cards/RemoteTerminalInfra/useRemoteTerminalInfraCard";
-import { useBackendDeployCard } from "./cards/BackendDeploy/useBackendDeployCard";
 import { useWebDeployCard } from "./cards/WebDeploy/useWebDeployCard";
 
 import Header from "./components/Header";
@@ -22,13 +18,9 @@ import RestoreToast from "./components/RestoreToast";
 import GithubLoginCard from "./cards/GithubLogin/GithubLoginCard";
 import RepoCard from "./cards/Repo/RepoCard";
 import AzureLoginCard from "./cards/AzureLogin/AzureLoginCard";
-import AzureAppRegistrationCard from "./cards/AzureAppRegistration/AzureAppRegistrationCard";
 import AzureSubscriptionCard from "./cards/AzureSubscription/AzureSubscriptionCard";
-import CoreInfraCard from "./cards/CoreInfra/CoreInfraCard";
 import RemoteTerminalInfraCard from "./cards/RemoteTerminalInfra/RemoteTerminalInfraCard";
-import BackendDeployCard from "./cards/BackendDeploy/BackendDeployCard";
 import WebDeployCard from "./cards/WebDeploy/WebDeployCard";
-import CreateDomainCard from "./cards/CreateDomain/CreateDomainCard";
 
 import { withAITracking } from "@microsoft/applicationinsights-react-js";
 import { reactPlugin } from "./monitor/applicationInsights";
@@ -81,28 +73,6 @@ function AppDashboard() {
     }),
   );
 
-  const azureAppSetup = addCard(
-    useAzureAppRegistrationCard({
-      azureAccount: azureLogin.account,
-      githubAccount: githubRepoEnv.repo.selectedAccount,
-      githubRepo: githubRepoEnv.repo.selectedRepo?.name ?? "",
-      githubRepoId: typeof githubRepoEnv.repo.selectedRepo?.id === "number" ? githubRepoEnv.repo.selectedRepo.id : null,
-      subscriptionId: azureSubscription.selectedSubscriptionId,
-      subscriptionLabel: azureSubscription.subscriptionLabel,
-      tenantId: azureLogin.confirmedTenantId || undefined,
-      variableValues: githubVariableValues,
-      manualTenantId: azureLogin.manualTenantId,
-    }),
-  );
-  const infra = addCard(
-    useCoreInfraCard({
-      azureAccount: azureLogin.account,
-      subscriptionId: azureSubscription.selectedSubscriptionId,
-      corpName,
-      spClientId: githubVariableValues.AZURE_CLIENT_ID ?? "",
-      tenantId: githubVariableValues.AZURE_TENANT_ID ?? "",
-    }),
-  );
   const remoteTerminalInfra = addCard(
     useRemoteTerminalInfraCard({
       azureAccount: azureLogin.account,
@@ -115,17 +85,6 @@ function AppDashboard() {
       githubRepoId: typeof githubRepoEnv.repo.selectedRepo?.id === "number" ? githubRepoEnv.repo.selectedRepo.id : null,
     }),
   );
-  const backendDeploy = addCard(
-    useBackendDeployCard({
-      azureAccount: azureLogin.account,
-      subscriptionId: azureSubscription.selectedSubscriptionId,
-      tenantId: githubVariableValues.AZURE_TENANT_ID ?? "",
-      corpName,
-      githubAccount: githubRepoEnv.repo.selectedAccount,
-      repoName: githubRepoEnv.repo.selectedRepo?.name ?? "",
-      selectedEnv: githubRepoEnv.env.selectedEnv,
-    }),
-  );
   const webDeploy = addCard(
     useWebDeployCard({
       variableValues: githubVariableValues,
@@ -136,16 +95,6 @@ function AppDashboard() {
       githubAccount: githubRepoEnv.repo.selectedAccount,
       repoName: githubRepoEnv.repo.selectedRepo?.name ?? "",
       selectedEnv: githubRepoEnv.env.selectedEnv,
-    }),
-  );
-  const createDomain = addCard(
-    useCreateDomainCard({
-      azureAccount: azureLogin.account,
-      subscriptionId: azureSubscription.selectedSubscriptionId,
-      corpName,
-      dnsName,
-      spClientId: githubVariableValues.AZURE_CLIENT_ID ?? "",
-      tenantId: githubVariableValues.AZURE_TENANT_ID ?? "",
     }),
   );
 
@@ -277,45 +226,6 @@ function AppDashboard() {
               onUserInteract={() => urlRestore.cancel(["tenant", "subscription"])}
             />
 
-            <AzureAppRegistrationCard
-              card={cardProps("azure_app_registration")}
-              appReg={azureAppSetup}
-              githubAccount={githubRepoEnv.repo.selectedAccount}
-              repoName={githubRepoEnv.repo.selectedRepo?.name ?? ""}
-              selectedEnv={githubRepoEnv.env.selectedEnv}
-              subscriptionId={azureSubscription.selectedSubscriptionId}
-              variables={githubVariables}
-              githubUrl={githubRepoEnv.githubEnvUrl}
-            />
-
-            <CoreInfraCard
-              card={cardProps("core_infra")}
-              infra={infra}
-              azureAccount={azureLogin.account}
-              corpName={corpName}
-              subscriptionId={azureSubscription.selectedSubscriptionId}
-              spClientId={azureAppSetup.spClientId}
-              githubAccount={githubRepoEnv.repo.selectedAccount}
-              repoName={githubRepoEnv.repo.selectedRepo?.name ?? ""}
-              selectedEnv={githubRepoEnv.env.selectedEnv}
-              variables={githubVariables}
-              githubUrl={githubRepoEnv.githubEnvUrl}
-            />
-
-            <CreateDomainCard
-              card={cardProps("create_domain")}
-              createDomain={createDomain}
-              azureAccount={azureLogin.account}
-              corpName={corpName}
-              dnsName={dnsName}
-              subscriptionId={azureSubscription.selectedSubscriptionId}
-              githubAccount={githubRepoEnv.repo.selectedAccount}
-              repoName={githubRepoEnv.repo.selectedRepo?.name ?? ""}
-              selectedEnv={githubRepoEnv.env.selectedEnv}
-              variables={githubVariables}
-              githubUrl={githubRepoEnv.githubEnvUrl}
-            />
-
             <RemoteTerminalInfraCard
               card={cardProps("remote_terminal_infra")}
               infra={remoteTerminalInfra}
@@ -326,16 +236,6 @@ function AppDashboard() {
               selectedEnv={githubRepoEnv.env.selectedEnv}
               variables={githubVariables}
               githubUrl={githubRepoEnv.githubEnvUrl}
-            />
-
-            <BackendDeployCard
-              card={cardProps("backend_deploy")}
-              backend={backendDeploy}
-              repoFullName={
-                githubRepoEnv.repo.selectedAccount && githubRepoEnv.repo.selectedRepo
-                  ? `${githubRepoEnv.repo.selectedAccount.login}/${githubRepoEnv.repo.selectedRepo.name}`
-                  : null
-              }
             />
 
             <WebDeployCard

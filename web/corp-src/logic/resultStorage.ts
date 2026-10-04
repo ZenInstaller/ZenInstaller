@@ -1,3 +1,8 @@
+/**
+ * @license SPDX-FileCopyrightText: © 2026 Zenme Pty Ltd <info@zenme.com.au>
+ * @license SPDX-License-Identifier: MIT
+ */
+
 /*
  * localStorage save/load pair for a card's persisted run result. Each card keeps its own
  * key and result type; only the read/write/parse-guard boilerplate is shared.

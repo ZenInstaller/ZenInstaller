@@ -1,3 +1,8 @@
+/**
+ * @license SPDX-FileCopyrightText: © 2026 Zenme Pty Ltd <info@zenme.com.au>
+ * @license SPDX-License-Identifier: MIT
+ */
+
 import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { useEffect } from "react";
@@ -38,12 +43,9 @@ const { apiMocks } = vi.hoisted(() => ({
     listLocations: vi.fn(),
     getExistingSP: vi.fn(),
     ensureScopeConsent: vi.fn(),
-    resourceGroupScope: vi.fn(
-      (subscriptionId: string, resourceGroupName: string) => `${subscriptionId}/${resourceGroupName}`,
-    ),
+    resourceGroupScope: vi.fn((subscriptionId: string, resourceGroupName: string) => `${subscriptionId}/${resourceGroupName}`),
     storageAccountScope: vi.fn(
-      (subscriptionId: string, resourceGroupName: string, storageAccountName: string) =>
-        `${subscriptionId}/${resourceGroupName}/${storageAccountName}`,
+      (subscriptionId: string, resourceGroupName: string, storageAccountName: string) => `${subscriptionId}/${resourceGroupName}/${storageAccountName}`
     ),
   },
 }));
@@ -91,7 +93,7 @@ vi.mock("../auth/msal", () => ({
 function HookHarness(
   props: {
     onUpdate: (value: UseCoreInfraCard) => void;
-  } & Parameters<typeof useCoreInfraCard>[0],
+  } & Parameters<typeof useCoreInfraCard>[0]
 ) {
   const value = useCoreInfraCard(props);
   useEffect(() => {
@@ -100,9 +102,7 @@ function HookHarness(
   return null;
 }
 
-function baseProps(
-  overrides: Partial<Parameters<typeof useCoreInfraCard>[0]> = {},
-): Parameters<typeof useCoreInfraCard>[0] {
+function baseProps(overrides: Partial<Parameters<typeof useCoreInfraCard>[0]> = {}): Parameters<typeof useCoreInfraCard>[0] {
   return {
     azureAccount: { tenantId: "tenant-1" } as AzureAccount,
     subscriptionId: "sub-1",
@@ -149,7 +149,7 @@ describe("useCoreInfraCard", () => {
           onUpdate={(value) => {
             latest = value;
           }}
-        />,
+        />
       );
     });
 
@@ -170,7 +170,7 @@ describe("useCoreInfraCard", () => {
           onUpdate={(value) => {
             latest = value;
           }}
-        />,
+        />
       );
     });
 
@@ -195,7 +195,7 @@ describe("useCoreInfraCard", () => {
           onUpdate={(value) => {
             latest = value;
           }}
-        />,
+        />
       );
     });
 
@@ -219,7 +219,7 @@ describe("useCoreInfraCard", () => {
           onUpdate={(value) => {
             latest = value;
           }}
-        />,
+        />
       );
     });
 
@@ -244,7 +244,7 @@ describe("useCoreInfraCard", () => {
           onUpdate={(value) => {
             latest = value;
           }}
-        />,
+        />
       );
     });
 
@@ -269,7 +269,7 @@ describe("useCoreInfraCard", () => {
           onUpdate={(value) => {
             latest = value;
           }}
-        />,
+        />
       );
     });
 
@@ -293,7 +293,7 @@ describe("useCoreInfraCard", () => {
           onUpdate={(value) => {
             latest = value;
           }}
-        />,
+        />
       );
     });
 
@@ -318,7 +318,7 @@ describe("useCoreInfraCard", () => {
           onUpdate={(value) => {
             latest = value;
           }}
-        />,
+        />
       );
     });
 
@@ -342,7 +342,7 @@ describe("useCoreInfraCard", () => {
           onUpdate={(value) => {
             latest = value;
           }}
-        />,
+        />
       );
     });
 
@@ -365,7 +365,7 @@ describe("useCoreInfraCard", () => {
           onUpdate={(value) => {
             latest = value;
           }}
-        />,
+        />
       );
     });
 
@@ -392,7 +392,7 @@ describe("useCoreInfraCard", () => {
           onUpdate={(value) => {
             latest = value;
           }}
-        />,
+        />
       );
     });
 
@@ -417,7 +417,7 @@ describe("useCoreInfraCard", () => {
           onUpdate={(value) => {
             latest = value;
           }}
-        />,
+        />
       );
     });
 
@@ -453,7 +453,7 @@ describe("useCoreInfraCard", () => {
           onUpdate={(value) => {
             latest = value;
           }}
-        />,
+        />
       );
     });
 
@@ -486,7 +486,7 @@ describe("useCoreInfraCard", () => {
           onUpdate={(value) => {
             latest = value;
           }}
-        />,
+        />
       );
     });
 
@@ -500,9 +500,7 @@ describe("useCoreInfraCard", () => {
     // ARM consent is already established by the Azure login card, so only Graph is asked for here.
     expect(apiMocks.ensureScopeConsent.mock.calls[0][1]).toEqual(["app.scope"]);
     // Nothing may run before consent is settled — a redirect here must cost no progress.
-    expect(apiMocks.ensureScopeConsent.mock.invocationCallOrder[0]).toBeLessThan(
-      apiMocks.ensureResourceGroup.mock.invocationCallOrder[0],
-    );
+    expect(apiMocks.ensureScopeConsent.mock.invocationCallOrder[0]).toBeLessThan(apiMocks.ensureResourceGroup.mock.invocationCallOrder[0]);
     expect(latest?.steps.find((s) => s.id === "consent")?.status).toBe("skipped");
 
     await act(async () => {
@@ -522,7 +520,7 @@ describe("useCoreInfraCard", () => {
           onUpdate={(value) => {
             latest = value;
           }}
-        />,
+        />
       );
     });
 
@@ -532,9 +530,7 @@ describe("useCoreInfraCard", () => {
 
     await waitFor(() => {
       expect(latest?.steps.find((s) => s.id === "rg-rbac")?.status).toBe("error");
-      expect(latest?.steps.find((s) => s.id === "rg-rbac")?.detail).toContain(
-        "Service principal for app client-z not found",
-      );
+      expect(latest?.steps.find((s) => s.id === "rg-rbac")?.detail).toContain("Service principal for app client-z not found");
     });
 
     await act(async () => {
@@ -554,7 +550,7 @@ describe("useCoreInfraCard", () => {
           onUpdate={(value) => {
             latest = value;
           }}
-        />,
+        />
       );
     });
 
@@ -584,7 +580,7 @@ describe("useCoreInfraCard", () => {
           onUpdate={(value) => {
             latest = value;
           }}
-        />,
+        />
       );
     });
 
@@ -621,7 +617,7 @@ describe("useCoreInfraCard", () => {
           onUpdate={(value) => {
             latest = value;
           }}
-        />,
+        />
       );
     });
 
@@ -638,7 +634,7 @@ describe("useCoreInfraCard", () => {
           onUpdate={(value) => {
             latest = value;
           }}
-        />,
+        />
       );
     });
 
@@ -655,7 +651,7 @@ describe("useCoreInfraCard", () => {
           onUpdate={(value) => {
             latest = value;
           }}
-        />,
+        />
       );
     });
 

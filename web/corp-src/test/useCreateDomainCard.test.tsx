@@ -1,3 +1,8 @@
+/**
+ * @license SPDX-FileCopyrightText: © 2026 Zenme Pty Ltd <info@zenme.com.au>
+ * @license SPDX-License-Identifier: MIT
+ */
+
 import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { useEffect } from "react";
@@ -92,7 +97,7 @@ vi.mock("../config/azureConfig", () => ({
 function HookHarness(
   props: {
     onUpdate: (value: UseCreateDomainCard) => void;
-  } & Parameters<typeof useCreateDomainCard>[0],
+  } & Parameters<typeof useCreateDomainCard>[0]
 ) {
   const value = useCreateDomainCard(props);
   useEffect(() => {
@@ -101,9 +106,7 @@ function HookHarness(
   return null;
 }
 
-function baseProps(
-  overrides: Partial<Parameters<typeof useCreateDomainCard>[0]> = {},
-): Parameters<typeof useCreateDomainCard>[0] {
+function baseProps(overrides: Partial<Parameters<typeof useCreateDomainCard>[0]> = {}): Parameters<typeof useCreateDomainCard>[0] {
   return {
     azureAccount: { tenantId: "tenant-1" } as AzureAccount,
     subscriptionId: "sub-1",
@@ -149,7 +152,7 @@ describe("useCreateDomainCard", () => {
         nameServers: ["old-ns"],
         domainVerified: true,
         isPrimary: true,
-      }),
+      })
     );
 
     let latest: UseCreateDomainCard | null = null;
@@ -162,7 +165,7 @@ describe("useCreateDomainCard", () => {
           onUpdate={(value) => {
             latest = value;
           }}
-        />,
+        />
       );
     });
 
@@ -176,7 +179,7 @@ describe("useCreateDomainCard", () => {
           onUpdate={(value) => {
             latest = value;
           }}
-        />,
+        />
       );
     });
 
@@ -207,7 +210,7 @@ describe("useCreateDomainCard", () => {
           onUpdate={(value) => {
             latest = value;
           }}
-        />,
+        />
       );
     });
 
@@ -225,7 +228,7 @@ describe("useCreateDomainCard", () => {
           onUpdate={(value) => {
             latest = value;
           }}
-        />,
+        />
       );
     });
 
@@ -250,7 +253,7 @@ describe("useCreateDomainCard", () => {
           onUpdate={(value) => {
             latest = value;
           }}
-        />,
+        />
       );
     });
 
@@ -278,7 +281,7 @@ describe("useCreateDomainCard", () => {
           onUpdate={(value) => {
             latest = value;
           }}
-        />,
+        />
       );
     });
 
@@ -316,7 +319,7 @@ describe("useCreateDomainCard", () => {
           onUpdate={(value) => {
             latest = value;
           }}
-        />,
+        />
       );
     });
 
@@ -349,7 +352,7 @@ describe("useCreateDomainCard", () => {
           onUpdate={(value) => {
             latest = value;
           }}
-        />,
+        />
       );
     });
 
@@ -379,7 +382,7 @@ describe("useCreateDomainCard", () => {
           onUpdate={(value) => {
             latest = value;
           }}
-        />,
+        />
       );
     });
 
@@ -409,7 +412,7 @@ describe("useCreateDomainCard", () => {
           onUpdate={(value) => {
             latest = value;
           }}
-        />,
+        />
       );
     });
 
@@ -423,9 +426,7 @@ describe("useCreateDomainCard", () => {
     // ARM consent is already established by the Azure login card, so only Graph is asked for here.
     expect(apiMocks.ensureScopeConsent.mock.calls[0][1]).toEqual(["domain.scope", "grant.scope", "app.scope"]);
     // Nothing may run before consent is settled — a redirect here must cost no progress.
-    expect(apiMocks.ensureScopeConsent.mock.invocationCallOrder[0]).toBeLessThan(
-      apiMocks.getProviderRegistrationState.mock.invocationCallOrder[0],
-    );
+    expect(apiMocks.ensureScopeConsent.mock.invocationCallOrder[0]).toBeLessThan(apiMocks.getProviderRegistrationState.mock.invocationCallOrder[0]);
     expect(latest?.steps.find((s) => s.id === "consent")?.status).toBe("skipped");
 
     await act(async () => {
@@ -445,7 +446,7 @@ describe("useCreateDomainCard", () => {
           onUpdate={(value) => {
             latest = value;
           }}
-        />,
+        />
       );
     });
 
@@ -455,9 +456,7 @@ describe("useCreateDomainCard", () => {
 
     await waitFor(() => {
       expect(latest?.steps.find((s) => s.id === "txt")?.status).toBe("error");
-      expect(latest?.steps.find((s) => s.id === "txt")?.detail).toBe(
-        "No TXT verification record returned by Microsoft Graph",
-      );
+      expect(latest?.steps.find((s) => s.id === "txt")?.detail).toBe("No TXT verification record returned by Microsoft Graph");
     });
 
     await act(async () => {
@@ -482,7 +481,7 @@ describe("useCreateDomainCard", () => {
           onUpdate={(value) => {
             latest = value;
           }}
-        />,
+        />
       );
     });
 
@@ -516,7 +515,7 @@ describe("useCreateDomainCard", () => {
           onUpdate={(value) => {
             latest = value;
           }}
-        />,
+        />
       );
     });
 
@@ -525,9 +524,7 @@ describe("useCreateDomainCard", () => {
     });
 
     await waitFor(() => {
-      expect(latest?.steps.find((s) => s.id === "grant")?.detail).toBe(
-        "Additional consent required — redirecting to Microsoft...",
-      );
+      expect(latest?.steps.find((s) => s.id === "grant")?.detail).toBe("Additional consent required — redirecting to Microsoft...");
       expect(acquireTokenRedirect).toHaveBeenCalledWith({
         scopes: ["grant.scope"],
         account: expect.anything(),
@@ -551,7 +548,7 @@ describe("useCreateDomainCard", () => {
           onUpdate={(value) => {
             latest = value;
           }}
-        />,
+        />
       );
     });
 
@@ -579,7 +576,7 @@ describe("useCreateDomainCard", () => {
           onUpdate={(value) => {
             latest = value;
           }}
-        />,
+        />
       );
     });
 
@@ -588,9 +585,7 @@ describe("useCreateDomainCard", () => {
     });
 
     await waitFor(() => {
-      expect(latest?.verifyError).toBe(
-        "Verification did not complete — DNS may still be propagating. Try again shortly.",
-      );
+      expect(latest?.verifyError).toBe("Verification did not complete — DNS may still be propagating. Try again shortly.");
       expect(latest?.isPrimary).toBe(false);
     });
 
@@ -610,7 +605,7 @@ describe("useCreateDomainCard", () => {
           onUpdate={(value) => {
             latest = value;
           }}
-        />,
+        />
       );
     });
 
@@ -649,7 +644,7 @@ describe("useCreateDomainCard", () => {
           onUpdate={(value) => {
             latest = value;
           }}
-        />,
+        />
       );
     });
 
@@ -682,7 +677,7 @@ describe("useCreateDomainCard", () => {
           onUpdate={(value) => {
             latest = value;
           }}
-        />,
+        />
       );
     });
 
@@ -702,7 +697,7 @@ describe("useCreateDomainCard", () => {
 
     await waitFor(() => {
       expect(latest?.verifyError).toBe(
-        "Verification failed — make sure your registrar's NS records point to the Azure DNS name servers, then retry after DNS propagates.",
+        "Verification failed — make sure your registrar's NS records point to the Azure DNS name servers, then retry after DNS propagates."
       );
       expect(consoleWarn).toHaveBeenCalled();
     });
@@ -724,7 +719,7 @@ describe("useCreateDomainCard", () => {
           onUpdate={(value) => {
             latest = value;
           }}
-        />,
+        />
       );
     });
 
@@ -763,7 +758,7 @@ describe("useCreateDomainCard", () => {
           onUpdate={(value) => {
             latest = value;
           }}
-        />,
+        />
       );
     });
 
@@ -790,7 +785,7 @@ describe("useCreateDomainCard", () => {
           onUpdate={(value) => {
             latest = value;
           }}
-        />,
+        />
       );
     });
 

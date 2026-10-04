@@ -1,12 +1,11 @@
+/**
+ * @license SPDX-FileCopyrightText: © 2026 Zenme Pty Ltd <info@zenme.com.au>
+ * @license SPDX-License-Identifier: MIT
+ */
+
 import { useCallback, useEffect, useState } from "react";
 import { ensureScopeConsent, getMsal } from "../../auth/msal";
-import {
-  APP_SCOPES,
-  DNS_PROVIDERS,
-  DOMAIN_SCOPES,
-  GRANT_CONSENT_SCOPES,
-  GRAPH_PERMISSIONS,
-} from "../../config/azureConfig";
+import { APP_SCOPES, DNS_PROVIDERS, DOMAIN_SCOPES, GRANT_CONSENT_SCOPES, GRAPH_PERMISSIONS } from "../../config/azureConfig";
 import { ensureDnsZone, ensureDnsTxtRecord } from "../../api/azureArm";
 import { useProviderRegistration } from "../../hooks/util/useProviderRegistration";
 import {
@@ -72,14 +71,7 @@ const { save: saveResult, load: loadResult } = createResultStorage<CreateDomainR
  * storage / observability live in useCoreInfraCard — this card locks behind it, so the RG the
  * DNS zone needs already exists when this runs.
  */
-export function useCreateDomainCard({
-  azureAccount,
-  subscriptionId,
-  corpName,
-  dnsName,
-  spClientId,
-  tenantId,
-}: UseCreateDomainCardParams): UseCreateDomainCard {
+export function useCreateDomainCard({ azureAccount, subscriptionId, corpName, dnsName, spClientId, tenantId }: UseCreateDomainCardParams): UseCreateDomainCard {
   const { steps, setSteps, running, setRunning, updateStep, resetSteps } = useStepRunner();
   const { ensureRegistered } = useProviderRegistration({ azureAccount, subscriptionId, tenantId });
   const [result, setResult] = useState<CreateDomainResult | null>(loadResult);
@@ -90,8 +82,7 @@ export function useCreateDomainCard({
   const [verifyError, setVerifyError] = useState<string | null>(null);
 
   // A persisted result only counts if it matches the current NAME/DNS/subscription.
-  const resultMatches =
-    !!result && result.corpName === corpName && result.dnsName === dnsName && result.subscriptionId === subscriptionId;
+  const resultMatches = !!result && result.corpName === corpName && result.dnsName === dnsName && result.subscriptionId === subscriptionId;
   const resourcesDone = resultMatches;
 
   // Drop stale persisted state when the target changes.
@@ -227,7 +218,7 @@ export function useCreateDomainCard({
       updateStep(
         "providers",
         providers.registered.length === 0 ? "skipped" : "done",
-        providers.registered.length === 0 ? "Already registered" : providers.registered.join(", "),
+        providers.registered.length === 0 ? "Already registered" : providers.registered.join(", ")
       );
 
       currentStep = "dns";
@@ -240,11 +231,7 @@ export function useCreateDomainCard({
       updateStep("domain", "running");
       let domain = await getEntraDomain(azureAccount, dnsName, tenantId);
       if (domain) {
-        updateStep(
-          "domain",
-          "skipped",
-          domain.isVerified ? "Already added and verified" : "Already added — not yet verified",
-        );
+        updateStep("domain", "skipped", domain.isVerified ? "Already added and verified" : "Already added — not yet verified");
       } else {
         domain = await createEntraDomain(azureAccount, dnsName, tenantId);
         updateStep("domain", "done");
@@ -258,14 +245,7 @@ export function useCreateDomainCard({
         updateStep("txt", "running");
         const txtToken = await getDomainVerificationTxt(azureAccount, dnsName, tenantId);
         if (!txtToken) throw new Error("No TXT verification record returned by Microsoft Graph");
-        const txt = await ensureDnsTxtRecord(
-          azureAccount,
-          subscriptionId,
-          resourceGroupName,
-          dnsName,
-          txtToken,
-          tenantId,
-        );
+        const txt = await ensureDnsTxtRecord(azureAccount, subscriptionId, resourceGroupName, dnsName, txtToken, tenantId);
         updateStep("txt", txt === "exists" ? "skipped" : "done", txtToken);
       }
 
@@ -290,8 +270,7 @@ export function useCreateDomainCard({
       } else {
         updateStep("grant", "running");
         const sp = await getExistingSP(azureAccount, spClientId, tenantId);
-        if (!sp)
-          throw new Error(`Service principal for app ${spClientId} not found — run the app registration card first`);
+        if (!sp) throw new Error(`Service principal for app ${spClientId} not found — run the app registration card first`);
         await grantAdminConsent(azureAccount, sp.id, [GRAPH_PERMISSIONS.DomainReadWriteAll], tenantId);
         updateStep("grant", "done");
       }
@@ -340,9 +319,7 @@ export function useCreateDomainCard({
     setVerifying(true);
     setVerifyError(null);
     try {
-      const domain = domainVerified
-        ? await getEntraDomain(azureAccount, dnsName, tenantId)
-        : await verifyEntraDomain(azureAccount, dnsName, tenantId);
+      const domain = domainVerified ? await getEntraDomain(azureAccount, dnsName, tenantId) : await verifyEntraDomain(azureAccount, dnsName, tenantId);
       if (!domain) throw new Error(`Domain ${dnsName} not found in tenant`);
       setDomainVerified(domain.isVerified);
 
@@ -354,9 +331,7 @@ export function useCreateDomainCard({
           await setPrimaryEntraDomain(azureAccount, dnsName, tenantId);
           primary = true;
         } catch (err) {
-          setVerifyError(
-            `Domain verified, but setting it as primary failed: ${err instanceof Error ? err.message : "unknown error"}`,
-          );
+          setVerifyError(`Domain verified, but setting it as primary failed: ${err instanceof Error ? err.message : "unknown error"}`);
         }
       }
       setIsPrimary(primary);
@@ -371,7 +346,7 @@ export function useCreateDomainCard({
       setVerifyError(
         isConsentError(msg)
           ? "Additional consent required — run the setup once to grant it."
-          : "Verification failed — make sure your registrar's NS records point to the Azure DNS name servers, then retry after DNS propagates.",
+          : "Verification failed — make sure your registrar's NS records point to the Azure DNS name servers, then retry after DNS propagates."
       );
       if (!isConsentError(msg)) console.warn("[create-domain] verify failed:", msg);
     } finally {

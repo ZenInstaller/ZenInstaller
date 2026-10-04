@@ -1,3 +1,8 @@
+/**
+ * @license SPDX-FileCopyrightText: © 2026 Zenme Pty Ltd <info@zenme.com.au>
+ * @license SPDX-License-Identifier: MIT
+ */
+
 import { useEffect } from "react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { act } from "react";
@@ -6,10 +11,7 @@ import { useGithubLoadable } from "../../hooks/util/useGithubLoadable";
 import type { UseGithubLoadable, UseGithubLoadableParams } from "../../hooks/util/useGithubLoadable";
 import type { Account } from "../../types";
 
-function HookHarness<T>(props: {
-  params: UseGithubLoadableParams<T>;
-  onUpdate: (value: UseGithubLoadable<T>) => void;
-}) {
+function HookHarness<T>(props: { params: UseGithubLoadableParams<T>; onUpdate: (value: UseGithubLoadable<T>) => void }) {
   const value = useGithubLoadable(props.params);
 
   useEffect(() => {
@@ -56,7 +58,7 @@ function renderHook<T>(params: UseGithubLoadableParams<T>) {
           onUpdate={(v) => {
             latest = v;
           }}
-        />,
+        />
       );
     });
   }
@@ -166,7 +168,12 @@ describe("useGithubLoadable", () => {
     // `cancelled` in the effect only skips the subsequent setLoading/setError — setValue inside
     // load() isn't guarded, so whichever fetch resolves last still wins the `value` state.
     let resolveFirst!: (value: Record<string, string>) => void;
-    fetcher.mockImplementationOnce(() => new Promise((resolve) => { resolveFirst = resolve; }));
+    fetcher.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          resolveFirst = resolve;
+        })
+    );
     const harness = renderHook<Record<string, string>>({
       account,
       repoName: "repo-a",

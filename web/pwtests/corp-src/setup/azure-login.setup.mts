@@ -1,3 +1,8 @@
+/**
+ * @license SPDX-FileCopyrightText: © 2026 Zenme Pty Ltd <info@zenme.com.au>
+ * @license SPDX-License-Identifier: MIT
+ */
+
 import { expect, Locator, Page, test as setup } from "@playwright/test";
 import fs from "fs";
 import { CORP_URL } from "../../testInit";
@@ -17,7 +22,7 @@ async function selectAzureTenant(page: Page, azureCard: Locator): Promise<string
   await expect(azureCard.getByText(/Signed in as/i)).toBeVisible({ timeout: 120_000 });
   await expect(tenantSelect.or(tenantInput)).toBeVisible({ timeout: 120_000 });
   console.log("Select the Azure tenant to use in the test browser. If prompted, enter a tenant ID and confirm it.");
-  const selectedTenantControl = await tenantSelect.isVisible() ? tenantSelect.locator("input") : tenantInput;
+  const selectedTenantControl = (await tenantSelect.isVisible()) ? tenantSelect.locator("input") : tenantInput;
   await expect(selectedTenantControl).toHaveValue(/\S/, { timeout: 180_000 });
   const selectedTenant = (await selectedTenantControl.inputValue()).trim();
   return selectedTenant;
@@ -55,11 +60,9 @@ setup("Manual setup for corp Azure auth tests", async ({ page, context }) => {
     console.log(`Current URL: ${page.url()}`);
 
     if (page.url().startsWith(CORP_URL)) {
-      await page
-        .goto(CORP_URL, { waitUntil: "domcontentloaded", timeout: 30_000 })
-        .catch((err) => {
-          console.log(`Fallback navigation was skipped: ${err.message}`);
-        });
+      await page.goto(CORP_URL, { waitUntil: "domcontentloaded", timeout: 30_000 }).catch((err) => {
+        console.log(`Fallback navigation was skipped: ${err.message}`);
+      });
     }
   }
 
@@ -73,9 +76,7 @@ setup("Manual setup for corp Azure auth tests", async ({ page, context }) => {
   const restoredTenantInput = restoredAzureCard.getByPlaceholder("Tenant ID");
   await expect(restoredTenantSelect.or(restoredTenantInput)).toBeVisible({ timeout: 120_000 });
 
-  const restoredTenantValue = await restoredTenantSelect.isVisible()
-    ? restoredTenantSelect.locator("input")
-    : restoredTenantInput;
+  const restoredTenantValue = (await restoredTenantSelect.isVisible()) ? restoredTenantSelect.locator("input") : restoredTenantInput;
   await expect(restoredTenantValue).toHaveValue(selectedTenant);
 
   await page.evaluate((tenantId) => sessionStorage.setItem("zeninstaller_arm_tenant", tenantId), selectedTenant);

@@ -1,15 +1,10 @@
+/**
+ * @license SPDX-FileCopyrightText: © 2026 Zenme Pty Ltd <info@zenme.com.au>
+ * @license SPDX-License-Identifier: MIT
+ */
+
 import { useState } from "react";
-import {
-  Box,
-  Button,
-  CircularProgress,
-  IconButton,
-  InputAdornment,
-  TextField,
-  ToggleButton,
-  ToggleButtonGroup,
-  Typography,
-} from "@mui/material";
+import { Box, Button, CircularProgress, IconButton, InputAdornment, TextField, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material";
 import ClearIcon from "@mui/icons-material/Clear";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
@@ -30,8 +25,7 @@ type Props = {
 function Intro() {
   return (
     <Typography sx={{ fontSize: "0.78rem", color: "#475569", lineHeight: 1.7 }}>
-      Connect your GitHub account so ZenInstaller can create the repository, environment, and secrets needed to deploy
-      Zenblox.
+      Connect your GitHub account so ZenInstaller can create the repository, environment, and secrets needed to deploy Zenblox.
     </Typography>
   );
 }
@@ -103,8 +97,7 @@ export default function GithubLoginCard({ card, auth }: Props) {
               <Box component="span" sx={{ ...monoSx, fontWeight: 600 }}>
                 Direct (PAT)
               </Box>{" "}
-              skips the backend entirely — paste your own Personal Access Token and the browser talks to GitHub
-              directly.
+              skips the backend entirely — paste your own Personal Access Token and the browser talks to GitHub directly.
             </Typography>
             <ToggleButtonGroup
               value={mode}
@@ -124,9 +117,7 @@ export default function GithubLoginCard({ card, auth }: Props) {
         {authLoading ? (
           <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, py: 1 }}>
             <CircularProgress size={16} sx={{ color: "#cbd5e1" }} />
-            <Typography sx={{ fontSize: "0.78rem", color: "#94a3b8", ...monoSx }}>
-              {signingIn ? "Signing you in..." : "Verifying access..."}
-            </Typography>
+            <Typography sx={{ fontSize: "0.78rem", color: "#94a3b8", ...monoSx }}>{signingIn ? "Signing you in..." : "Verifying access..."}</Typography>
           </Box>
         ) : !user ? (
           mode === "direct" ? (
@@ -177,11 +168,7 @@ export default function GithubLoginCard({ card, auth }: Props) {
                         tabIndex={-1}
                         aria-label={showPat ? "Hide token" : "Show token"}
                       >
-                        {showPat ? (
-                          <VisibilityOffIcon sx={{ fontSize: 14, color: "#94a3b8" }} />
-                        ) : (
-                          <VisibilityIcon sx={{ fontSize: 14, color: "#94a3b8" }} />
-                        )}
+                        {showPat ? <VisibilityOffIcon sx={{ fontSize: 14, color: "#94a3b8" }} /> : <VisibilityIcon sx={{ fontSize: 14, color: "#94a3b8" }} />}
                       </IconButton>
                     </InputAdornment>
                   ),

@@ -1,3 +1,8 @@
+/**
+ * @license SPDX-FileCopyrightText: © 2026 Zenme Pty Ltd <info@zenme.com.au>
+ * @license SPDX-License-Identifier: MIT
+ */
+
 import { useEffect, useState } from "react";
 import { getExistingSP, hasRbacRole } from "../../api/azureGraph";
 import type { AzureSpTarget } from "../../types";
@@ -9,12 +14,7 @@ const IDLE: RbacCheckResult = { status: "unknown", missingRoles: [] };
 
 export type UseRbacCheckParams = AzureSpTarget;
 
-export function useRbacCheck({
-  azureAccount,
-  spClientId,
-  subscriptionId,
-  tenantId,
-}: UseRbacCheckParams): RbacCheckResult {
+export function useRbacCheck({ azureAccount, spClientId, subscriptionId, tenantId }: UseRbacCheckParams): RbacCheckResult {
   const [result, setResult] = useState<RbacCheckResult>(IDLE);
 
   useEffect(() => {

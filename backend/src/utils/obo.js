@@ -1,10 +1,10 @@
+/**
+ * @license SPDX-FileCopyrightText: © 2026 Zenme Pty Ltd <info@zenme.com.au>
+ * @license SPDX-License-Identifier: MIT
+ */
+
 import { ConfidentialClientApplication } from "@azure/msal-node";
-import {
-  AuthenticationError,
-  CredentialUnavailableError,
-  DefaultAzureCredential,
-  ManagedIdentityCredential,
-} from "@azure/identity";
+import { AuthenticationError, CredentialUnavailableError, DefaultAzureCredential, ManagedIdentityCredential } from "@azure/identity";
 import { Forbidden, InternalError, Unauthorized, logError } from "../error/index.js";
 
 /*
@@ -64,8 +64,7 @@ export async function getOboToken(userToken, scopes) {
     logError(err);
     if (isOurFault(err)) throw InternalError({ cause: err, meta: { reason: "function_identity_failed" } });
     // Not a bad token — the user or an admin has not yet consented to the downstream permission.
-    if (err?.subError === "consent_required")
-      throw Forbidden({ cause: err, meta: { reason: "consent_required", scopes } });
+    if (err?.subError === "consent_required") throw Forbidden({ cause: err, meta: { reason: "consent_required", scopes } });
     throw Unauthorized({ cause: err, meta: { reason: "obo_exchange_failed", scopes } });
   }
 

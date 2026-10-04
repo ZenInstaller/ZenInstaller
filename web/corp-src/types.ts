@@ -1,3 +1,8 @@
+/**
+ * @license SPDX-FileCopyrightText: © 2026 Zenme Pty Ltd <info@zenme.com.au>
+ * @license SPDX-License-Identifier: MIT
+ */
+
 import type { AccountInfo } from "@azure/msal-browser";
 
 export type AzureAccount = AccountInfo;

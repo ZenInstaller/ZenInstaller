@@ -1,3 +1,8 @@
+/**
+ * @license SPDX-FileCopyrightText: © 2026 Zenme Pty Ltd <info@zenme.com.au>
+ * @license SPDX-License-Identifier: MIT
+ */
+
 import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { useEffect } from "react";
@@ -15,9 +20,7 @@ vi.mock("../api", () => ({
   fetchVariables: apiMocks.fetchVariables,
 }));
 
-function HookHarness(
-  props: { onUpdate: (value: UseGithubVariables) => void } & Parameters<typeof useGithubVariables>[0],
-) {
+function HookHarness(props: { onUpdate: (value: UseGithubVariables) => void } & Parameters<typeof useGithubVariables>[0]) {
   const value = useGithubVariables(props);
   useEffect(() => {
     props.onUpdate(value);
@@ -25,9 +28,7 @@ function HookHarness(
   return null;
 }
 
-function baseProps(
-  overrides: Partial<Parameters<typeof useGithubVariables>[0]> = {},
-): Parameters<typeof useGithubVariables>[0] {
+function baseProps(overrides: Partial<Parameters<typeof useGithubVariables>[0]> = {}): Parameters<typeof useGithubVariables>[0] {
   return {
     account: { login: "org-one", id: 1, type: "Organization" } satisfies Account,
     repoName: "repo-one",
@@ -68,16 +69,12 @@ describe("useGithubVariables", () => {
           onUpdate={(value) => {
             latest = value;
           }}
-        />,
+        />
       );
     });
 
     await waitFor(() => {
-      expect(apiMocks.fetchVariables).toHaveBeenCalledWith(
-        { login: "org-one", id: 1, type: "Organization" },
-        "repo-one",
-        "prod",
-      );
+      expect(apiMocks.fetchVariables).toHaveBeenCalledWith({ login: "org-one", id: 1, type: "Organization" }, "repo-one", "prod");
       expect(latest?.values).toEqual({ NAME: "Zenblox" });
       expect(latest?.loading).toBe(false);
       expect(latest?.error).toBe(false);
@@ -101,7 +98,7 @@ describe("useGithubVariables", () => {
           onUpdate={(value) => {
             latest = value;
           }}
-        />,
+        />
       );
     });
 
@@ -121,9 +118,7 @@ describe("useGithubVariables", () => {
 
   it("onRefresh sets error when variable loading throws", async () => {
     const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
-    apiMocks.fetchVariables
-      .mockResolvedValueOnce({ NAME: "Zenblox" })
-      .mockRejectedValueOnce(new Error("var load failed"));
+    apiMocks.fetchVariables.mockResolvedValueOnce({ NAME: "Zenblox" }).mockRejectedValueOnce(new Error("var load failed"));
 
     let latest: UseGithubVariables | null = null;
     const root = createRoot(document.createElement("div"));
@@ -135,7 +130,7 @@ describe("useGithubVariables", () => {
           onUpdate={(value) => {
             latest = value;
           }}
-        />,
+        />
       );
     });
 
@@ -170,7 +165,7 @@ describe("useGithubVariables", () => {
           onUpdate={(value) => {
             latest = value;
           }}
-        />,
+        />
       );
     });
 

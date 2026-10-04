@@ -1,3 +1,8 @@
+/**
+ * @license SPDX-FileCopyrightText: © 2026 Zenme Pty Ltd <info@zenme.com.au>
+ * @license SPDX-License-Identifier: MIT
+ */
+
 // ── GitHub OAuth app ──────────────────────────────────────────────────────────
 
 export const GITHUB_PROVIDER = "github";

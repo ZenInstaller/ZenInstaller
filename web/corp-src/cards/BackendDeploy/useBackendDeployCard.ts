@@ -1,11 +1,11 @@
+/**
+ * @license SPDX-FileCopyrightText: © 2026 Zenme Pty Ltd <info@zenme.com.au>
+ * @license SPDX-License-Identifier: MIT
+ */
+
 import { useCallback, useEffect, useState } from "react";
 import { fetchArtifactZip, fetchStageReport, triggerWorkflow } from "../../api";
-import {
-  deployZipToFunctionApp,
-  fetchDeployedBackend,
-  updateFunctionAppSettings,
-  type DeployedBackend,
-} from "../../api/azureArm";
+import { deployZipToFunctionApp, fetchDeployedBackend, updateFunctionAppSettings, type DeployedBackend } from "../../api/azureArm";
 import { getRootResourceGroupName, getTerminalFunctionAppName } from "../../logic/naming";
 import { BACKEND_VERSION_KEYS } from "../../config/azureConfig";
 import { useStepRunner } from "../../hooks/util/useStepRunner";
@@ -104,9 +104,7 @@ export function useBackendDeployCard({
     if (!azureAccount || !appName || !subscriptionId) return;
     setLoadingDeployed(true);
     try {
-      setDeployed(
-        await fetchDeployedBackend(azureAccount, subscriptionId, resourceGroup, appName, tenantId || undefined),
-      );
+      setDeployed(await fetchDeployedBackend(azureAccount, subscriptionId, resourceGroup, appName, tenantId || undefined));
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not read the deployed version");
     } finally {
@@ -165,8 +163,8 @@ export function useBackendDeployCard({
           "running",
           total ? `${mb(received)} / ${mb(total)} MB` : `${mb(received)} MB`,
           // Undefined without a Content-Length, which leaves the row with text but no bar.
-          total ? received / total : undefined,
-        ),
+          total ? received / total : undefined
+        )
       );
       updateStep("download", "done", `${mb(zip.size)} MB`);
 
@@ -190,7 +188,7 @@ export function useBackendDeployCard({
           [BACKEND_VERSION_KEYS.sha]: latest.sha,
           [BACKEND_VERSION_KEYS.builtAt]: String(latest.builtAt),
         },
-        tenantId || undefined,
+        tenantId || undefined
       );
       await readDeployed();
     } catch (e) {
@@ -200,18 +198,7 @@ export function useBackendDeployCard({
     } finally {
       setRunning(false);
     }
-  }, [
-    azureAccount,
-    githubAccount,
-    repoName,
-    latest,
-    appName,
-    tenantId,
-    readDeployed,
-    setRunning,
-    setSteps,
-    updateStep,
-  ]);
+  }, [azureAccount, githubAccount, repoName, latest, appName, tenantId, readDeployed, setRunning, setSteps, updateStep]);
 
   const reset = useCallback(() => {
     resetSteps();
@@ -224,13 +211,7 @@ export function useBackendDeployCard({
   const updateAvailable = !!latest && !done;
 
   const status: CardStatus = !ready ? "idle" : done ? "complete" : "warning";
-  const summary = !ready
-    ? "Unavailable"
-    : done
-      ? `Deployed ${latest?.sha.slice(0, 7)}`
-      : updateAvailable
-        ? "Update available"
-        : "Build the backend";
+  const summary = !ready ? "Unavailable" : done ? `Deployed ${latest?.sha.slice(0, 7)}` : updateAvailable ? "Update available" : "Build the backend";
 
   return {
     cardId: "backend_deploy" as const,

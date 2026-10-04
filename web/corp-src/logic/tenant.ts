@@ -1,3 +1,8 @@
+/**
+ * @license SPDX-FileCopyrightText: © 2026 Zenme Pty Ltd <info@zenme.com.au>
+ * @license SPDX-License-Identifier: MIT
+ */
+
 import type { AzureTenant } from "../types";
 
 // Looks up a tenant's display name in a fetched list, falling back to the raw id when unknown.

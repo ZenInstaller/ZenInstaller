@@ -1,3 +1,8 @@
+/**
+ * @license SPDX-FileCopyrightText: © 2026 Zenme Pty Ltd <info@zenme.com.au>
+ * @license SPDX-License-Identifier: MIT
+ */
+
 import { act, useEffect } from "react";
 import { createRoot } from "react-dom/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -88,7 +93,7 @@ describe("useGithubLoginCard", () => {
           onUpdate={(value) => {
             latest = value;
           }}
-        />,
+        />
       );
     });
 
@@ -124,7 +129,7 @@ describe("useGithubLoginCard", () => {
           onUpdate={(value) => {
             latest = value;
           }}
-        />,
+        />
       );
     });
 
@@ -152,7 +157,7 @@ describe("useGithubLoginCard", () => {
           onUpdate={(value) => {
             latest = value;
           }}
-        />,
+        />
       );
     });
 
@@ -184,7 +189,7 @@ describe("useGithubLoginCard", () => {
           onUpdate={(value) => {
             latest = value;
           }}
-        />,
+        />
       );
     });
 
@@ -215,7 +220,7 @@ describe("useGithubLoginCard", () => {
           onUpdate={(value) => {
             latest = value;
           }}
-        />,
+        />
       );
     });
 
@@ -242,7 +247,7 @@ describe("useGithubLoginCard", () => {
           onUpdate={(value) => {
             latest = value;
           }}
-        />,
+        />
       );
     });
 
@@ -276,7 +281,7 @@ describe("useGithubLoginCard", () => {
           onUpdate={(value) => {
             latest = value;
           }}
-        />,
+        />
       );
     });
 
@@ -318,7 +323,7 @@ describe("useGithubLoginCard", () => {
           onUpdate={(value) => {
             latest = value;
           }}
-        />,
+        />
       );
     });
 
@@ -365,7 +370,7 @@ describe("useGithubLoginCard", () => {
           onUpdate={(value) => {
             latest = value;
           }}
-        />,
+        />
       );
     });
 
@@ -397,7 +402,7 @@ describe("useGithubLoginCard", () => {
           onUpdate={(value) => {
             latest = value;
           }}
-        />,
+        />
       );
     });
 
@@ -453,7 +458,7 @@ describe("useGithubLoginCard", () => {
           onUpdate={(value) => {
             latest = value;
           }}
-        />,
+        />
       );
     });
 
@@ -488,7 +493,7 @@ describe("useGithubLoginCard", () => {
           onUpdate={(value) => {
             latest = value;
           }}
-        />,
+        />
       );
     });
 

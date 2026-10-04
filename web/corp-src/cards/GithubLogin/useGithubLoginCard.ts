@@ -1,3 +1,8 @@
+/**
+ * @license SPDX-FileCopyrightText: © 2026 Zenme Pty Ltd <info@zenme.com.au>
+ * @license SPDX-License-Identifier: MIT
+ */
+
 import { useCallback, useEffect, useState, useRef } from "react";
 import { verifyAuth, switchToDirect, switchToBackend, fetchGithubUser } from "../../api";
 import { exchangeGithubCode } from "../../api/backend";

@@ -1,3 +1,8 @@
+/**
+ * @license SPDX-FileCopyrightText: © 2026 Zenme Pty Ltd <info@zenme.com.au>
+ * @license SPDX-License-Identifier: MIT
+ */
+
 import { defineConfig, defineProject } from "vitest/config";
 import { playwright } from "@vitest/browser-playwright";
 
@@ -13,7 +18,7 @@ export default defineConfig({
           include: ["*-src/test/**/*.{test,spec}.{ts,tsx,js,jsx}"],
           exclude: ["*-src/test/**/*.browser.{test,spec}.{ts,tsx,js,jsx}"],
           environment: "jsdom",
-          setupFiles: ['./vitest.setup.js'],
+          setupFiles: ["./vitest.setup.js"],
           globals: true,
         },
       }),

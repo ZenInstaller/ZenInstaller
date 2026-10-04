@@ -1,3 +1,8 @@
+/**
+ * @license SPDX-FileCopyrightText: © 2026 Zenme Pty Ltd <info@zenme.com.au>
+ * @license SPDX-License-Identifier: MIT
+ */
+
 import { InternalError, NotFound, logError } from "../error/index.js";
 import { TableClient } from "@azure/data-tables";
 import { getAppCredential } from "./obo.js";
@@ -28,10 +33,7 @@ export function getTableClient() {
 }
 
 export async function saveSession(tableClient, { sessionId, accessToken, expiresAt }) {
-  await tableClient.upsertEntity(
-    { partitionKey: SESSION_PARTITION_KEY, rowKey: sessionId, accessToken, expiresAt },
-    "Replace",
-  );
+  await tableClient.upsertEntity({ partitionKey: SESSION_PARTITION_KEY, rowKey: sessionId, accessToken, expiresAt }, "Replace");
 }
 
 export async function readSession(tableClient, sessionId) {

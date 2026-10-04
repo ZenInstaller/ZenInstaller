@@ -1,3 +1,8 @@
+/**
+ * @license SPDX-FileCopyrightText: © 2026 Zenme Pty Ltd <info@zenme.com.au>
+ * @license SPDX-License-Identifier: MIT
+ */
+
 /*
  * Shared UI style tokens for the corp installer, pulled out of the ~12 card/
  * component files that each redeclared their own identical copies.

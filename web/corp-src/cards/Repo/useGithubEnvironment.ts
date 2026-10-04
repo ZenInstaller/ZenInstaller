@@ -1,3 +1,8 @@
+/**
+ * @license SPDX-FileCopyrightText: © 2026 Zenme Pty Ltd <info@zenme.com.au>
+ * @license SPDX-License-Identifier: MIT
+ */
+
 import { useCallback, useEffect, useRef, useState } from "react";
 import { fetchEnvs } from "../../api";
 import { type Account, type Branch, type CardStatus, type GhEnv, type RepoOption } from "../../types";
@@ -103,9 +108,7 @@ export function useGithubEnvironment(opts: UseGithubEnvironmentParams): UseGithu
       setBranchMatchError(null);
       setStatus("complete");
     } else if (result.status === "case") {
-      setBranchMatchWarning(
-        `Environment "${selectedEnv.name}" and branch "${result.branch.name}" have mismatched casing.`,
-      );
+      setBranchMatchWarning(`Environment "${selectedEnv.name}" and branch "${result.branch.name}" have mismatched casing.`);
       setBranchMatchError(null);
       setStatus("warning");
     } else if (result.status === "multiple") {
@@ -133,7 +136,7 @@ export function useGithubEnvironment(opts: UseGithubEnvironmentParams): UseGithu
       setSelectedEnv(match);
       return true;
     },
-    [envList],
+    [envList]
   );
 
   return {

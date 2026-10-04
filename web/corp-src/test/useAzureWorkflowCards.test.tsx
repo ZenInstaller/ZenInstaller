@@ -1,12 +1,14 @@
+/**
+ * @license SPDX-FileCopyrightText: © 2026 Zenme Pty Ltd <info@zenme.com.au>
+ * @license SPDX-License-Identifier: MIT
+ */
+
 import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { useEffect } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useAccessPassCard, type UseAccessPassCard } from "../cards/AccessPass/useAccessPassCard";
-import {
-  useAzureAppRegistrationCard,
-  type UseAzureAppRegistrationCard,
-} from "../cards/AzureAppRegistration/useAzureAppRegistrationCard";
+import { useAzureAppRegistrationCard, type UseAzureAppRegistrationCard } from "../cards/AzureAppRegistration/useAzureAppRegistrationCard";
 import { useCoreInfraCard, type UseCoreInfraCard } from "../cards/CoreInfra/useCoreInfraCard";
 import { useCreateDomainCard, type UseCreateDomainCard } from "../cards/CreateDomain/useCreateDomainCard";
 import type { AzureAccount } from "../types";
@@ -92,12 +94,9 @@ vi.mock("../api/azureArm", () => ({
   ensureRbacRoleAtScope: apiMocks.ensureRbacRoleAtScope,
   hasRbacRoleAtScope: apiMocks.hasRbacRoleAtScope,
   listLocations: apiMocks.listLocations,
-  resourceGroupScope: vi.fn(
-    (subscriptionId: string, resourceGroupName: string) => `${subscriptionId}/${resourceGroupName}`,
-  ),
+  resourceGroupScope: vi.fn((subscriptionId: string, resourceGroupName: string) => `${subscriptionId}/${resourceGroupName}`),
   storageAccountScope: vi.fn(
-    (subscriptionId: string, resourceGroupName: string, storageAccountName: string) =>
-      `${subscriptionId}/${resourceGroupName}/${storageAccountName}`,
+    (subscriptionId: string, resourceGroupName: string, storageAccountName: string) => `${subscriptionId}/${resourceGroupName}/${storageAccountName}`
   ),
   ensureDnsZone: vi.fn(),
   ensureDnsTxtRecord: vi.fn(),
@@ -161,9 +160,7 @@ describe("azure workflow cards", () => {
 
     apiMocks.listUsersManagedBySignedInUser.mockResolvedValue([{ id: "user-1", displayName: "Manager One" }]);
     apiMocks.ensureTemporaryAccessPassEnabled.mockResolvedValue(true);
-    apiMocks.listUserAuthenticationMethods.mockResolvedValue([
-      { id: "email-1", "@odata.type": "#microsoft.graph.emailAuthenticationMethod" },
-    ]);
+    apiMocks.listUserAuthenticationMethods.mockResolvedValue([{ id: "email-1", "@odata.type": "#microsoft.graph.emailAuthenticationMethod" }]);
     apiMocks.resetUserPassword.mockResolvedValue(undefined);
     apiMocks.deleteUserAuthenticationMethod.mockResolvedValue(undefined);
     apiMocks.createTemporaryAccessPassForUser.mockResolvedValue({ temporaryAccessPass: "tap-123", id: "tap-1" });
@@ -215,7 +212,7 @@ describe("azure workflow cards", () => {
         }),
       (value) => {
         latest = value;
-      },
+      }
     );
 
     await act(async () => {
@@ -262,7 +259,7 @@ describe("azure workflow cards", () => {
         }),
       (value) => {
         latest = value;
-      },
+      }
     );
 
     await act(async () => {
@@ -295,7 +292,7 @@ describe("azure workflow cards", () => {
         }),
       (value) => {
         latest = value;
-      },
+      }
     );
 
     await act(async () => {

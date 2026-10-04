@@ -1,3 +1,8 @@
+/**
+ * @license SPDX-FileCopyrightText: © 2026 Zenme Pty Ltd <info@zenme.com.au>
+ * @license SPDX-License-Identifier: MIT
+ */
+
 import { updateKeyVaultSecrets } from "./keyvault.js";
 import { buildFunctionApp, zipFunctionApp, deployFunctionAppZip, deleteAppSetting } from "./functionApp.js";
 import { execSync } from "child_process";
@@ -47,7 +52,7 @@ export async function runDeploy(config) {
         functionAppName,
         resourceGroupName,
       },
-      { cwd: distCwd },
+      { cwd: distCwd }
     );
 
     console.log("Deploy success");

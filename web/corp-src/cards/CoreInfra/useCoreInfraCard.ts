@@ -1,3 +1,8 @@
+/**
+ * @license SPDX-FileCopyrightText: © 2026 Zenme Pty Ltd <info@zenme.com.au>
+ * @license SPDX-License-Identifier: MIT
+ */
+
 import { useCallback, useEffect, useState } from "react";
 import {
   ensureResourceGroup,
@@ -68,13 +73,7 @@ const RESULT_KEY = "zeninstaller_infra_result";
 
 const { save: saveResult, load: loadResult } = createResultStorage<CoreInfraResult>(RESULT_KEY);
 
-export function useCoreInfraCard({
-  azureAccount,
-  subscriptionId,
-  corpName,
-  spClientId,
-  tenantId,
-}: UseCoreInfraCardParams): UseCoreInfraCard {
+export function useCoreInfraCard({ azureAccount, subscriptionId, corpName, spClientId, tenantId }: UseCoreInfraCardParams): UseCoreInfraCard {
   const [location, setLocation] = useState(DEFAULT_AZURE_LOCATION);
   const [locations, setLocations] = useState<AzureLocation[]>([]);
   const [locationsLoading, setLocationsLoading] = useState(false);
@@ -123,13 +122,7 @@ export function useCoreInfraCard({
           setInfraRbacStatus("missing-role");
           return;
         }
-        const hasRole = await hasRbacRoleAtScope(
-          azureAccount,
-          resourceGroupScope(subscriptionId, resourceGroupName),
-          sp.id,
-          "Reader",
-          tenantId,
-        );
+        const hasRole = await hasRbacRoleAtScope(azureAccount, resourceGroupScope(subscriptionId, resourceGroupName), sp.id, "Reader", tenantId);
         if (!cancelled) setInfraRbacStatus(hasRole ? "ready" : "missing-role");
       } catch {
         // Consent/token errors — leave unknown rather than flag broken.
@@ -197,17 +190,13 @@ export function useCoreInfraCard({
       updateStep(
         "providers",
         providers.registered.length === 0 ? "skipped" : "done",
-        providers.registered.length === 0 ? "Already registered" : providers.registered.join(", "),
+        providers.registered.length === 0 ? "Already registered" : providers.registered.join(", ")
       );
 
       currentStep = "rg";
       updateStep("rg", "running");
       const rgResult = await ensureResourceGroup(azureAccount, subscriptionId, resourceGroupName, location, tenantId);
-      updateStep(
-        "rg",
-        rgResult === "exists" ? "skipped" : "done",
-        rgResult === "exists" ? "Already exists" : undefined,
-      );
+      updateStep("rg", rgResult === "exists" ? "skipped" : "done", rgResult === "exists" ? "Already exists" : undefined);
 
       currentStep = "rg-rbac";
       updateStep("rg-rbac", "running");
@@ -215,97 +204,38 @@ export function useCoreInfraCard({
       if (!sp) throw new Error(`Service principal for app ${spClientId} not found — run the Azure card first`);
       const rgScope = resourceGroupScope(subscriptionId, resourceGroupName);
       const rgRbac = await ensureRbacRoleAtScope(azureAccount, rgScope, sp.id, "Reader", tenantId);
-      updateStep(
-        "rg-rbac",
-        rgRbac === "exists" ? "skipped" : "done",
-        rgRbac === "exists" ? "Already assigned" : "Reader",
-      );
+      updateStep("rg-rbac", rgRbac === "exists" ? "skipped" : "done", rgRbac === "exists" ? "Already assigned" : "Reader");
 
       currentStep = "law";
       updateStep("law", "running");
-      const law = await ensureLogAnalyticsWorkspace(
-        azureAccount,
-        subscriptionId,
-        resourceGroupName,
-        lawName,
-        location,
-        tenantId,
-      );
-      updateStep(
-        "law",
-        law.result === "exists" ? "skipped" : "done",
-        law.result === "exists" ? "Already exists" : undefined,
-      );
+      const law = await ensureLogAnalyticsWorkspace(azureAccount, subscriptionId, resourceGroupName, lawName, location, tenantId);
+      updateStep("law", law.result === "exists" ? "skipped" : "done", law.result === "exists" ? "Already exists" : undefined);
 
       currentStep = "diag";
       updateStep("diag", "running");
-      const diag = await ensureSubscriptionDiagnostics(
-        azureAccount,
-        subscriptionId,
-        DIAGNOSTIC_SETTING_NAME,
-        law.id,
-        tenantId,
-      );
+      const diag = await ensureSubscriptionDiagnostics(azureAccount, subscriptionId, DIAGNOSTIC_SETTING_NAME, law.id, tenantId);
       updateStep("diag", diag === "exists" ? "skipped" : "done", diag === "exists" ? "Already configured" : undefined);
 
       currentStep = "appins";
       updateStep("appins", "running");
-      const appins = await ensureAppInsights(
-        azureAccount,
-        subscriptionId,
-        resourceGroupName,
-        appInsightsName,
-        location,
-        law.id,
-        tenantId,
-      );
-      updateStep(
-        "appins",
-        appins === "exists" ? "skipped" : "done",
-        appins === "exists" ? "Already exists" : undefined,
-      );
+      const appins = await ensureAppInsights(azureAccount, subscriptionId, resourceGroupName, appInsightsName, location, law.id, tenantId);
+      updateStep("appins", appins === "exists" ? "skipped" : "done", appins === "exists" ? "Already exists" : undefined);
 
       currentStep = "storage";
       updateStep("storage", "running");
-      const storage = await ensureStorageAccount(
-        azureAccount,
-        subscriptionId,
-        resourceGroupName,
-        storageAccountName,
-        location,
-        tenantId,
-      );
-      updateStep(
-        "storage",
-        storage === "exists" ? "skipped" : "done",
-        storage === "exists" ? "Already exists" : undefined,
-      );
+      const storage = await ensureStorageAccount(azureAccount, subscriptionId, resourceGroupName, storageAccountName, location, tenantId);
+      updateStep("storage", storage === "exists" ? "skipped" : "done", storage === "exists" ? "Already exists" : undefined);
 
       currentStep = "container";
       updateStep("container", "running");
-      const container = await ensureStorageContainer(
-        azureAccount,
-        subscriptionId,
-        resourceGroupName,
-        storageAccountName,
-        TFSTATE_CONTAINER,
-        tenantId,
-      );
-      updateStep(
-        "container",
-        container === "exists" ? "skipped" : "done",
-        container === "exists" ? "Already exists" : undefined,
-      );
+      const container = await ensureStorageContainer(azureAccount, subscriptionId, resourceGroupName, storageAccountName, TFSTATE_CONTAINER, tenantId);
+      updateStep("container", container === "exists" ? "skipped" : "done", container === "exists" ? "Already exists" : undefined);
 
       currentStep = "rbac";
       updateStep("rbac", "running");
       const scope = storageAccountScope(subscriptionId, resourceGroupName, storageAccountName);
       const rbac = await ensureRbacRoleAtScope(azureAccount, scope, sp.id, "Storage Blob Data Reader", tenantId);
-      updateStep(
-        "rbac",
-        rbac === "exists" ? "skipped" : "done",
-        rbac === "exists" ? "Already assigned" : "Storage Blob Data Reader",
-      );
+      updateStep("rbac", rbac === "exists" ? "skipped" : "done", rbac === "exists" ? "Already assigned" : "Storage Blob Data Reader");
 
       const r: CoreInfraResult = { corpName, subscriptionId };
       setResult(r);

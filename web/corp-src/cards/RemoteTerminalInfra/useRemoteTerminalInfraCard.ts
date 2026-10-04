@@ -1,3 +1,8 @@
+/**
+ * @license SPDX-FileCopyrightText: © 2026 Zenme Pty Ltd <info@zenme.com.au>
+ * @license SPDX-License-Identifier: MIT
+ */
+
 import { useCallback, useState } from "react";
 import {
   appInsightsScope,
@@ -16,13 +21,7 @@ import {
   storageAccountScope,
   webPubSubScope,
 } from "../../api/azureArm";
-import {
-  createAppRegistration,
-  createServicePrincipal,
-  ensureFederatedCredential,
-  getExistingApp,
-  getExistingSP,
-} from "../../api/azureGraph";
+import { createAppRegistration, createServicePrincipal, ensureFederatedCredential, getExistingApp, getExistingSP } from "../../api/azureGraph";
 import { useStepRunner } from "../../hooks/util/useStepRunner";
 import { useProviderRegistration } from "../../hooks/util/useProviderRegistration";
 import { DEFAULT_AZURE_LOCATION } from "../../logic/naming";
@@ -170,8 +169,7 @@ export function useRemoteTerminalInfraCard({
     ];
     setSteps(initialSteps);
 
-    const mark = (id: string, r: "created" | "exists") =>
-      updateStep(id, r === "exists" ? "skipped" : "done", r === "exists" ? "Already exists" : undefined);
+    const mark = (id: string, r: "created" | "exists") => updateStep(id, r === "exists" ? "skipped" : "done", r === "exists" ? "Already exists" : undefined);
 
     try {
       updateStep("providers", "running");
@@ -179,109 +177,40 @@ export function useRemoteTerminalInfraCard({
       updateStep(
         "providers",
         providers.registered.length === 0 ? "skipped" : "done",
-        providers.registered.length === 0 ? "Already registered" : providers.registered.join(", "),
+        providers.registered.length === 0 ? "Already registered" : providers.registered.join(", ")
       );
 
       updateStep("rg", "running");
       mark("rg", await ensureResourceGroup(azureAccount, subscriptionId, resourceGroupName, location, tenantId));
 
       updateStep("law", "running");
-      const law = await ensureLogAnalyticsWorkspace(
-        azureAccount,
-        subscriptionId,
-        resourceGroupName,
-        lawName,
-        location,
-        tenantId,
-      );
+      const law = await ensureLogAnalyticsWorkspace(azureAccount, subscriptionId, resourceGroupName, lawName, location, tenantId);
       mark("law", law.result);
 
       updateStep("appins", "running");
       mark(
         "appins",
         // App Insights wants the workspace's resource id, not its name.
-        await ensureAppInsights(
-          azureAccount,
-          subscriptionId,
-          resourceGroupName,
-          appInsightsName,
-          location,
-          law.id,
-          tenantId,
-        ),
+        await ensureAppInsights(azureAccount, subscriptionId, resourceGroupName, appInsightsName, location, law.id, tenantId)
       );
 
       updateStep("storage", "running");
-      mark(
-        "storage",
-        await ensureStorageAccount(
-          azureAccount,
-          subscriptionId,
-          resourceGroupName,
-          storageAccountName,
-          location,
-          tenantId,
-        ),
-      );
+      mark("storage", await ensureStorageAccount(azureAccount, subscriptionId, resourceGroupName, storageAccountName, location, tenantId));
 
       updateStep("table", "running");
-      mark(
-        "table",
-        await ensureStorageTable(
-          azureAccount,
-          subscriptionId,
-          resourceGroupName,
-          storageAccountName,
-          TERMINAL_SESSION_TABLE,
-          tenantId,
-        ),
-      );
+      mark("table", await ensureStorageTable(azureAccount, subscriptionId, resourceGroupName, storageAccountName, TERMINAL_SESSION_TABLE, tenantId));
 
       updateStep("container", "running");
-      mark(
-        "container",
-        await ensureStorageContainer(
-          azureAccount,
-          subscriptionId,
-          resourceGroupName,
-          storageAccountName,
-          TERMINAL_DEPLOY_CONTAINER,
-          tenantId,
-        ),
-      );
+      mark("container", await ensureStorageContainer(azureAccount, subscriptionId, resourceGroupName, storageAccountName, TERMINAL_DEPLOY_CONTAINER, tenantId));
 
       updateStep("wps", "running");
-      mark(
-        "wps",
-        await ensureWebPubSub(
-          azureAccount,
-          subscriptionId,
-          resourceGroupName,
-          webPubSubName,
-          location,
-          "Free_F1",
-          tenantId,
-        ),
-      );
+      mark("wps", await ensureWebPubSub(azureAccount, subscriptionId, resourceGroupName, webPubSubName, location, "Free_F1", tenantId));
 
       updateStep("hub", "running");
-      mark(
-        "hub",
-        await ensureWebPubSubHub(
-          azureAccount,
-          subscriptionId,
-          resourceGroupName,
-          webPubSubName,
-          TERMINAL_HUB,
-          tenantId,
-        ),
-      );
+      mark("hub", await ensureWebPubSubHub(azureAccount, subscriptionId, resourceGroupName, webPubSubName, TERMINAL_HUB, tenantId));
 
       updateStep("plan", "running");
-      mark(
-        "plan",
-        await ensureFlexServicePlan(azureAccount, subscriptionId, resourceGroupName, planName, location, tenantId),
-      );
+      mark("plan", await ensureFlexServicePlan(azureAccount, subscriptionId, resourceGroupName, planName, location, tenantId));
 
       updateStep("app", "running");
       const blobBase = `https://${storageAccountName}.blob.core.windows.net`;
@@ -309,7 +238,7 @@ export function useRemoteTerminalInfraCard({
           SESSION_TABLE_NAME: TERMINAL_SESSION_TABLE,
         },
         allowedOrigins,
-        tenantId,
+        tenantId
       );
       mark("app", appResult);
 
@@ -329,11 +258,7 @@ export function useRemoteTerminalInfraCard({
           assigned.push(role);
         }
       }
-      updateStep(
-        "rbac",
-        assigned.length === 0 ? "skipped" : "done",
-        assigned.length === 0 ? "Already assigned" : assigned.join(", "),
-      );
+      updateStep("rbac", assigned.length === 0 ? "skipped" : "done", assigned.length === 0 ? "Already assigned" : assigned.join(", "));
 
       updateStep("pipelineApp", "running");
       const existingApp = await getExistingApp(azureAccount, pipelineAppName, tenantId);
@@ -355,10 +280,7 @@ export function useRemoteTerminalInfraCard({
 
       // Service Owner, not Service Reader: issuing a client token is a POST on the data plane.
       updateStep("pipelineRbac", "running");
-      mark(
-        "pipelineRbac",
-        await ensureRbacRoleAtScope(azureAccount, wpsScope, sp.id, "Web PubSub Service Owner", tenantId),
-      );
+      mark("pipelineRbac", await ensureRbacRoleAtScope(azureAccount, wpsScope, sp.id, "Web PubSub Service Owner", tenantId));
 
       const finished: RemoteTerminalInfraResult = {
         corpName,

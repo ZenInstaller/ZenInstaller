@@ -1,3 +1,8 @@
+/**
+ * @license SPDX-FileCopyrightText: © 2026 Zenme Pty Ltd <info@zenme.com.au>
+ * @license SPDX-License-Identifier: MIT
+ */
+
 import { useCallback, useEffect, useRef } from "react";
 import type { CardHook, CardRequirements, CardStatus, LoginHook, AzureAccount } from "../../types";
 import { AZURE_CLIENT_ID } from "../../config/azureConfig";
@@ -64,35 +69,25 @@ export function useAzureLoginCard({ savedTenantId }: UseAzureLoginCardParams): U
   // ── Restore ───────────────────────────────────────────────────────────────
   const restoreTenant = useCallback(
     (value: string): boolean => {
-      const match =
-        azure.tenants.find((t) => t.tenantId.toLowerCase() === value.toLowerCase()) ??
-        findIgnoreCase(azure.tenants, (t) => t.displayName, value);
+      const match = azure.tenants.find((t) => t.tenantId.toLowerCase() === value.toLowerCase()) ?? findIgnoreCase(azure.tenants, (t) => t.displayName, value);
       if (!match) return false;
       azure.selectTenant(match.tenantId);
       return true;
     },
     // azure itself is a fresh object every render — only tenants/selectTenant matter here.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [azure.tenants, azure.selectTenant],
+    [azure.tenants, azure.selectTenant]
   );
 
   const done = !!azure.account && azure.confirmedTenantId !== null && !!azure.manualTenantId;
   const azureConfigured = !!AZURE_CLIENT_ID;
-  const status: CardStatus = !azureConfigured
-    ? "unavailable"
-    : azure.account && done
-      ? "complete"
-      : azure.account
-        ? "warning"
-        : "idle";
+  const status: CardStatus = !azureConfigured ? "unavailable" : azure.account && done ? "complete" : azure.account ? "warning" : "idle";
   const summary = !azureConfigured
     ? "Unavailable"
     : !azure.account
       ? "Sign in to Azure"
       : done
-        ? [azure.account.username, tenantDisplayName(azure.tenants, azure.confirmedTenantId)]
-          .filter(Boolean)
-          .join(" · ") || "Signed in"
+        ? [azure.account.username, tenantDisplayName(azure.tenants, azure.confirmedTenantId)].filter(Boolean).join(" · ") || "Signed in"
         : "Select a tenant";
 
   return {

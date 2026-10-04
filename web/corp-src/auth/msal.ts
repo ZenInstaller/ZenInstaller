@@ -1,3 +1,8 @@
+/**
+ * @license SPDX-FileCopyrightText: © 2026 Zenme Pty Ltd <info@zenme.com.au>
+ * @license SPDX-License-Identifier: MIT
+ */
+
 import { InteractionRequiredAuthError, PublicClientApplication } from "@azure/msal-browser";
 import { AZURE_CLIENT_ID } from "../config/azureConfig";
 import type { AzureAccount } from "../types";
@@ -26,11 +31,7 @@ export async function getMsal(): Promise<PublicClientApplication | null> {
   return _msal;
 }
 
-export async function ensureScopeConsent(
-  account: AzureAccount,
-  scopes: string[],
-  overrideTenantId?: string,
-): Promise<boolean> {
+export async function ensureScopeConsent(account: AzureAccount, scopes: string[], overrideTenantId?: string): Promise<boolean> {
   const msal = await getMsal();
   if (!msal) return false;
   const tenant = overrideTenantId || account.tenantId;

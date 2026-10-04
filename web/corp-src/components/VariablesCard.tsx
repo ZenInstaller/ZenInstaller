@@ -1,3 +1,8 @@
+/**
+ * @license SPDX-FileCopyrightText: © 2026 Zenme Pty Ltd <info@zenme.com.au>
+ * @license SPDX-License-Identifier: MIT
+ */
+
 import { Box, IconButton, InputAdornment, TextField, Tooltip, Typography } from "@mui/material";
 import ClearIcon from "@mui/icons-material/Clear";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
@@ -87,9 +92,7 @@ function VariableRow({
         </Typography>
         {description && (
           <Tooltip title={description} placement="top" arrow>
-            <InfoOutlinedIcon
-              sx={{ fontSize: 13, color: "#cbd5e1", cursor: "help", "&:hover": { color: "#94a3b8" } }}
-            />
+            <InfoOutlinedIcon sx={{ fontSize: 13, color: "#cbd5e1", cursor: "help", "&:hover": { color: "#94a3b8" } }} />
           </Tooltip>
         )}
       </Box>
@@ -111,21 +114,13 @@ function VariableRow({
             localValue || isDirty ? (
               <InputAdornment position="end" sx={{ gap: 0 }}>
                 {localValue && (
-                  <IconButton
-                    size="small"
-                    onClick={() => onChange(varKey, "")}
-                    sx={{ color: "#94a3b8", p: 0.25, "&:hover": { color: "#475569" } }}
-                  >
+                  <IconButton size="small" onClick={() => onChange(varKey, "")} sx={{ color: "#94a3b8", p: 0.25, "&:hover": { color: "#475569" } }}>
                     <ClearIcon sx={{ fontSize: 13 }} />
                   </IconButton>
                 )}
                 {isDirty && (
                   <Tooltip title="Revert to saved value">
-                    <IconButton
-                      size="small"
-                      onClick={() => onRevert(varKey)}
-                      sx={{ color: "#94a3b8", p: 0.25, "&:hover": { color: "#d97706" } }}
-                    >
+                    <IconButton size="small" onClick={() => onRevert(varKey)} sx={{ color: "#94a3b8", p: 0.25, "&:hover": { color: "#d97706" } }}>
                       <UndoIcon sx={{ fontSize: 13 }} />
                     </IconButton>
                   </Tooltip>
@@ -173,11 +168,7 @@ function VariableRow({
       )}
 
       {isSuccess && (
-        <Typography
-          sx={{ fontSize: "0.62rem", color: "#16a34a", fontFamily: "'IBM Plex Mono', monospace", whiteSpace: "nowrap" }}
-        >
-          just updated
-        </Typography>
+        <Typography sx={{ fontSize: "0.62rem", color: "#16a34a", fontFamily: "'IBM Plex Mono', monospace", whiteSpace: "nowrap" }}>just updated</Typography>
       )}
 
       {!isDirty && !isSuccess && !isError && validStatus === true && (

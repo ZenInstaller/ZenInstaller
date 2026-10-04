@@ -1,3 +1,8 @@
+/**
+ * @license SPDX-FileCopyrightText: © 2026 Zenme Pty Ltd <info@zenme.com.au>
+ * @license SPDX-License-Identifier: MIT
+ */
+
 import { app } from "@azure/functions";
 import { Octokit } from "octokit";
 import { requireAuth } from "../utils/auth.js";
@@ -31,6 +36,6 @@ app.http("getDeployments", {
           deployments: data.map((d) => ({ id: d.id, task: d.task, payload: d.payload, created_at: d.created_at })),
         },
       };
-    }),
+    })
   ),
 });

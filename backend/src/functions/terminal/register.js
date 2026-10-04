@@ -1,3 +1,8 @@
+/**
+ * @license SPDX-FileCopyrightText: © 2026 Zenme Pty Ltd <info@zenme.com.au>
+ * @license SPDX-License-Identifier: MIT
+ */
+
 import { app } from "@azure/functions";
 import { requireAuth } from "../../utils/auth.js";
 import { corsWrapper } from "../../utils/cors.js";
@@ -27,6 +32,6 @@ app.http("register", {
       await saveSession(tableClient, { sessionId, accessToken, expiresAt });
       context.log(`Session registered: ${sessionId} (TTL ${ttlSeconds}s)`);
       return { jsonBody: { ok: true } };
-    }),
+    })
   ),
 });

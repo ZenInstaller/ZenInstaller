@@ -1,20 +1,15 @@
-export const AZURE_VARIABLE_KEYS = [
-  "AZURE_CLIENT_ID",
-  "AZURE_PLAN_CLIENT_ID",
-  "AZURE_SUBSCRIPTION_ID",
-  "AZURE_TENANT_ID",
-] as const;
+/**
+ * @license SPDX-FileCopyrightText: © 2026 Zenme Pty Ltd <info@zenme.com.au>
+ * @license SPDX-License-Identifier: MIT
+ */
+
+export const AZURE_VARIABLE_KEYS = ["AZURE_CLIENT_ID", "AZURE_PLAN_CLIENT_ID", "AZURE_SUBSCRIPTION_ID", "AZURE_TENANT_ID"] as const;
 // Tenant + subscription — saved by the Azure subscription card.
 export const AZURE_TARGET_KEYS = ["AZURE_TENANT_ID", "AZURE_SUBSCRIPTION_ID"] as const;
 // App-registration client ids — saved by the Azure app registration card.
 export const AZURE_APP_KEYS = ["AZURE_CLIENT_ID", "AZURE_PLAN_CLIENT_ID"] as const;
 // Relay connection details — saved by the deployment terminal card.
-export const DEPLOYMENT_TERMINAL_KEYS = [
-  "WEBPUBSUB_ENDPOINT",
-  "WEBPUBSUB_CLIENT_ID",
-  "WEBPUBSUB_TENANT_ID",
-  "BACKEND_API",
-] as const;
+export const DEPLOYMENT_TERMINAL_KEYS = ["WEBPUBSUB_ENDPOINT", "WEBPUBSUB_CLIENT_ID", "WEBPUBSUB_TENANT_ID", "BACKEND_API"] as const;
 export const AWS_VARIABLE_KEYS = ["AWS_ROLE_ARN"] as const;
 export const CORP_NAME_KEYS = ["NAME"] as const;
 export const DNS_KEYS = ["DNS"] as const;

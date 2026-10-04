@@ -1,3 +1,8 @@
+/**
+ * @license SPDX-FileCopyrightText: © 2026 Zenme Pty Ltd <info@zenme.com.au>
+ * @license SPDX-License-Identifier: MIT
+ */
+
 import { execSync } from "child_process";
 
 export function buildFunctionApp({ cwd } = {}) {
@@ -32,6 +37,6 @@ export function deleteAppSetting({ functionAppName, resourceGroupName, settingNa
       stdio: "inherit",
       shell: true,
       cwd,
-    },
+    }
   );
 }

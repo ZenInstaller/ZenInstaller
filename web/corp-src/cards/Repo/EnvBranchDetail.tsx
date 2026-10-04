@@ -1,3 +1,8 @@
+/**
+ * @license SPDX-FileCopyrightText: © 2026 Zenme Pty Ltd <info@zenme.com.au>
+ * @license SPDX-License-Identifier: MIT
+ */
+
 import { Box, Button, CircularProgress, MenuItem, Select, Typography } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import CallSplitIcon from "@mui/icons-material/CallSplit";
@@ -62,23 +67,12 @@ export default function EnvBranchDetail({
         </Button>
 
         <>
-          <Typography
-            sx={{ fontSize: "0.72rem", color: "#64748b", fontFamily: "'IBM Plex Mono', monospace", flexShrink: 0 }}
-          >
+          <Typography sx={{ fontSize: "0.72rem", color: "#64748b", fontFamily: "'IBM Plex Mono', monospace", flexShrink: 0 }}>
             Clone the new branch from existing branch:
           </Typography>
-          <Select
-            size="small"
-            value={sourceBranch}
-            onChange={(e) => onSourceBranchChange(e.target.value)}
-            sx={{ mr: 3, minWidth: 140, ...selectSx }}
-          >
+          <Select size="small" value={sourceBranch} onChange={(e) => onSourceBranchChange(e.target.value)} sx={{ mr: 3, minWidth: 140, ...selectSx }}>
             {branches.map((b) => (
-              <MenuItem
-                key={b.name}
-                value={b.name}
-                sx={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: "0.8rem" }}
-              >
+              <MenuItem key={b.name} value={b.name} sx={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: "0.8rem" }}>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                   <CallSplitIcon sx={{ fontSize: 13, color: "#94a3b8" }} />
                   {b.name}

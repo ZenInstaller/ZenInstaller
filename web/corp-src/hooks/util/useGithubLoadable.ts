@@ -1,3 +1,8 @@
+/**
+ * @license SPDX-FileCopyrightText: © 2026 Zenme Pty Ltd <info@zenme.com.au>
+ * @license SPDX-License-Identifier: MIT
+ */
+
 import { useCallback, useEffect, useState } from "react";
 import type { Account } from "../../types";
 
@@ -24,13 +29,7 @@ export type UseGithubLoadable<T> = {
 
 // Shared load-on-(account,repo,env)-change / refresh-on-demand pattern behind
 // useGithubVariables (and any future useGithubSecrets) — only fetcher + emptyValue differ.
-export function useGithubLoadable<T>({
-  account,
-  repoName,
-  envName,
-  emptyValue,
-  fetcher,
-}: UseGithubLoadableParams<T>): UseGithubLoadable<T> {
+export function useGithubLoadable<T>({ account, repoName, envName, emptyValue, fetcher }: UseGithubLoadableParams<T>): UseGithubLoadable<T> {
   const [value, setValue] = useState<T>(emptyValue);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);

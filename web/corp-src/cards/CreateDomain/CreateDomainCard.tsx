@@ -1,3 +1,8 @@
+/**
+ * @license SPDX-FileCopyrightText: © 2026 Zenme Pty Ltd <info@zenme.com.au>
+ * @license SPDX-License-Identifier: MIT
+ */
+
 import { Box, Button, CircularProgress, Typography } from "@mui/material";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
@@ -32,8 +37,7 @@ type Props = {
 function Intro({ dnsName }: { dnsName: string }) {
   return (
     <Typography sx={{ fontSize: "0.78rem", color: "#475569", lineHeight: 1.7 }}>
-      Creates the DNS zone for <b>{dnsName || "your domain"}</b>, adds it to Entra ID as a custom domain, then verifies
-      it and sets it as primary.
+      Creates the DNS zone for <b>{dnsName || "your domain"}</b>, adds it to Entra ID as a custom domain, then verifies it and sets it as primary.
     </Typography>
   );
 }
@@ -108,9 +112,7 @@ export default function CreateDomainCard({
         {/* Gating hints */}
         {!azureAccount && (
           <Box sx={{ background: "#fef9c3", border: "1px solid #fde047", borderRadius: "8px", px: 2, py: 1.25 }}>
-            <Typography sx={{ fontSize: "0.75rem", color: "#713f12" }}>
-              Sign in with Azure first — this card reuses that session.
-            </Typography>
+            <Typography sx={{ fontSize: "0.75rem", color: "#713f12" }}>Sign in with Azure first — this card reuses that session.</Typography>
           </Box>
         )}
         {azureAccount && missing.length > 0 && (
@@ -123,24 +125,16 @@ export default function CreateDomainCard({
         {checkingStatus && (
           <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
             <CircularProgress size={12} />
-            <Typography sx={{ fontSize: "0.7rem", color: "#94a3b8", ...mono }}>
-              Checking whether this domain is already set up...
-            </Typography>
+            <Typography sx={{ fontSize: "0.7rem", color: "#94a3b8", ...mono }}>Checking whether this domain is already set up...</Typography>
           </Box>
         )}
-        {checkStatusError && (
-          <Typography sx={{ fontSize: "0.68rem", color: "#d97706", ...mono }}>
-            Couldn't check existing setup: {checkStatusError}
-          </Typography>
-        )}
+        {checkStatusError && <Typography sx={{ fontSize: "0.68rem", color: "#d97706", ...mono }}>Couldn't check existing setup: {checkStatusError}</Typography>}
         {/* Planned resources */}
         {ready && steps.length === 0 && (
           <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
             <Box>
               <Typography sx={{ ...labelSx, mb: 0.75 }}>Resources</Typography>
-              <Box
-                sx={{ borderLeft: "2px solid #e2e8f0", pl: 1.5, display: "flex", flexDirection: "column", gap: 0.25 }}
-              >
+              <Box sx={{ borderLeft: "2px solid #e2e8f0", pl: 1.5, display: "flex", flexDirection: "column", gap: 0.25 }}>
                 {[
                   ["DNS zone", dnsName],
                   ["Custom domain", dnsName],
@@ -242,12 +236,10 @@ export default function CreateDomainCard({
               gap: 1,
             }}
           >
-            <Typography sx={{ fontSize: "0.78rem", color: "#1e40af", fontWeight: 600 }}>
-              Point your domain at Azure DNS
-            </Typography>
+            <Typography sx={{ fontSize: "0.78rem", color: "#1e40af", fontWeight: 600 }}>Point your domain at Azure DNS</Typography>
             <Typography sx={{ fontSize: "0.72rem", color: "#1e40af" }}>
-              At your domain registrar, replace the NS records for <b>{dnsName}</b> with the Azure name servers below.
-              Microsoft can only verify the domain once DNS resolves through Azure.
+              At your domain registrar, replace the NS records for <b>{dnsName}</b> with the Azure name servers below. Microsoft can only verify the domain once
+              DNS resolves through Azure.
             </Typography>
             <Box sx={{ display: "flex", flexDirection: "column", gap: 0.25 }}>
               {nameServers.map((ns) => (
@@ -290,9 +282,7 @@ export default function CreateDomainCard({
                   {!domainVerified && (
                     <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
                       <WarningAmberIcon sx={{ fontSize: 13, color: "#d97706" }} />
-                      <Typography sx={{ fontSize: "0.68rem", color: "#d97706" }}>
-                        DNS propagation can take minutes to hours
-                      </Typography>
+                      <Typography sx={{ fontSize: "0.68rem", color: "#d97706" }}>DNS propagation can take minutes to hours</Typography>
                     </Box>
                   )}
                 </Box>

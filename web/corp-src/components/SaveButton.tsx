@@ -1,3 +1,8 @@
+/**
+ * @license SPDX-FileCopyrightText: © 2026 Zenme Pty Ltd <info@zenme.com.au>
+ * @license SPDX-License-Identifier: MIT
+ */
+
 import { Box, Button, CircularProgress } from "@mui/material";
 import SaveIcon from "@mui/icons-material/Save";
 import { MONO } from "../config/styles";
@@ -24,9 +29,7 @@ export default function SaveButton({ verb, noun, count, loading, disabled, onCli
       variant="contained"
       size="small"
       aria-label={text}
-      startIcon={
-        loading ? <CircularProgress size={12} sx={{ color: "#93c5fd" }} /> : <SaveIcon sx={{ fontSize: 14 }} />
-      }
+      startIcon={loading ? <CircularProgress size={12} sx={{ color: "#93c5fd" }} /> : <SaveIcon sx={{ fontSize: 14 }} />}
       sx={{
         background: "#2563eb",
         ...MONO,

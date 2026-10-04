@@ -1,3 +1,8 @@
+/**
+ * @license SPDX-FileCopyrightText: © 2026 Zenme Pty Ltd <info@zenme.com.au>
+ * @license SPDX-License-Identifier: MIT
+ */
+
 import { useCallback, useState } from "react";
 import { ensureScopeConsent, getMsal } from "../../auth/msal";
 import { APP_SCOPES, AZURE_CLIENT_ID } from "../../config/azureConfig";
@@ -14,16 +19,7 @@ import { isConsentError } from "../../logic/consent";
 import { createResultStorage } from "../../logic/resultStorage";
 import { useStepRunner } from "../../hooks/util/useStepRunner";
 import { useRbacCheck, type RbacCheckStatus } from "./useRbacCheck";
-import type {
-  Account,
-  AzureAccount,
-  AzureConfigHook,
-  AzureTarget,
-  CardHook,
-  CardRequirements,
-  CardStatus,
-  SetupStep,
-} from "../../types";
+import type { Account, AzureAccount, AzureConfigHook, AzureTarget, CardHook, CardRequirements, CardStatus, SetupStep } from "../../types";
 import { VALID_ENVS } from "../../config/githubConfig";
 import { getFederatedCredential, getImmutableRepoSegment } from "../../logic/naming";
 import { setOidcImmutableSubject } from "../../api";
@@ -91,9 +87,7 @@ export function useAzureAppRegistrationCard({
 }: UseAzureAppRegistrationCardParams): UseAzureAppRegistrationCard {
   const [appName, setAppName] = useState("zeninstaller-github");
   const defaultSelected = ["PROD", "TEST"].filter((e) => VALID_ENVS.includes(e));
-  const [environments, setEnvironments] = useState<string[]>(
-    defaultSelected.length > 0 ? defaultSelected : ["PROD", "TEST"],
-  );
+  const [environments, setEnvironments] = useState<string[]>(defaultSelected.length > 0 ? defaultSelected : ["PROD", "TEST"]);
   const { steps, setSteps, running, setRunning, updateStep, resetSteps } = useStepRunner();
   const [result, setResult] = useState<AzureAppRegistrationResult | null>(loadResult);
   const [variablesComplete, setVariablesComplete] = useState(false);
@@ -138,7 +132,7 @@ export function useAzureAppRegistrationCard({
         /* keep default name */
       }
     },
-    [azureAccount, effectiveTenantId],
+    [azureAccount, effectiveTenantId]
   );
 
   const reset = useCallback(() => {

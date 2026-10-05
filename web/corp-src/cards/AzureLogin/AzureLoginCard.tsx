@@ -1,7 +1,6 @@
 import { Box, Button, CircularProgress, MenuItem, Select, TextField, Typography } from "@mui/material";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import { CLOUD_DOCS } from "./config.ts";
-//import { CLOUD_DOCS } from "../../config/docsConfig";
 import { MONO as mono, labelSx } from "../../config/styles";
 import Card from "../../components/Card";
 import ViewLink from "../../components/ViewLink";

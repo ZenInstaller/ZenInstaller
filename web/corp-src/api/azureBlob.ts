@@ -26,25 +26,6 @@ async function blobFetch(
   return res;
 }
 
-export async function enableStaticWebsite(
-  account: AzureAccount,
-  accountName: string,
-  overrideTenantId?: string,
-  indexDocument = "index.html",
-): Promise<void> {
-  const body =
-    `<?xml version="1.0" encoding="utf-8"?><StorageServiceProperties><StaticWebsite>` +
-    `<Enabled>true</Enabled><IndexDocument>${indexDocument}</IndexDocument>` +
-    `<ErrorDocument404Path>${indexDocument}</ErrorDocument404Path>` +
-    `</StaticWebsite></StorageServiceProperties>`;
-  await blobFetch(
-    account,
-    accountName,
-    "/?restype=service&comp=properties",
-    { method: "PUT", body, headers: { "Content-Type": "application/xml" } },
-    overrideTenantId,
-  );
-}
 
 const CONTENT_TYPES: Record<string, string> = {
   html: "text/html; charset=utf-8",

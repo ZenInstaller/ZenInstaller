@@ -1,17 +1,41 @@
 import { useEffect, useRef, useState } from "react";
-import { Box, Button, CircularProgress, Collapse, Typography } from "@mui/material";
+import {
+  Box,
+  Button,
+  CircularProgress,
+  Collapse,
+  IconButton,
+  MenuItem,
+  Select,
+  TextField,
+  Typography,
+} from "@mui/material";
+import CheckIcon from "@mui/icons-material/Check";
+import EditIcon from "@mui/icons-material/Edit";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import type { UseRemoteTerminalInfraCard } from "./useRemoteTerminalInfraCard";
 import StepRow from "../StepRow";
 import Card from "../../components/Card";
 import ViewLink from "../../components/ViewLink";
-import { getAdminConsentUrl, getAzureResourceUrl } from "../../logic/consoleUrls";
+import { getAzureResourceUrl } from "../../logic/consoleUrls";
+import { getPrivateInstallerAppName } from "../../logic/naming";
 import { resourceGroupScope } from "../../api/azureArm";
 import { MONO as mono, labelSx } from "../../config/styles";
 import CloudVariableDetail from "../CloudVariableDetail";
 import { DEPLOYMENT_TERMINAL_KEYS } from "../../logic/variables";
 import type { UseGithubVariables } from "../../hooks/useGithubVariables";
 import type { Account, CardChrome, GhEnv } from "../../types";
+
+function PlainRow({ label, value }: { label: string; value: string }) {
+  return (
+    <Typography sx={{ fontSize: "0.75rem", color: "#64748b", ...mono }}>
+      {label}:{" "}
+      <Box component="span" sx={{ color: "#0f172a" }}>
+        {value}
+      </Box>
+    </Typography>
+  );
+}
 
 type Props = {
   card: CardChrome;
@@ -37,6 +61,8 @@ export default function RemoteTerminalInfraCard({
   githubUrl,
 }: Props) {
   const [varExpanded, setVarExpanded] = useState(false);
+  const [editingLocation, setEditingLocation] = useState(false);
+  const [editingStorage, setEditingStorage] = useState(false);
   const [autoSaveCounter, setAutoSaveCounter] = useState(0);
   const prevRunNonceRef = useRef(infra.runNonce);
 
@@ -57,12 +83,8 @@ export default function RemoteTerminalInfraCard({
   const populate =
     infra.result && infra.resultMatches
       ? {
-          WEBPUBSUB_ENDPOINT: infra.result.webPubSubHost,
-          WEBPUBSUB_CLIENT_ID: infra.result.pipelineClientId,
-          WEBPUBSUB_TENANT_ID: infra.result.pipelineTenantId,
-          VITE_API_URL: infra.result.apiUrl,
           VITE_AZURE_CLIENT_ID: infra.result.installerClientId,
-          VITE_APPINSIGHTS_CONNECTION_STRING: infra.result.appInsightsConnectionString,
+          SITE_STORAGE_ACCOUNT: infra.result.siteStorageAccount,
         }
       : undefined;
 
@@ -78,25 +100,109 @@ export default function RemoteTerminalInfraCard({
           <Box>
             <Typography sx={{ ...labelSx, mb: 0.75 }}>Resources</Typography>
             <Box sx={{ borderLeft: "2px solid #e2e8f0", pl: 1.5, display: "flex", flexDirection: "column", gap: 0.25 }}>
-              {[
-                ["Resource group", infra.resourceGroupName],
-                ["Log Analytics", infra.lawName],
-                ["Application Insights", infra.appInsightsName],
-                ["Storage account", infra.storageAccountName],
-                ["Site storage account", infra.webStorageAccountName],
-                ["Web PubSub", infra.webPubSubName],
-                ["Hub", infra.hubName],
-                ["Function App", infra.functionAppName],
-                ["App registration", infra.pipelineAppName],
-                ["Sign-in app registration", "Zeninstaller Private"],
-              ].map(([label, value]) => (
-                <Typography key={label} sx={{ fontSize: "0.75rem", color: "#64748b", ...mono }}>
-                  {label}:{" "}
-                  <Box component="span" sx={{ color: "#0f172a" }}>
-                    {value}
-                  </Box>
-                </Typography>
-              ))}
+              <PlainRow label="Resource group" value={infra.resourceGroupName} />
+              <PlainRow label="Log Analytics" value={infra.lawName} />
+
+              {/* Global to Azure, so it has to be changeable when another tenant already holds it. */}
+              <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, minHeight: "1.6em" }}>
+                <Typography sx={{ fontSize: "0.75rem", color: "#64748b", ...mono }}>Site storage account:</Typography>
+                {editingStorage ? (
+                  <>
+                    <TextField
+                      size="small"
+                      value={infra.siteStorageAccount}
+                      onChange={(e) => infra.setSiteStorageAccount(e.target.value)}
+                      error={!!infra.siteStorageError}
+                      helperText={infra.siteStorageError ?? undefined}
+                      sx={{ width: 200 }}
+                      inputProps={{ style: { fontFamily: "'IBM Plex Mono', monospace", fontSize: "0.75rem" } }}
+                    />
+                    {/* Stays open until the name is one this installation can actually create or reuse. */}
+                    <IconButton
+                      size="small"
+                      disabled={infra.siteStorageChecking}
+                      onClick={() => void infra.checkSiteStorageAccount().then((ok) => ok && setEditingStorage(false))}
+                      sx={{ color: "#22c55e", p: 0.25 }}
+                    >
+                      {infra.siteStorageChecking ? <CircularProgress size={12} /> : <CheckIcon sx={{ fontSize: 14 }} />}
+                    </IconButton>
+                  </>
+                ) : (
+                  <>
+                    <Typography sx={{ fontSize: "0.75rem", color: "#0f172a", ...mono }}>
+                      {infra.siteStorageAccount}
+                    </Typography>
+                    <IconButton
+                      size="small"
+                      onClick={() => setEditingStorage(true)}
+                      sx={{ color: "#cbd5e1", p: 0.25, "&:hover": { color: "#2563eb" } }}
+                    >
+                      <EditIcon sx={{ fontSize: 13 }} />
+                    </IconButton>
+                  </>
+                )}
+              </Box>
+
+              <PlainRow label="Sign-in app registration" value={getPrivateInstallerAppName()} />
+
+              {/* Every resource above lands in this region, so it is chosen before the first run. */}
+              <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, minHeight: "1.6em" }}>
+                {editingLocation ? (
+                  <>
+                    <Typography sx={{ fontSize: "0.75rem", color: "#64748b", ...mono }}>Location:</Typography>
+                    {infra.locations.length > 0 ? (
+                      <Select
+                        size="small"
+                        value={infra.location}
+                        onChange={(e) => infra.setLocation(e.target.value)}
+                        sx={{ fontSize: "0.75rem", ...mono, minWidth: 220, "& .MuiSelect-select": { py: 0.35 } }}
+                      >
+                        {infra.locations.map((l) => (
+                          <MenuItem key={l.name} value={l.name} sx={{ fontSize: "0.78rem", ...mono }}>
+                            {l.displayName}{" "}
+                            <Box component="span" sx={{ color: "#94a3b8", ml: 0.5 }}>
+                              ({l.name})
+                            </Box>
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    ) : (
+                      <TextField
+                        size="small"
+                        value={infra.location}
+                        onChange={(e) => infra.setLocation(e.target.value)}
+                        placeholder={infra.locationsLoading ? "Loading regions..." : "e.g. australiaeast"}
+                        sx={{ minWidth: 220 }}
+                        inputProps={{ style: { fontFamily: "'IBM Plex Mono', monospace", fontSize: "0.8rem" } }}
+                      />
+                    )}
+                    {infra.locationsLoading && <CircularProgress size={12} />}
+                    <IconButton
+                      size="small"
+                      onClick={() => setEditingLocation(false)}
+                      sx={{ color: "#22c55e", p: 0.25 }}
+                    >
+                      <CheckIcon sx={{ fontSize: 14 }} />
+                    </IconButton>
+                  </>
+                ) : (
+                  <>
+                    <Typography sx={{ fontSize: "0.75rem", color: "#64748b", ...mono }}>
+                      Location:{" "}
+                      <Box component="span" sx={{ color: "#0f172a" }}>
+                        {infra.locations.find((l) => l.name === infra.location)?.displayName ?? infra.location}
+                      </Box>
+                    </Typography>
+                    <IconButton
+                      size="small"
+                      onClick={() => setEditingLocation(true)}
+                      sx={{ color: "#cbd5e1", p: 0.25, "&:hover": { color: "#2563eb" } }}
+                    >
+                      <EditIcon sx={{ fontSize: 13 }} />
+                    </IconButton>
+                  </>
+                )}
+              </Box>
             </Box>
           </Box>
         )}
@@ -131,36 +237,14 @@ export default function RemoteTerminalInfraCard({
           </Button>
         </Box>
 
-        {infra.result && infra.resultMatches && (
-          <Box>
-            <Typography sx={{ ...labelSx, mb: 0.75 }}>Admin consent</Typography>
-            <Typography sx={{ fontSize: "0.72rem", color: "#475569", mb: 0.5 }}>
-              An administrator opens this once so everyone else can sign in without being prompted.
-            </Typography>
-            <Typography
-              component="a"
-              href={getAdminConsentUrl(infra.result.pipelineTenantId, infra.result.installerClientId)}
-              target="_blank"
-              rel="noopener noreferrer"
-              sx={{
-                fontSize: "0.72rem",
-                ...mono,
-                color: "#1d4ed8",
-                wordBreak: "break-all",
-                textDecoration: "none",
-                "&:hover": { textDecoration: "underline" },
-              }}
-            >
-              {getAdminConsentUrl(infra.result.pipelineTenantId, infra.result.installerClientId)}
-            </Typography>
-          </Box>
-        )}
-
         {infra.steps.length > 0 && (
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 0.25 }}>
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 0.25, borderLeft: "2px solid #e2e8f0", pl: 1.5 }}>
             {infra.steps.map((s) => (
               <StepRow key={s.id} step={s} />
             ))}
+            {infra.running && (
+              <Typography sx={{ fontSize: "0.68rem", color: "#94a3b8", mt: 0.5 }}>Running...</Typography>
+            )}
           </Box>
         )}
 
@@ -191,6 +275,7 @@ export default function RemoteTerminalInfraCard({
             repo={repoName}
             envName={selectedEnv?.name ?? null}
             keys={DEPLOYMENT_TERMINAL_KEYS}
+            hiddenKeys={["SITE_STORAGE_ACCOUNT"]}
             variables={variables}
             populate={populate}
             title="Connection details"

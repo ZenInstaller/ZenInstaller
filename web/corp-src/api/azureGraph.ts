@@ -163,6 +163,24 @@ export async function createSpaAppRegistration(
 
 // ── Service principal ──────────────────────────────────────────────────────────
 
+// A second site means a second origin, so the uri is appended rather than replacing what is registered.
+export async function ensureSpaRedirectUri(
+  account: AzureAccount,
+  appObjectId: string,
+  redirectUri: string,
+  overrideTenantId?: string,
+): Promise<boolean> {
+  const token = await getToken(account, APP_SCOPES, overrideTenantId);
+  const app = await gFetch(token, GRAPH, `/applications/${appObjectId}?$select=spa`);
+  const registered: string[] = app?.spa?.redirectUris ?? [];
+  if (registered.includes(redirectUri)) return false;
+  await gFetch(token, GRAPH, `/applications/${appObjectId}`, {
+    method: "PATCH",
+    body: JSON.stringify({ spa: { redirectUris: [...registered, redirectUri] } }),
+  });
+  return true;
+}
+
 export async function getExistingSP(
   account: AzureAccount,
   appId: string,

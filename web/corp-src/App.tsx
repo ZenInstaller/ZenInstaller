@@ -54,9 +54,6 @@ function AppDashboard() {
   });
   const githubVariableValues = githubVariables.values;
 
-  const corpName = githubVariableValues.NAME ?? "";
-  const dnsName = githubVariableValues.DNS ?? "";
-
   // The Azure sign-in session, shared by the login / subscription / app-registration / access-pass cards.
   const azureLogin = addCard(
     useAzureLoginCard({
@@ -75,14 +72,11 @@ function AppDashboard() {
 
   const remoteTerminalInfra = addCard(
     useRemoteTerminalInfraCard({
+      variableValues: githubVariableValues,
       azureAccount: azureLogin.account,
       subscriptionId: azureSubscription.selectedSubscriptionId,
-      corpName,
       tenantId: githubVariableValues.AZURE_TENANT_ID ?? "",
-      allowedOrigins: [window.location.origin, ...(dnsName ? [`https://www.${dnsName}`, `https://${dnsName}`] : [])],
-      githubAccount: githubRepoEnv.repo.selectedAccount,
-      githubRepo: githubRepoEnv.repo.selectedRepo?.name ?? "",
-      githubRepoId: typeof githubRepoEnv.repo.selectedRepo?.id === "number" ? githubRepoEnv.repo.selectedRepo.id : null,
+      allowedOrigins: [window.location.origin],
     }),
   );
   const webDeploy = addCard(
@@ -91,7 +85,6 @@ function AppDashboard() {
       azureAccount: azureLogin.account,
       subscriptionId: azureSubscription.selectedSubscriptionId,
       tenantId: githubVariableValues.AZURE_TENANT_ID ?? "",
-      corpName,
       githubAccount: githubRepoEnv.repo.selectedAccount,
       repoName: githubRepoEnv.repo.selectedRepo?.name ?? "",
       selectedEnv: githubRepoEnv.env.selectedEnv,

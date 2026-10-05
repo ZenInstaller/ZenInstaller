@@ -328,6 +328,33 @@ export async function ensureSubscriptionDiagnostics(
   return "created";
 }
 
+export async function ensureBlobDiagnostics(
+  account: AzureAccount,
+  subscriptionId: string,
+  resourceGroup: string,
+  storageAccountName: string,
+  settingName: string,
+  workspaceId: string,
+  overrideTenantId?: string,
+): Promise<EnsureResult> {
+  const token = await getToken(account, ARM_SCOPES, overrideTenantId);
+  const path = `/subscriptions/${subscriptionId}/resourceGroups/${resourceGroup}/providers/Microsoft.Storage/storageAccounts/${storageAccountName}/blobServices/default/providers/Microsoft.Insights/diagnosticSettings/${settingName}?api-version=2021-05-01-preview`;
+  if (await armGet(token, path)) return "exists";
+  await gFetch(token, ARM, path, {
+    method: "PUT",
+    body: JSON.stringify({
+      properties: {
+        workspaceId,
+        logs: [
+          { category: "StorageWrite", enabled: true },
+          { category: "StorageDelete", enabled: true },
+        ],
+      },
+    }),
+  });
+  return "created";
+}
+
 // ── Application Insights ───────────────────────────────────────────────────────
 
 // The browser needs the whole connection string, not just the key, and it is only on the resource.
@@ -407,6 +434,50 @@ export async function ensureDnsTxtRecord(
 
 // ── Storage account + container ────────────────────────────────────────────────
 
+type StorageAccountRow = { id?: string; name?: string; properties?: { primaryEndpoints?: { web?: string } } };
+
+async function findStorageAccount(
+  token: string,
+  subscriptionId: string,
+  name: string,
+): Promise<StorageAccountRow | null> {
+  const data = await armGet(
+    token,
+    `/subscriptions/${subscriptionId}/providers/Microsoft.Storage/storageAccounts?api-version=2023-01-01`,
+  );
+  return ((data as { value?: StorageAccountRow[] } | null)?.value ?? []).find((a) => a.name === name) ?? null;
+}
+
+// checkNameAvailability never says who holds a name; this is what tells "ours, elsewhere" apart.
+// ponytail: subscription-scoped, widen to Resource Graph if accounts spread across subscriptions.
+export async function findStorageAccountGroup(
+  account: AzureAccount,
+  subscriptionId: string,
+  name: string,
+  overrideTenantId?: string,
+): Promise<string | null> {
+  const token = await getToken(account, ARM_SCOPES, overrideTenantId);
+  const found = await findStorageAccount(token, subscriptionId, name);
+  return found?.id?.match(/resourceGroups\/([^/]+)/i)?.[1] ?? null;
+}
+
+// Azure answers for the whole world, so "unavailable" can also mean someone else's account.
+export async function storageAccountNameAvailable(
+  account: AzureAccount,
+  subscriptionId: string,
+  name: string,
+  overrideTenantId?: string,
+): Promise<boolean> {
+  const token = await getToken(account, ARM_SCOPES, overrideTenantId);
+  const availability = await gFetch(
+    token,
+    ARM,
+    `/subscriptions/${subscriptionId}/providers/Microsoft.Storage/checkNameAvailability?api-version=2023-01-01`,
+    { method: "POST", body: JSON.stringify({ name, type: "Microsoft.Storage/storageAccounts" }) },
+  );
+  return availability?.nameAvailable !== false;
+}
+
 export async function ensureStorageAccount(
   account: AzureAccount,
   subscriptionId: string,
@@ -443,20 +514,23 @@ export async function ensureStorageAccount(
   return "created";
 }
 
-export async function ensureBlobCors(
+export async function ensureBlobServiceProperties(
   account: AzureAccount,
   subscriptionId: string,
   resourceGroup: string,
   name: string,
   allowedOrigins: string[],
   overrideTenantId?: string,
+  indexDocument = "index.html",
 ): Promise<void> {
   const token = await getToken(account, ARM_SCOPES, overrideTenantId);
-  const path = `/subscriptions/${subscriptionId}/resourceGroups/${resourceGroup}/providers/Microsoft.Storage/storageAccounts/${name}/blobServices/default?api-version=2023-01-01`;
+  const path = `/subscriptions/${subscriptionId}/resourceGroups/${resourceGroup}/providers/Microsoft.Storage/storageAccounts/${name}/blobServices/default?api-version=2025-08-01`;
   await gFetch(token, ARM, path, {
     method: "PUT",
     body: JSON.stringify({
       properties: {
+        // The PUT replaces what it is given, so both have to travel together or one wipes the other.
+        staticWebsite: { enabled: true, indexDocument, errorDocument404Path: indexDocument },
         cors: {
           corsRules: [
             {
@@ -477,14 +551,11 @@ export async function ensureBlobCors(
 export async function getStaticWebsiteUrl(
   account: AzureAccount,
   subscriptionId: string,
-  resourceGroup: string,
   name: string,
   overrideTenantId?: string,
 ): Promise<string | null> {
   const token = await getToken(account, ARM_SCOPES, overrideTenantId);
-  const path = `/subscriptions/${subscriptionId}/resourceGroups/${resourceGroup}/providers/Microsoft.Storage/storageAccounts/${name}?api-version=2023-01-01`;
-  const sa = await armGet(token, path);
-  const web = (sa?.properties as { primaryEndpoints?: { web?: string } } | undefined)?.primaryEndpoints?.web;
+  const web = (await findStorageAccount(token, subscriptionId, name))?.properties?.primaryEndpoints?.web;
   return web ? web.replace(/\/+$/, "") : null;
 }
 

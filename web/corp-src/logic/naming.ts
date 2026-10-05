@@ -25,9 +25,16 @@ export function getTerminalStorageAccountName(corpName: string): string {
   return `${corpName}term`.toLowerCase();
 }
 
-// Static site hosting needs anonymous public reads, so it never shares an account with state.
-export function getWebStorageAccountName(corpName: string): string {
-  return `${corpName}pvtweb`.toLowerCase();
+// One private installer environment per tenant, so these are fixed rather than derived from the corp.
+export const PRIVATE_RESOURCE_GROUP = "zeninstaller-private-rg";
+export const PRIVATE_LOG_ANALYTICS = "zeninstaller-private-law";
+/*
+ * Storage account names are globally unique across all of Azure, so a fixed one would be claimed by
+ * whoever installs first. The subscription's own id is random, per-customer and stable, which keeps
+ * the name both collision-free and the same on every re-run. 18 + 6 is Azure's limit of 24 exactly.
+ */
+export function getWebStorageAccountName(subscriptionId: string): string {
+  return `zeninstallerpvtweb${subscriptionId.replace(/-/g, "").slice(0, 6)}`.toLowerCase();
 }
 
 // The private installer's own sign-in app, so consent happens in the customer's tenant.

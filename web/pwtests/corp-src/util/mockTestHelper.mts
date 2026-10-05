@@ -27,6 +27,15 @@ export type MockAzureState = {
 	rbacAssigned: boolean;
 };
 
+export type CreateDomainAzureMockState = {
+	domainExists: boolean;
+	domainVerified: boolean;
+	domainPrimary: boolean;
+	dnsZoneExists: boolean;
+	dnsTxtExists: boolean;
+	adminConsentGranted: boolean;
+};
+
 async function json(route: Route, body: unknown, status = 200) {
 	await route.fulfill({
 		status,
@@ -104,6 +113,10 @@ export async function installCoreInfraAzureMock(page: Page): Promise<CoreInfraAz
 		const roleAssignmentsIndex = normalizedPath.indexOf(roleAssignmentsMarker);
 		if (roleAssignmentsIndex >= 0) {
 			const scope = normalizedPath.slice(0, roleAssignmentsIndex);
+			const isCoreInfraScope =
+				/\/resourcegroups\/root-pwtests$/i.test(scope) || /\/storageaccounts\/pwtestspvt$/i.test(scope);
+			if (!isCoreInfraScope) return route.fallback();
+
 			if (method === "GET") {
 				const roleIds = state.roleAssignments.get(scope) ?? new Set<string>();
 				return json(route, {
@@ -288,12 +301,12 @@ export async function installMockBackend(page: Page, context?: BrowserContext) {
 	});
 }
 
-export async function installMockAzure(page: Page): Promise<MockAzureState> {
+export async function installMockAzure(page: Page, initialState: Partial<MockAzureState> = {}): Promise<MockAzureState> {
 	const state: MockAzureState = {
-		appDisplayName: null,
-		servicePrincipalCreated: false,
-		federatedSubjects: new Set(),
-		rbacAssigned: false,
+		appDisplayName: initialState.appDisplayName ?? null,
+		servicePrincipalCreated: initialState.servicePrincipalCreated ?? false,
+		federatedSubjects: initialState.federatedSubjects ?? new Set(),
+		rbacAssigned: initialState.rbacAssigned ?? false,
 	};
 
 	await page.route(`${AZURE_MANAGEMENT_URL}/**`, async (route) => {
@@ -349,7 +362,99 @@ export async function installMockAzure(page: Page): Promise<MockAzureState> {
 	return state;
 }
 
-export async function signInMockAzure(page: Page) {
+export async function installCreateDomainAzureMock(
+	page: Page,
+	domainName: string,
+	initialState: Partial<CreateDomainAzureMockState> = {},
+): Promise<CreateDomainAzureMockState> {
+	const state: CreateDomainAzureMockState = {
+		domainExists: initialState.domainExists ?? false,
+		domainVerified: initialState.domainVerified ?? false,
+		domainPrimary: initialState.domainPrimary ?? false,
+		dnsZoneExists: initialState.dnsZoneExists ?? false,
+		dnsTxtExists: initialState.dnsTxtExists ?? false,
+		adminConsentGranted: initialState.adminConsentGranted ?? false,
+	};
+	const nameServers = ["ns1.mock.azure-dns.com.", "ns2.mock.azure-dns.net."];
+	const verificationToken = "MS=ms12345678";
+
+	await page.route(`${AZURE_MANAGEMENT_URL}/**`, async (route) => {
+		const request = route.request();
+		const path = new URL(request.url()).pathname;
+		const normalizedPath = path.toLowerCase();
+		const zonePath = `/providers/microsoft.network/dnszones/${domainName.toLowerCase()}`;
+
+		if (normalizedPath.endsWith(zonePath)) {
+			if (request.method() === "GET") {
+				return state.dnsZoneExists
+					? json(route, { id: path, properties: { nameServers } })
+					: json(route, { error: { code: "ResourceNotFound" } }, 404);
+			}
+			if (request.method() === "PUT") {
+				state.dnsZoneExists = true;
+				return json(route, { id: path, properties: { nameServers } });
+			}
+		}
+
+		if (normalizedPath.endsWith(`${zonePath}/txt/@`)) {
+			if (request.method() === "GET") {
+				return state.dnsTxtExists
+					? json(route, { properties: { TXTRecords: [{ value: [verificationToken] }] } })
+					: json(route, { error: { code: "ResourceNotFound" } }, 404);
+			}
+			if (request.method() === "PUT") {
+				state.dnsTxtExists = true;
+				return json(route, {});
+			}
+		}
+
+		return route.fallback();
+	});
+
+	await page.route(`${MICROSOFT_GRAPH_URL}/**`, async (route) => {
+		const request = route.request();
+		const path = new URL(request.url()).pathname;
+		const domainPath = `/v1.0/domains/${domainName}`;
+
+		if (path === "/v1.0/domains" && request.method() === "GET") {
+			return json(route, {
+				value: state.domainExists && state.domainVerified
+					? [{ id: domainName, isVerified: true, isDefault: state.domainPrimary, isInitial: false }]
+					: [],
+			});
+		}
+		if (path === "/v1.0/domains" && request.method() === "POST") {
+			state.domainExists = true;
+			return json(route, { id: domainName, isVerified: false, isDefault: false }, 201);
+		}
+		if (path === domainPath && request.method() === "GET") {
+			return state.domainExists
+				? json(route, { id: domainName, isVerified: state.domainVerified, isDefault: state.domainPrimary })
+				: json(route, { error: { code: "Request_ResourceNotFound" } }, 404);
+		}
+		if (path === `${domainPath}/verificationDnsRecords` && request.method() === "GET") {
+			return json(route, { value: [{ recordType: "Txt", text: verificationToken }] });
+		}
+		if (path === `${domainPath}/verify` && request.method() === "POST") {
+			state.domainVerified = true;
+			return json(route, { id: domainName, isVerified: true, isDefault: state.domainPrimary });
+		}
+		if (path === domainPath && request.method() === "PATCH") {
+			state.domainPrimary = true;
+			return json(route, {});
+		}
+		if (path.endsWith("/appRoleAssignments") && request.method() === "POST") {
+			state.adminConsentGranted = true;
+			return json(route, {}, 201);
+		}
+
+		return route.fallback();
+	});
+
+	return state;
+}
+
+export async function signInMockAzure(page: Page, additionalGraphScopeSets: string[][] = []): Promise<string> {
 	const localUrl = page.url();
 	await page.route(`${MICROSOFT_LOGIN_URL}/**`, async (route) => {
 		await route.abort("blockedbyclient");
@@ -363,13 +468,21 @@ export async function signInMockAzure(page: Page) {
 	if (!clientId) throw new Error("The mocked Azure sign-in did not include a client ID.");
 
 	await page.goto(localUrl);
-	await page.evaluate(({ clientId, tenantId, azureManagementScope, graphApplicationScope, graphAppRoleAssignmentScope }) => {
+	await page.evaluate(({ clientId, tenantId, azureManagementScope, graphApplicationScope, graphAppRoleAssignmentScope, additionalGraphScopeSets }) => {
 		const environment = "login.microsoftonline.com";
 		const homeAccountId = `mock-home.${tenantId}`;
 		const accountKey = `msal.3|${homeAccountId}|${environment}|${tenantId}`.toLowerCase();
 		const accessTokenKey = ["msal.3", homeAccountId, environment, "accesstoken", clientId, tenantId, azureManagementScope, ""].join("|").toLowerCase();
 		const graphTarget = [graphApplicationScope, graphAppRoleAssignmentScope].join(" ");
 		const graphAccessTokenKey = ["msal.3", homeAccountId, environment, "accesstoken", clientId, tenantId, graphTarget, ""].join("|").toLowerCase();
+		const additionalGraphTargets = additionalGraphScopeSets.map((scopes) => scopes.join(" "));
+		const additionalGraphAccessTokenKeys = additionalGraphTargets.map((target) =>
+			["msal.3", homeAccountId, environment, "accesstoken", clientId, tenantId, target, ""].join("|").toLowerCase(),
+		);
+		const additionalGraphScopes = [...new Set(additionalGraphScopeSets.flat())];
+		const additionalGraphScopeKeys = additionalGraphScopes.map((scope) =>
+					["msal.3", homeAccountId, environment, "accesstoken", clientId, tenantId, scope, ""].join("|").toLowerCase(),
+		);
 		const now = Math.floor(Date.now() / 1000);
 		const username = "mock-user@example.com";
 
@@ -388,7 +501,11 @@ export async function signInMockAzure(page: Page) {
 			name: "Mock Azure User",
 			tenantProfiles: [{ tenantId, localAccountId: "mock-user-id", username, name: "Mock Azure User", isHomeTenant: true }],
 		}));
-		sessionStorage.setItem(`msal.3.token.keys.${clientId}`, JSON.stringify({ idToken: [], accessToken: [accessTokenKey, graphAccessTokenKey], refreshToken: [] }));
+		sessionStorage.setItem(`msal.3.token.keys.${clientId}`, JSON.stringify({
+			idToken: [],
+			accessToken: [accessTokenKey, graphAccessTokenKey, ...additionalGraphAccessTokenKeys],
+			refreshToken: [],
+		}));
 		const token = {
 			homeAccountId,
 			credentialType: "AccessToken",
@@ -404,15 +521,50 @@ export async function signInMockAzure(page: Page) {
 		};
 		sessionStorage.setItem(accessTokenKey, JSON.stringify(token));
 		sessionStorage.setItem(graphAccessTokenKey, JSON.stringify({ ...token, target: graphTarget }));
+		// Consent bundles cover setup while individual entries satisfy later single-scope API calls.
+		for (const [index, key] of additionalGraphAccessTokenKeys.entries()) {
+			sessionStorage.setItem(key, JSON.stringify({ ...token, target: additionalGraphTargets[index] }));
+		}
+		for (const [index, key] of additionalGraphScopeKeys.entries()) {
+			sessionStorage.setItem(key, JSON.stringify({ ...token, target: additionalGraphScopes[index] }));
+		}
 	}, {
 		clientId,
 		tenantId: mockTenantId,
 		azureManagementScope: AZURE_MANAGEMENT_SCOPE,
 		graphApplicationScope: GRAPH_APPLICATION_SCOPE,
 		graphAppRoleAssignmentScope: GRAPH_APP_ROLE_ASSIGNMENT_SCOPE,
+		additionalGraphScopeSets,
 	});
 
 	await page.reload();
+	return clientId;
+}
+
+export async function cacheMockAzureGraphScopeSets(page: Page, clientId: string, scopeSets: string[][]) {
+	await page.evaluate(({ clientId, tenantId, scopeSets }) => {
+		const environment = "login.microsoftonline.com";
+		const homeAccountId = `mock-home.${tenantId}`;
+		const tokenKeysStorageKey = `msal.3.token.keys.${clientId}`;
+		const tokenKeys = JSON.parse(sessionStorage.getItem(tokenKeysStorageKey) ?? '{"idToken":[],"accessToken":[],"refreshToken":[]}');
+		const baseTokenKey = tokenKeys.accessToken.find((key: string) => {
+			const token = JSON.parse(sessionStorage.getItem(key) ?? "null");
+			return token?.target?.includes("management.azure.com");
+		});
+		if (!baseTokenKey) throw new Error("The mocked Azure sign-in has no cached ARM access token.");
+		const baseToken = JSON.parse(sessionStorage.getItem(baseTokenKey)!);
+
+		for (const scopes of scopeSets) {
+			const target = scopes.join(" ");
+			const key = ["msal.3", homeAccountId, environment, "accesstoken", clientId, tenantId, target, ""]
+				.join("|")
+				.toLowerCase();
+			sessionStorage.setItem(key, JSON.stringify({ ...baseToken, target }));
+			if (!tokenKeys.accessToken.includes(key)) tokenKeys.accessToken.push(key);
+		}
+
+		sessionStorage.setItem(tokenKeysStorageKey, JSON.stringify(tokenKeys));
+	}, { clientId, tenantId: mockTenantId, scopeSets });
 }
 
 export { mockSubscriptionId, mockTenantId };
@@ -421,14 +573,19 @@ export async function prepareMockAzureSubscription(
 	page: Page,
 	context: BrowserContext,
 	repoName: string,
-	options: { initialVariables?: Record<string, string>; saveVariables?: boolean } = {},
+	options: {
+		initialVariables?: Record<string, string>;
+		saveVariables?: boolean;
+		initialAzureState?: Partial<MockAzureState>;
+		additionalGraphScopeSets?: string[][];
+	} = {},
 ) {
 	const github = await installMockGitHub(page, context, { initialVariables: options.initialVariables });
-	const azure = await installMockAzure(page);
+	const azure = await installMockAzure(page, options.initialAzureState);
 	await page.goto(CORP_URL);
 
 	const azureLoginCard = await expandAzureLoginCard(page);
-	await signInMockAzure(page);
+	await signInMockAzure(page, options.additionalGraphScopeSets);
 	await expect(azureLoginCard.getByText(/Signed in as/i)).toBeVisible();
 	const tenantSelect = azureLoginCard.getByTestId("tenant-select");
 	await expect(tenantSelect).toBeVisible();

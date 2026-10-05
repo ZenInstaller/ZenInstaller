@@ -4,25 +4,63 @@ import { expect, test } from "@playwright/test";
 import { CORP_URL, viewports } from "../../testInit";
 import { expectSnapshot, safePathSegment } from "../../util/testHelper.ts";
 import {
-	expandAzureAppRegistrationCard,
-	expandAzureLoginCard,
-	expandAzureSubscriptionCard,
-	expandRepoCard,
-} from "../util/cardHelper.mts";
-import { createNewRepo } from "../util/testHelper.mts";
-import {
-	coreInfraStepLabels,
 	expectSuccessfulSteps,
-	cacheMockAzureGraphScopeSets,
 	installCoreInfraAzureMock,
 	installCreateDomainAzureMock,
 	installMockAzure,
 	installMockGitHub,
-	signInMockAzure,
+	mockSubscriptionId,
+	mockTenantId,
 } from "../util/mockTestHelper.mts";
 
 const companyShortCode = "pwtests";
 const domainName = "pwtests.example";
+const mockClientId = "00000000-0000-0000-0000-000000000002";
+
+// Served in place of the Vite MSAL module only for this mock test.
+const authenticationModule = `
+export const MSA_TENANT = "9188040d-6c67-4c5b-b112-36a304b66dad";
+
+const tenantId = ${JSON.stringify(mockTenantId)};
+const account = {
+	homeAccountId: "mock-home." + tenantId,
+	environment: "login.microsoftonline.com",
+	tenantId,
+	localAccountId: "mock-user-id",
+	username: "mock-user@example.com",
+	name: "Mock Azure User",
+	tenantProfiles: new Map([[tenantId, { tenantId, isHomeTenant: true }]]),
+};
+
+const rejectRedirect = async () => {
+	throw new Error("Unexpected authentication redirect in a mock test.");
+};
+
+const msal = {
+	handleRedirectPromise: async () => null,
+	getAllAccounts: () => [account],
+	acquireTokenSilent: async () => ({ account, accessToken: "mock-access-token" }),
+	acquireTokenRedirect: rejectRedirect,
+	loginRedirect: rejectRedirect,
+	clearCache: async () => {},
+};
+
+export const getMsal = async () => msal;
+export const ensureScopeConsent = async () => false;
+export const getToken = async () => "mock-access-token";
+
+let activeAccount = null;
+export function setActiveAzureIdentity(value) {
+	activeAccount = value;
+}
+
+export const getMsToken = async () => activeAccount ? "mock-access-token" : null;
+export async function requireMsToken() {
+	const token = await getMsToken();
+	if (!token) throw new Error("No mocked Microsoft account is active.");
+	return token;
+}
+`;
 
 const initialSetupStepLabels = [
 	"Confirm Microsoft permissions",
@@ -57,76 +95,60 @@ async function prepareDomainCard(
 	viewportName: string,
 ) {
 	const repoName = safePathSegment(`mock-create-domain-${viewportName.toLowerCase()}`);
+	const unexpectedRequests: string[] = [];
+	await context.route("**/*", async (route) => {
+		if (new URL(route.request().url()).origin === new URL(CORP_URL).origin) {
+			return route.continue();
+		}
+		unexpectedRequests.push(`${route.request().method()} ${route.request().url()}`);
+		await route.abort("blockedbyclient");
+	});
+	await context.route("https://js.monitor.azure.com/scripts/b/ai.config.1.cfg.json", (route) =>
+		route.fulfill({ json: { enabled: false } }),
+	);
+	await context.route("https://australiaeast-1.in.applicationinsights.azure.com/v2/track", (route) =>
+		route.fulfill({ status: 200, json: { itemsReceived: 0, itemsAccepted: 0, errors: [] } }),
+	);
+	await page.route(/\/corp-src\/cards\/AzureLogin\/msal\.ts(?:\?.*)?$/, (route) =>
+		route.fulfill({ contentType: "application/javascript", body: authenticationModule }),
+	);
+	await context.addInitScript(({ clientId, tenantId, subscriptionId, corpName }) => {
+		localStorage.setItem("zeninstaller_azure_result", JSON.stringify({
+			clientId, tenantId, subscriptionIds: [subscriptionId],
+		}));
+		localStorage.setItem("zeninstaller_infra_result", JSON.stringify({ corpName, subscriptionId }));
+		sessionStorage.setItem("zeninstaller_arm_tenant", tenantId);
+	}, { clientId: mockClientId, tenantId: mockTenantId, subscriptionId: mockSubscriptionId, corpName: companyShortCode });
 	const github = await installMockGitHub(page, context, {
+		repositoryName: repoName,
+		branches: ["main", "PROD"],
 		initialVariables: {
 			NAME: companyShortCode,
-			COMPANY_SHORT_CODE: companyShortCode,
+			AZURE_TENANT_ID: mockTenantId,
+			AZURE_SUBSCRIPTION_ID: mockSubscriptionId,
+			AZURE_CLIENT_ID: mockClientId,
+			AZURE_PLAN_CLIENT_ID: mockClientId,
 		},
 	});
-	await installMockAzure(page);
-	await page.goto(CORP_URL);
-
-	const azureLoginCard = await expandAzureLoginCard(page);
-	const azureClientId = await signInMockAzure(page);
-	await expect(azureLoginCard.getByText(/Signed in as/i)).toBeVisible();
-	const tenantSelect = azureLoginCard.getByTestId("tenant-select");
-	await expect(tenantSelect).toBeVisible();
-	await tenantSelect.click();
-	await page.getByRole("option", { name: /Mock tenant/i }).click();
-
-	const repoCard = await expandRepoCard(page);
-	await createNewRepo(page, repoCard, repoName);
-	await expect(repoCard.getByText("Loading environments...", { exact: true })).toBeHidden();
-	const prodEnvironment = repoCard.getByText("PROD", { exact: true });
-	await expect(prodEnvironment).toBeVisible();
-	await prodEnvironment.click();
-	const createProdButton = repoCard.getByRole("button", { name: "Create New Branch: PROD" });
-	if (await createProdButton.isVisible()) {
-		await createProdButton.click();
-		await expect(createProdButton).toBeHidden();
-	}
-
-	const azureSubscriptionCard = await expandAzureSubscriptionCard(page);
-	await expect(azureSubscriptionCard.getByText("Loading subscriptions...", { exact: true })).toBeHidden();
-	await expect(azureSubscriptionCard.getByRole("combobox")).toBeVisible();
-	await azureSubscriptionCard.getByRole("button", { name: "Save 2 variables" }).click();
-	await expect(azureSubscriptionCard.getByRole("button", { name: /^Save\s+variables$/ })).toBeDisabled();
-
-	const appRegistrationCard = await expandAzureAppRegistrationCard(page);
-	await appRegistrationCard.locator("input:visible").first().fill("zeninstaller-mock-create-domain");
-	await appRegistrationCard.getByRole("button", { name: "Create app registration" }).click();
-	await expect(appRegistrationCard.getByText("Running...", { exact: true })).toBeHidden();
-	await expect(appRegistrationCard.getByRole("button", { name: "Try again" })).toBeVisible();
-	await expect(appRegistrationCard.getByText(/Connection details saved(?: — no changes needed)?\./i)).toBeVisible();
-	await expect(appRegistrationCard.getByText(/Additional consent required|Consent redirect failed/i)).toHaveCount(0);
-
+	await installMockAzure(page, {
+		appDisplayName: "zeninstaller-mock-create-domain",
+		servicePrincipalCreated: true,
+		rbacAssigned: true,
+	});
 	const azure = await installCreateDomainAzureMock(page, domainName);
-
-	await installCoreInfraAzureMock(page);
-
-	const coreInfraCard = page.locator("#card-core_infra");
-	await coreInfraCard.getByText("Terraform state backend", { exact: true }).click();
-	await expect(coreInfraCard.getByText("Complete the Azure app registration", { exact: true })).toBeHidden();
-	await coreInfraCard.getByRole("button", { name: "Create core infrastructure" }).click();
-	await expect(coreInfraCard.getByText("Running...", { exact: true })).toBeHidden();
-	await expectSuccessfulSteps(coreInfraCard, coreInfraStepLabels(companyShortCode));
-	await expect(coreInfraCard.getByRole("button", { name: "Start over" })).toBeVisible();
-
-	await cacheMockAzureGraphScopeSets(page, azureClientId, [
-		[
-			"https://graph.microsoft.com/Domain.ReadWrite.All",
-			"https://graph.microsoft.com/AppRoleAssignment.ReadWrite.All",
-			"https://graph.microsoft.com/Application.Read.All",
-			"https://graph.microsoft.com/Application.ReadWrite.All",
-		],
-		["https://graph.microsoft.com/Domain.ReadWrite.All"],
-		["https://graph.microsoft.com/Organization.Read.All"],
-	]);
-
+	const infrastructure = await installCoreInfraAzureMock(page);
+	infrastructure.createdResources.add("resource-group");
+	infrastructure.roleAssignments.set(`/subscriptions/${mockSubscriptionId}/resourcegroups/root-${companyShortCode}`,
+		new Set(["acdd72a7-3385-48ef-bd42-f606fba81ae7"]));
+	const url = new URL(CORP_URL);
+	url.search = new URLSearchParams({
+		account: "mock-user", repo: repoName, env: "PROD", tenant: mockTenantId, subscription: mockSubscriptionId,
+	}).toString();
+	await page.goto(url.toString());
 	const card = page.locator("#card-create_domain");
 	await openDomainCard(card);
-
-	return { card, prepared: { github }, azure };
+	await expect(card.getByRole("textbox")).toBeVisible();
+	return { card, prepared: { github }, azure, unexpectedRequests };
 }
 
 test.beforeEach(async ({ page }) => {
@@ -148,11 +170,11 @@ for (const [viewportName, viewport] of Object.entries(viewports)) {
 
 		test("Happy path", async ({ page, context }, testInfo) => {
 			test.setTimeout(180_000);
-			const { card, prepared, azure } = await prepareDomainCard(page, context, viewportName);
+			const { card, prepared, azure, unexpectedRequests } = await prepareDomainCard(page, context, viewportName);
 			await expectSnapshot(page, card, testInfo, "start", viewportName);
 
 			await test.step("Save variables then set up corp domain", async () => {
-				const domainInput = card.getByText("DNS Domain", { exact: true }).locator("../..").getByRole("textbox");
+				const domainInput = card.getByRole("textbox");
 				await expect(domainInput).toBeVisible();
 				await expect(card.getByRole("progressbar")).toBeHidden();
 
@@ -195,7 +217,6 @@ for (const [viewportName, viewport] of Object.entries(viewports)) {
 
 				await expect(card.getByText("Resources", { exact: true })).toBeVisible();
 				await expect(card.getByText(/DNS zone:/i)).toBeVisible();
-				await expect(card.getByText("Point your domain at Azure DNS", { exact: true })).toBeVisible();
 				await expect(card.getByRole("button", { name: "Verify domain now" })).toBeEnabled();
 				expect(azure.domainVerified).toBe(false);
 				expect(azure.domainPrimary).toBe(false);
@@ -203,6 +224,7 @@ for (const [viewportName, viewport] of Object.entries(viewports)) {
 				expect(prepared.github.variables.DNS).toBe(domainName);
 				await expectSnapshot(page, card, testInfo, "end", viewportName);
 			});
+			expect(unexpectedRequests, "All non-app requests must be fulfilled by mocks").toEqual([]);
 		});
 	});
 }

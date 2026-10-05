@@ -12,6 +12,8 @@ const mockSpObjectId = "00000000-0000-0000-0000-000000000004";
 
 type MockGitHubOptions = {
 	initialVariables?: Record<string, string>;
+	repositoryName?: string;
+	branches?: string[];
 };
 
 export type MockGitHubState = {
@@ -164,8 +166,8 @@ export async function installMockGitHub(page: Page, context: BrowserContext, opt
 
 	const state: MockGitHubState = {
 		variables: { ...options.initialVariables },
-		repositoryName: null,
-		branches: new Set(["main"]),
+		repositoryName: options.repositoryName ?? null,
+		branches: new Set(options.branches ?? ["main"]),
 	};
 
 	await page.route(`${GITHUB_API_URL}/**`, async (route) => {
@@ -555,7 +557,7 @@ export async function cacheMockAzureGraphScopeSets(page: Page, clientId: string,
 		const baseToken = JSON.parse(sessionStorage.getItem(baseTokenKey)!);
 
 		for (const scopes of scopeSets) {
-			const target = scopes.join(" ");
+			const target = [...scopes].map((scope) => scope.toLowerCase()).sort().join(" ");
 			const key = ["msal.3", homeAccountId, environment, "accesstoken", clientId, tenantId, target, ""]
 				.join("|")
 				.toLowerCase();

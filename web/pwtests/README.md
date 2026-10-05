@@ -36,3 +36,21 @@ Run the following test while showing the browser and letting the user authentica
 ## Notes to AI:
 Refer to the AI agent guidance at [PlaywrightTest-developer.md](/agents/playwrightTest-developer.md)
 
+## Backend deployment card tests
+
+[BackendDeployCard integration tests](./corp-src/integration-tests/BackendDeployCard.spec.mts)
+reuse `pwtests-Desktop` and `pwtests-Mobile` with their existing `PROD` environment,
+Azure target, and relay connection variables. They require saved GitHub PAT and
+Azure sessions and an already configured Private Zeninstaller Environment.
+Missing configuration fails the test; it does not create repositories, save
+replacement variables, or provision infrastructure.
+
+Running the integration happy path triggers `buildBackend.yml` and may deploy
+backend code and update backend version settings on the existing Function App.
+The happy path is skipped unless `RUN_BACKEND_DEPLOY_INTEGRATION=true` is set.
+Enable it only with approval for those live changes.
+
+[BackendDeployCard mock tests](./corp-src/mock-tests/BackendDeployCard.spec.mts)
+simulate authentication, builds, artifact downloads, deployment, and version
+read-back. They also cover missing artifacts, build failures, upload recovery,
+and signed-out gating without contacting external services.

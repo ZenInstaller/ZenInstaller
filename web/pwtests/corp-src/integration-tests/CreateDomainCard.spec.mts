@@ -207,6 +207,7 @@ for (const [viewportName, viewport] of Object.entries(viewports)) {
 					await card.getByText("Corp domain", { exact: true }).first().click();
 				}
 
+				//TODO: if you reload the page for existing domain then Set up Core DNS Domain button reappears
 				const setupButton = card.getByRole("button", { name: "Re-run setup" });
 				await expectVisibleWithin(setupButton, "Corp domain setup button", 50_000);
 				await setupButton.click();

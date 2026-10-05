@@ -1,3 +1,8 @@
+/**
+ * @license SPDX-FileCopyrightText: © 2026 Zenme Pty Ltd <info@zenme.com.au>
+ * @license SPDX-License-Identifier: MIT
+ */
+
 export const GRAPH = "https://graph.microsoft.com/v1.0";
 export const ARM = "https://management.azure.com";
 

@@ -1,3 +1,8 @@
+/**
+ * @license SPDX-FileCopyrightText: © 2026 Zenme Pty Ltd <info@zenme.com.au>
+ * @license SPDX-License-Identifier: MIT
+ */
+
 import { Box } from "@mui/material";
 import Card from "../../components/Card";
 import ViewLink from "../../components/ViewLink";
@@ -30,12 +35,7 @@ function Action({ repoFullName }: { repoFullName: string | null }) {
 export default function RepoCard({ card, githubRepo, lockedByPR }: Props) {
   const { repo, env } = githubRepo;
   return (
-    <Card
-      title="Repository & environment"
-      action={<Action repoFullName={repo.repoFullName} />}
-      lockedIntro={<Intro />}
-      {...card}
-    >
+    <Card title="Repository & environment" action={<Action repoFullName={repo.repoFullName} />} lockedIntro={<Intro />} {...card}>
       <RepoDetail
         accounts={repo.accountList}
         selectedAccount={repo.selectedAccount}

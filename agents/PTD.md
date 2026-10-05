@@ -1,4 +1,4 @@
-# Agent definition file for PTD
+# Agent definition file for Playwright test Developer
 
 - Name: Playwright test Developer
 - Nickname: PTD

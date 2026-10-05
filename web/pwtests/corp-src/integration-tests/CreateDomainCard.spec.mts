@@ -1,3 +1,8 @@
+/**
+ * @license SPDX-FileCopyrightText: © 2026 Zenme Pty Ltd <info@zenme.com.au>
+ * @license SPDX-License-Identifier: MIT
+ */
+
 // UI component: ../../../corp-src/cards/CreateDomainCard.tsx
 import { writeFile } from "node:fs/promises";
 import { expect, test } from "@playwright/test";
@@ -13,18 +18,22 @@ import { checkRepoExists, chooseExistingRepo, createNewRepo } from "../util/test
 import { restoreAzureSessionStorage, restoreGithubSessionStorage } from "../util/setupHelper.mts";
 import { coreInfraStepLabels, expectSuccessfulSteps } from "../util/mockTestHelper.mts";
 
-async function prepareExistingAzureSubscription(page: import("@playwright/test").Page, context: import("@playwright/test").BrowserContext,viewportName: string,) {
-	await restoreGithubSessionStorage(context);
-	await restoreAzureSessionStorage(context);
-	await page.goto(CORP_URL);
+async function prepareExistingAzureSubscription(
+  page: import("@playwright/test").Page,
+  context: import("@playwright/test").BrowserContext,
+  viewportName: string
+) {
+  await restoreGithubSessionStorage(context);
+  await restoreAzureSessionStorage(context);
+  await page.goto(CORP_URL);
 
-	const azureCard = await expandAzureLoginCard(page);
-	const tenantSelect = azureCard.getByTestId("tenant-select");
-	await expectVisibleWithin(tenantSelect, "Azure tenant selector", 50_000);
-	const tenantId = (await tenantSelect.locator("input").inputValue()).trim();
-	expect(tenantId, "The restored Azure tenant ID should not be empty").not.toBe("");
-	await tenantSelect.click();
-	await page.getByRole("option").filter({ hasText: tenantId }).click();
+  const azureCard = await expandAzureLoginCard(page);
+  const tenantSelect = azureCard.getByTestId("tenant-select");
+  await expectVisibleWithin(tenantSelect, "Azure tenant selector", 50_000);
+  const tenantId = (await tenantSelect.locator("input").inputValue()).trim();
+  expect(tenantId, "The restored Azure tenant ID should not be empty").not.toBe("");
+  await tenantSelect.click();
+  await page.getByRole("option").filter({ hasText: tenantId }).click();
 
 	const repoCard = await expandRepoCard(page);
 	const repoName = safePathSegment(`${TEST_REPO_MAIN}-${viewportName}`);
@@ -97,24 +106,24 @@ async function prepareExistingAzureSubscription(page: import("@playwright/test")
 }
 
 test.beforeEach(async ({ page }) => {
-	await page.coverage.startJSCoverage({ resetOnNavigation: false });
+  await page.coverage.startJSCoverage({ resetOnNavigation: false });
 });
 
 test.afterEach(async ({ page }, testInfo) => {
-	if (page.isClosed()) return;
+  if (page.isClosed()) return;
 
-	const entries = await page.coverage.stopJSCoverage();
-	const file = testInfo.outputPath("v8-coverage.json");
-	await writeFile(file, JSON.stringify(entries), "utf8");
-	await testInfo.attach("v8-coverage", {
-		path: file,
-		contentType: "application/json",
-	});
+  const entries = await page.coverage.stopJSCoverage();
+  const file = testInfo.outputPath("v8-coverage.json");
+  await writeFile(file, JSON.stringify(entries), "utf8");
+  await testInfo.attach("v8-coverage", {
+    path: file,
+    contentType: "application/json",
+  });
 });
 
 for (const [viewportName, viewport] of Object.entries(viewports)) {
-	test.describe(`Create Domain Card - ${viewportName}`, () => {
-		test.use({ viewport, deviceScaleFactor: 1 });
+  test.describe(`Create Domain Card - ${viewportName}`, () => {
+    test.use({ viewport, deviceScaleFactor: 1 });
 
 		test("Happy path", async ({ page, context }, testInfo) => {
 			test.setTimeout(1_200_000);

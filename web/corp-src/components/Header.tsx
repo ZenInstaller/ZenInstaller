@@ -1,3 +1,8 @@
+/**
+ * @license SPDX-FileCopyrightText: © 2026 Zenme Pty Ltd <info@zenme.com.au>
+ * @license SPDX-License-Identifier: MIT
+ */
+
 import { Box, Typography } from "@mui/material";
 
 // The tab title is the same sentence, so it is read from there rather than repeated here.
@@ -29,9 +34,7 @@ export default function Header() {
       >
         ZB
       </Box>
-      <Typography sx={{ fontWeight: 700, fontSize: "0.95rem", color: "#0f172a", letterSpacing: "-0.01em" }}>
-        {document.title}
-      </Typography>
+      <Typography sx={{ fontWeight: 700, fontSize: "0.95rem", color: "#0f172a", letterSpacing: "-0.01em" }}>{document.title}</Typography>
     </Box>
   );
 }

@@ -1,3 +1,8 @@
+/**
+ * @license SPDX-FileCopyrightText: © 2026 Zenme Pty Ltd <info@zenme.com.au>
+ * @license SPDX-License-Identifier: MIT
+ */
+
 import type { CardHook, CardStatus, User } from "../../types";
 import { useGithubRepo, type UseGithubRepo } from "./useGithubRepo";
 import { useGithubEnvironment, type UseGithubEnvironment } from "./useGithubEnvironment";
@@ -56,10 +61,7 @@ export function useRepoCard({ user }: UseRepoCardParams): UseRepoCard {
               ? "Select an environment"
               : `${githubRepo.repoFullName} · ${envName}`;
 
-  const githubEnvUrl =
-    githubRepo.repoFullName && env.selectedEnv
-      ? getEnvSettingsUrl(githubRepo.repoFullName, env.selectedEnv.id)
-      : undefined;
+  const githubEnvUrl = githubRepo.repoFullName && env.selectedEnv ? getEnvSettingsUrl(githubRepo.repoFullName, env.selectedEnv.id) : undefined;
 
   return {
     repo: githubRepo,
@@ -70,11 +72,7 @@ export function useRepoCard({ user }: UseRepoCardParams): UseRepoCard {
     status,
     summary,
     cardRequirements: ["github_login"],
-    cardDependencyLabel: isRepoReady
-      ? isEnvReady
-        ? null
-        : "Choose an environment"
-      : "Select a repository & environment",
+    cardDependencyLabel: isRepoReady ? (isEnvReady ? null : "Choose an environment") : "Select a repository & environment",
     done: isRepoReady && isEnvReady,
   };
 }

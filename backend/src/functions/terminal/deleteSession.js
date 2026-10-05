@@ -1,3 +1,8 @@
+/**
+ * @license SPDX-FileCopyrightText: © 2026 Zenme Pty Ltd <info@zenme.com.au>
+ * @license SPDX-License-Identifier: MIT
+ */
+
 import { app } from "@azure/functions";
 import { requireAuth } from "../../utils/auth.js";
 import { corsWrapper } from "../../utils/cors.js";
@@ -20,6 +25,6 @@ app.http("deleteSession", {
       await deleteSessionEntity(tableClient, sessionId);
       context.log(`Session cleaned up: ${sessionId}`);
       return { jsonBody: { ok: true } };
-    }),
+    })
   ),
 });

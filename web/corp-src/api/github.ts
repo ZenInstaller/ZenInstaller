@@ -1,3 +1,8 @@
+/**
+ * @license SPDX-FileCopyrightText: © 2026 Zenme Pty Ltd <info@zenme.com.au>
+ * @license SPDX-License-Identifier: MIT
+ */
+
 import { parse } from "dotenv";
 import JSZip from "jszip";
 import type { Account, Branch, GhEnv, PullRequest, Repo, StageReport, WorkflowRun, UpsertSecretResult } from "../types";
@@ -67,12 +72,7 @@ export function createGithubApi(token: string) {
   }
 
   // Raw bytes rather than a parsed zip: the backend package goes straight to the Function App.
-  async function fetchArtifactZip(
-    account: Account,
-    repo: string,
-    artifactId: number,
-    onProgress?: DownloadProgress,
-  ): Promise<Blob> {
+  async function fetchArtifactZip(account: Account, repo: string, artifactId: number, onProgress?: DownloadProgress): Promise<Blob> {
     const res = await gh(`/repos/${account.login}/${repo}/actions/artifacts/${artifactId}/zip`);
     if (!res.ok) throw new Error(`Failed to download the package: ${res.status}`);
     return readBlobWithProgress(res, onProgress);
@@ -95,14 +95,8 @@ export function createGithubApi(token: string) {
   // ── Orgs & Repos ──────────────────────────────────────────────────────────────
 
   async function fetchOrgList(): Promise<Account[]> {
-    const [user, orgs] = await Promise.all([
-      fetchGithubUser(token),
-      paginate<{ login: string; id: number }>("/user/orgs"),
-    ]);
-    return [
-      { login: user.login, type: "User", id: user.id },
-      ...orgs.map((o) => ({ login: o.login, type: "Organization" as const, id: o.id })),
-    ];
+    const [user, orgs] = await Promise.all([fetchGithubUser(token), paginate<{ login: string; id: number }>("/user/orgs")]);
+    return [{ login: user.login, type: "User", id: user.id }, ...orgs.map((o) => ({ login: o.login, type: "Organization" as const, id: o.id }))];
   }
 
   async function fetchRepos(account: Account): Promise<Repo[]> {
@@ -129,7 +123,7 @@ export function createGithubApi(token: string) {
     includeAllBranch: boolean,
     createEnvs: boolean,
     templateRepo: string,
-    validEnvs: readonly string[],
+    validEnvs: readonly string[]
   ): Promise<{
     repo: Repo;
     envSuccess: boolean;
@@ -156,7 +150,7 @@ export function createGithubApi(token: string) {
           body: JSON.stringify({}),
         });
         return { name: envName, success: r.ok, error: r.ok ? undefined : String(r.status) };
-      }),
+      })
     );
     return { repo, envSuccess: envResults.every((e) => e.success), results: { envs: envResults } };
   }
@@ -164,18 +158,11 @@ export function createGithubApi(token: string) {
   // ── Branches ──────────────────────────────────────────────────────────────────
 
   async function fetchBranches(account: Account, repo: string): Promise<Branch[]> {
-    const all = await paginate<{ name: string; commit: { sha: string }; protected: boolean }>(
-      `/repos/${account.login}/${repo}/branches`,
-    );
+    const all = await paginate<{ name: string; commit: { sha: string }; protected: boolean }>(`/repos/${account.login}/${repo}/branches`);
     return all.map((b) => ({ name: b.name, commit: b.commit.sha, protected: b.protected }));
   }
 
-  async function createBranch(
-    account: Account,
-    repo: string,
-    branchName: string,
-    sourceBranch: string,
-  ): Promise<Branch> {
+  async function createBranch(account: Account, repo: string, branchName: string, sourceBranch: string): Promise<Branch> {
     const refRes = await gh(`/repos/${account.login}/${repo}/git/ref/heads/${sourceBranch}`);
     if (!refRes.ok) throw new Error(`Failed to resolve source branch "${sourceBranch}": ${refRes.status}`);
     const { object } = await refRes.json();
@@ -216,15 +203,13 @@ export function createGithubApi(token: string) {
     const res = await gh(`/repos/${account.login}/${repo}/actions/runs?head_sha=${headSha}&per_page=100`);
     if (!res.ok) throw new Error(`Failed to fetch runs: ${res.status}`);
     const data = await res.json();
-    return (data.workflow_runs ?? []).map(
-      (r: { id: number; head_sha: string; workflow_id: number; created_at: string; actor: { login: string } }) => ({
-        id: r.id,
-        head_sha: r.head_sha,
-        workflow_id: String(r.workflow_id),
-        created_at: r.created_at,
-        actor: r.actor?.login ?? "",
-      }),
-    );
+    return (data.workflow_runs ?? []).map((r: { id: number; head_sha: string; workflow_id: number; created_at: string; actor: { login: string } }) => ({
+      id: r.id,
+      head_sha: r.head_sha,
+      workflow_id: String(r.workflow_id),
+      created_at: r.created_at,
+      actor: r.actor?.login ?? "",
+    }));
   }
 
   // ── Environments ──────────────────────────────────────────────────────────────
@@ -243,17 +228,11 @@ export function createGithubApi(token: string) {
   // ── Secrets ───────────────────────────────────────────────────────────────────
 
   async function fetchSecrets(account: Account, repo: string, envName: string): Promise<string[]> {
-    const all = await paginate<{ name: string }>(
-      `/repos/${account.login}/${repo}/environments/${encodeURIComponent(envName)}/secrets`,
-    );
+    const all = await paginate<{ name: string }>(`/repos/${account.login}/${repo}/environments/${encodeURIComponent(envName)}/secrets`);
     return all.map((s) => s.name);
   }
 
-  async function fetchPublicKey(
-    account: Account,
-    repo: string,
-    envName?: string,
-  ): Promise<{ key: string; keyId: string }> {
+  async function fetchPublicKey(account: Account, repo: string, envName?: string): Promise<{ key: string; keyId: string }> {
     const path = envName
       ? `/repos/${account.login}/${repo}/environments/${encodeURIComponent(envName)}/secrets/public-key`
       : `/repos/${account.login}/${repo}/actions/secrets/public-key`;
@@ -269,7 +248,7 @@ export function createGithubApi(token: string) {
     name: string,
     encryptedValue: string,
     keyId: string,
-    envName?: string,
+    envName?: string
   ): Promise<UpsertSecretResult> {
     const path = envName
       ? `/repos/${account.login}/${repo}/environments/${encodeURIComponent(envName)}/secrets/${name}`
@@ -285,19 +264,11 @@ export function createGithubApi(token: string) {
   // ── Variables ─────────────────────────────────────────────────────────────────
 
   async function fetchVariables(account: Account, repo: string, envName: string): Promise<Record<string, string>> {
-    const all = await paginate<{ name: string; value: string }>(
-      `/repos/${account.login}/${repo}/environments/${encodeURIComponent(envName)}/variables`,
-    );
+    const all = await paginate<{ name: string; value: string }>(`/repos/${account.login}/${repo}/environments/${encodeURIComponent(envName)}/variables`);
     return Object.fromEntries(all.map((v) => [v.name, v.value]));
   }
 
-  async function createVariable(
-    account: Account,
-    repo: string,
-    name: string,
-    value: string,
-    envName: string,
-  ): Promise<void> {
+  async function createVariable(account: Account, repo: string, name: string, value: string, envName: string): Promise<void> {
     const res = await gh(`/repos/${account.login}/${repo}/environments/${encodeURIComponent(envName)}/variables`, {
       method: "POST",
       body: JSON.stringify({ name, value }),
@@ -305,30 +276,18 @@ export function createGithubApi(token: string) {
     if (!res.ok) throw new Error(`Failed to create variable "${name}": ${res.status}`);
   }
 
-  async function updateVariable(
-    account: Account,
-    repo: string,
-    name: string,
-    value: string,
-    envName: string,
-  ): Promise<void> {
-    const res = await gh(
-      `/repos/${account.login}/${repo}/environments/${encodeURIComponent(envName)}/variables/${name}`,
-      {
-        method: "PATCH",
-        body: JSON.stringify({ name, value }),
-      },
-    );
+  async function updateVariable(account: Account, repo: string, name: string, value: string, envName: string): Promise<void> {
+    const res = await gh(`/repos/${account.login}/${repo}/environments/${encodeURIComponent(envName)}/variables/${name}`, {
+      method: "PATCH",
+      body: JSON.stringify({ name, value }),
+    });
     if (!res.ok) throw new Error(`Failed to update variable "${name}": ${res.status}`);
   }
 
   async function deleteVariable(account: Account, repo: string, name: string, envName: string): Promise<void> {
-    const res = await gh(
-      `/repos/${account.login}/${repo}/environments/${encodeURIComponent(envName)}/variables/${name}`,
-      {
-        method: "DELETE",
-      },
-    );
+    const res = await gh(`/repos/${account.login}/${repo}/environments/${encodeURIComponent(envName)}/variables/${name}`, {
+      method: "DELETE",
+    });
     if (!res.ok) throw new Error(`Failed to delete variable "${name}": ${res.status}`);
   }
 
@@ -340,7 +299,7 @@ export function createGithubApi(token: string) {
     envName: string,
     dir: string,
     kind: "plan" | "deploy" | "build",
-    perPage: number = 1,
+    perPage: number = 1
   ): Promise<StageReport | null> {
     const params = new URLSearchParams({ environment: envName, task: `${kind}:${dir}`, per_page: perPage.toString() });
     const res = await gh(`/repos/${account.login}/${repo}/deployments?${params}`);
@@ -406,13 +365,7 @@ export function createGithubApi(token: string) {
     }
   }
 
-  async function triggerWorkflow(
-    account: Account,
-    repo: string,
-    workflowId: string,
-    githubEnvName: string,
-    ref: string,
-  ): Promise<void> {
+  async function triggerWorkflow(account: Account, repo: string, workflowId: string, githubEnvName: string, ref: string): Promise<void> {
     const res = await gh(`/repos/${account.login}/${repo}/actions/workflows/${workflowId}/dispatches`, {
       method: "POST",
       body: JSON.stringify({ ref, inputs: { github_env_name: githubEnvName } }),
@@ -420,13 +373,7 @@ export function createGithubApi(token: string) {
     if (!res.ok) throw new Error(`Failed to trigger workflow: ${res.status}`);
   }
 
-  async function triggerWorkflowFromPR(
-    account: Account,
-    repo: string,
-    workflowId: string,
-    githubEnvName: string,
-    commitSha: string,
-  ): Promise<void> {
+  async function triggerWorkflowFromPR(account: Account, repo: string, workflowId: string, githubEnvName: string, commitSha: string): Promise<void> {
     return triggerWorkflow(account, repo, workflowId, githubEnvName, commitSha);
   }
   // Hands the workflow the session the browser already registered, never the access token.

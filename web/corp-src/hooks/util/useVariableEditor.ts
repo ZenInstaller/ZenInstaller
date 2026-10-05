@@ -1,3 +1,8 @@
+/**
+ * @license SPDX-FileCopyrightText: © 2026 Zenme Pty Ltd <info@zenme.com.au>
+ * @license SPDX-License-Identifier: MIT
+ */
+
 import { useEffect, useRef, useState } from "react";
 import type { Account, UpsertStatus } from "../../types";
 import { createVariable, updateVariable, deleteVariable } from "../../api";
@@ -28,17 +33,7 @@ type Params = {
  * Local/saved variable-editing core shared by the GitHub- and Azure-variables editors: tracks
  * edits, dirty state, the save loop, resync against external saves, and optional auto-save.
  */
-export function useVariableEditor({
-  keys,
-  savedValues,
-  account,
-  repo,
-  envName,
-  onSavedKey,
-  populate,
-  autoSaveCounter,
-  onAutoSaveResult,
-}: Params) {
+export function useVariableEditor({ keys, savedValues, account, repo, envName, onSavedKey, populate, autoSaveCounter, onAutoSaveResult }: Params) {
   const [localValues, setLocalValues] = useState<Record<string, string>>(savedValues);
   const [upsertStatuses, setUpsertStatuses] = useState<UpsertStatus[]>([]);
   const [updating, setUpdating] = useState(false);

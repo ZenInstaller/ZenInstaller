@@ -1,3 +1,8 @@
+/**
+ * @license SPDX-FileCopyrightText: © 2026 Zenme Pty Ltd <info@zenme.com.au>
+ * @license SPDX-License-Identifier: MIT
+ */
+
 import { Box, Button, CircularProgress } from "@mui/material";
 import type { SxProps, Theme } from "@mui/material";
 import CheckIcon from "@mui/icons-material/Check";

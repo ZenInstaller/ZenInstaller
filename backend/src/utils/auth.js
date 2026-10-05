@@ -1,3 +1,8 @@
+/**
+ * @license SPDX-FileCopyrightText: © 2026 Zenme Pty Ltd <info@zenme.com.au>
+ * @license SPDX-License-Identifier: MIT
+ */
+
 import { Forbidden, Unauthorized } from "../error/index.js";
 import { assertRoles } from "./rbac.js";
 

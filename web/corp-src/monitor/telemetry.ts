@@ -1,11 +1,12 @@
 /**
- * @license SPDX-FileCopyrightText: © 2025 Zenme Pty Ltd <info@zenme.com.au>
+ * @license SPDX-FileCopyrightText: © 2026 Zenme Pty Ltd <info@zenme.com.au>
  * @license SPDX-License-Identifier: MIT
  */
+
 import { getAppInsights } from "./applicationInsights";
 import _ from "lodash";
 
-export const logPageView = (name: string, properties?: Record<string, any>) => {
+export const logPageView = (name: string, properties?: Record<string, unknown>) => {
   const appInsights = getAppInsights();
   const operationId = appInsights.context.telemetryTrace.traceID;
   const correlationId = operationId;
@@ -22,7 +23,7 @@ export const logPageView = (name: string, properties?: Record<string, any>) => {
   console.log("Logging page view:", name, properties, operationId);
 };
 
-export const logEvent = (eventName: string, properties?: Record<string, any>) => {
+export const logEvent = (eventName: string, properties?: Record<string, unknown>) => {
   const actionType = "click";
   const parentId = "UnknownParent";
   const pageName = document.title || window.location.pathname;

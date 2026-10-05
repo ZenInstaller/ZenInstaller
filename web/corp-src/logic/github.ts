@@ -1,3 +1,8 @@
+/**
+ * @license SPDX-FileCopyrightText: © 2026 Zenme Pty Ltd <info@zenme.com.au>
+ * @license SPDX-License-Identifier: MIT
+ */
+
 // GitHub URL builders shared across corp-src.
 
 export const GITHUB_LOGIN_URL = "https://github.com/login";

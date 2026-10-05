@@ -1,3 +1,8 @@
+/**
+ * @license SPDX-FileCopyrightText: © 2026 Zenme Pty Ltd <info@zenme.com.au>
+ * @license SPDX-License-Identifier: MIT
+ */
+
 import { useCallback } from "react";
 import { fetchVariables } from "../api";
 import type { Account } from "../types";
@@ -40,7 +45,7 @@ export function useGithubVariables(opts: UseGithubVariablesParams): UseGithubVar
     (key: string, value: string) => {
       setValues((prev) => ({ ...prev, [key]: value }));
     },
-    [setValues],
+    [setValues]
   );
 
   return { values, loading, refreshing, error, onRefresh, onConfirmed };

@@ -1,3 +1,8 @@
+/**
+ * @license SPDX-FileCopyrightText: © 2026 Zenme Pty Ltd <info@zenme.com.au>
+ * @license SPDX-License-Identifier: MIT
+ */
+
 import { useEffect } from "react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { act } from "react";
@@ -45,10 +50,7 @@ vi.mock("../hooks/useUrlStateManager", () => ({
   },
 }));
 
-function HookHarness(props: {
-  user: Parameters<typeof useGithubRepo>[0];
-  onUpdate: (value: UseGithubRepo) => void;
-}) {
+function HookHarness(props: { user: Parameters<typeof useGithubRepo>[0]; onUpdate: (value: UseGithubRepo) => void }) {
   const value = useGithubRepo(props.user);
 
   useEffect(() => {
@@ -115,7 +117,14 @@ describe("useGithubRepo", () => {
     const root = createRoot(container);
 
     await act(async () => {
-      root.render(<HookHarness user={baseUser()} onUpdate={(v) => { latest = v; }} />);
+      root.render(
+        <HookHarness
+          user={baseUser()}
+          onUpdate={(v) => {
+            latest = v;
+          }}
+        />
+      );
     });
 
     await waitFor(() => {
@@ -140,7 +149,14 @@ describe("useGithubRepo", () => {
     urlMocks.has.mockImplementation((key: string) => key === "account");
 
     await act(async () => {
-      root.render(<HookHarness user={baseUser()} onUpdate={(v) => { latest = v; }} />);
+      root.render(
+        <HookHarness
+          user={baseUser()}
+          onUpdate={(v) => {
+            latest = v;
+          }}
+        />
+      );
     });
 
     await waitFor(() => {
@@ -160,7 +176,14 @@ describe("useGithubRepo", () => {
     const root = createRoot(document.createElement("div"));
 
     await act(async () => {
-      root.render(<HookHarness user={baseUser()} onUpdate={(v) => { latest = v; }} />);
+      root.render(
+        <HookHarness
+          user={baseUser()}
+          onUpdate={(v) => {
+            latest = v;
+          }}
+        />
+      );
     });
 
     await waitFor(() => {
@@ -199,7 +222,14 @@ describe("useGithubRepo", () => {
     const root = createRoot(document.createElement("div"));
 
     await act(async () => {
-      root.render(<HookHarness user={baseUser()} onUpdate={(v) => { latest = v; }} />);
+      root.render(
+        <HookHarness
+          user={baseUser()}
+          onUpdate={(v) => {
+            latest = v;
+          }}
+        />
+      );
     });
 
     await waitFor(() => {
@@ -231,7 +261,14 @@ describe("useGithubRepo", () => {
     const root = createRoot(document.createElement("div"));
 
     await act(async () => {
-      root.render(<HookHarness user={baseUser()} onUpdate={(v) => { latest = v; }} />);
+      root.render(
+        <HookHarness
+          user={baseUser()}
+          onUpdate={(v) => {
+            latest = v;
+          }}
+        />
+      );
     });
 
     await waitFor(() => {
@@ -269,7 +306,14 @@ describe("useGithubRepo", () => {
     const root = createRoot(document.createElement("div"));
 
     await act(async () => {
-      root.render(<HookHarness user={baseUser()} onUpdate={(v) => { latest = v; }} />);
+      root.render(
+        <HookHarness
+          user={baseUser()}
+          onUpdate={(v) => {
+            latest = v;
+          }}
+        />
+      );
     });
 
     await waitFor(() => {
@@ -307,7 +351,14 @@ describe("useGithubRepo", () => {
     const root = createRoot(document.createElement("div"));
 
     await act(async () => {
-      root.render(<HookHarness user={baseUser()} onUpdate={(v) => { latest = v; }} />);
+      root.render(
+        <HookHarness
+          user={baseUser()}
+          onUpdate={(v) => {
+            latest = v;
+          }}
+        />
+      );
     });
 
     await waitFor(() => {
@@ -348,7 +399,14 @@ describe("useGithubRepo", () => {
     const root = createRoot(document.createElement("div"));
 
     await act(async () => {
-      root.render(<HookHarness user={baseUser()} onUpdate={(v) => { latest = v; }} />);
+      root.render(
+        <HookHarness
+          user={baseUser()}
+          onUpdate={(v) => {
+            latest = v;
+          }}
+        />
+      );
     });
 
     await waitFor(() => {
@@ -369,7 +427,14 @@ describe("useGithubRepo", () => {
     const root = createRoot(container);
 
     await act(async () => {
-      root.render(<HookHarness user={baseUser()} onUpdate={(v) => { latest = v; }} />);
+      root.render(
+        <HookHarness
+          user={baseUser()}
+          onUpdate={(v) => {
+            latest = v;
+          }}
+        />
+      );
     });
 
     await waitFor(() => {
@@ -401,7 +466,14 @@ describe("useGithubRepo", () => {
     const root = createRoot(document.createElement("div"));
 
     await act(async () => {
-      root.render(<HookHarness user={baseUser()} onUpdate={(v) => { latest = v; }} />);
+      root.render(
+        <HookHarness
+          user={baseUser()}
+          onUpdate={(v) => {
+            latest = v;
+          }}
+        />
+      );
     });
 
     await act(async () => {
@@ -424,14 +496,26 @@ describe("useGithubRepo", () => {
     mockApi.generateRepo.mockResolvedValueOnce({
       repo: { id: 33, name: "new-repo" },
       envSuccess: false,
-      results: { envs: [{ name: "PROD", success: false }, { name: "TEST", success: true }] },
+      results: {
+        envs: [
+          { name: "PROD", success: false },
+          { name: "TEST", success: true },
+        ],
+      },
     });
 
     let latest: UseGithubRepo | null = null;
     const root = createRoot(document.createElement("div"));
 
     await act(async () => {
-      root.render(<HookHarness user={baseUser()} onUpdate={(v) => { latest = v; }} />);
+      root.render(
+        <HookHarness
+          user={baseUser()}
+          onUpdate={(v) => {
+            latest = v;
+          }}
+        />
+      );
     });
 
     await waitFor(() => {
@@ -465,7 +549,14 @@ describe("useGithubRepo", () => {
     const root = createRoot(document.createElement("div"));
 
     await act(async () => {
-      root.render(<HookHarness user={baseUser()} onUpdate={(v) => { latest = v; }} />);
+      root.render(
+        <HookHarness
+          user={baseUser()}
+          onUpdate={(v) => {
+            latest = v;
+          }}
+        />
+      );
     });
 
     await waitFor(() => {
@@ -494,7 +585,14 @@ describe("useGithubRepo", () => {
     const root = createRoot(document.createElement("div"));
 
     await act(async () => {
-      root.render(<HookHarness user={baseUser()} onUpdate={(v) => { latest = v; }} />);
+      root.render(
+        <HookHarness
+          user={baseUser()}
+          onUpdate={(v) => {
+            latest = v;
+          }}
+        />
+      );
     });
 
     await waitFor(() => {
@@ -533,7 +631,14 @@ describe("useGithubRepo", () => {
     const root = createRoot(document.createElement("div"));
 
     await act(async () => {
-      root.render(<HookHarness user={baseUser()} onUpdate={(v) => { latest = v; }} />);
+      root.render(
+        <HookHarness
+          user={baseUser()}
+          onUpdate={(v) => {
+            latest = v;
+          }}
+        />
+      );
     });
 
     await act(async () => {
@@ -563,7 +668,14 @@ describe("useGithubRepo", () => {
     const root = createRoot(document.createElement("div"));
 
     await act(async () => {
-      root.render(<HookHarness user={baseUser()} onUpdate={(v) => { latest = v; }} />);
+      root.render(
+        <HookHarness
+          user={baseUser()}
+          onUpdate={(v) => {
+            latest = v;
+          }}
+        />
+      );
     });
 
     await act(async () => {
@@ -602,7 +714,14 @@ describe("useGithubRepo", () => {
     const root = createRoot(document.createElement("div"));
 
     await act(async () => {
-      root.render(<HookHarness user={baseUser()} onUpdate={(v) => { latest = v; }} />);
+      root.render(
+        <HookHarness
+          user={baseUser()}
+          onUpdate={(v) => {
+            latest = v;
+          }}
+        />
+      );
     });
 
     await act(async () => {
@@ -627,7 +746,14 @@ describe("useGithubRepo", () => {
     const root = createRoot(document.createElement("div"));
 
     await act(async () => {
-      root.render(<HookHarness user={baseUser()} onUpdate={(v) => { latest = v; }} />);
+      root.render(
+        <HookHarness
+          user={baseUser()}
+          onUpdate={(v) => {
+            latest = v;
+          }}
+        />
+      );
     });
 
     await waitFor(() => {

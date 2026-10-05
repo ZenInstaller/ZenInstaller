@@ -1,3 +1,8 @@
+/**
+ * @license SPDX-FileCopyrightText: © 2026 Zenme Pty Ltd <info@zenme.com.au>
+ * @license SPDX-License-Identifier: MIT
+ */
+
 import { app } from "@azure/functions";
 import { Octokit } from "octokit";
 import { requireAuth } from "../utils/auth.js";
@@ -23,7 +28,7 @@ app.http("getVariables", {
           environment_name: env,
           per_page: 30,
         },
-        (res) => res.data ?? [],
+        (res) => res.data ?? []
       );
       // Convert array to { NAME: value } map for easy lookup on the frontend
       const variables = Object.fromEntries(all.map(({ name, value }) => [name, value]));
@@ -31,6 +36,6 @@ app.http("getVariables", {
       return {
         jsonBody: { success: true, variables },
       };
-    }),
+    })
   ),
 });

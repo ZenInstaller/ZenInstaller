@@ -1,3 +1,8 @@
+/**
+ * @license SPDX-FileCopyrightText: © 2026 Zenme Pty Ltd <info@zenme.com.au>
+ * @license SPDX-License-Identifier: MIT
+ */
+
 import { useCallback, useEffect, useState } from "react";
 import { listSubscriptions, type Subscription } from "../../api/azureGraph";
 import { AZURE_CLIENT_ID } from "../../config/azureConfig";
@@ -84,30 +89,23 @@ export function useAzureSubscriptionCard({
   // ── Restore ───────────────────────────────────────────────────────────────
   const restoreSubscription = useCallback(
     (value: string): boolean => {
-      const match =
-        subscriptions.find((s) => s.id === value) ?? findIgnoreCase(subscriptions, (s) => s.displayName, value);
+      const match = subscriptions.find((s) => s.id === value) ?? findIgnoreCase(subscriptions, (s) => s.displayName, value);
       if (!match) return false;
       setSelectedSubscriptionId(match.id);
       return true;
     },
-    [subscriptions],
+    [subscriptions]
   );
 
-  const subscriptionConfirmed =
-    !!savedSubscriptionId && savedSubscriptionId === selectedSubscriptionId && confirmedTenantId === pickedTenant;
+  const subscriptionConfirmed = !!savedSubscriptionId && savedSubscriptionId === selectedSubscriptionId && confirmedTenantId === pickedTenant;
   const subscriptionDrift = !!selectedSubscriptionId && !subscriptionConfirmed;
   const subscriptionNoAccess = !!pickedTenant && !!subsError && subscriptions.length === 0;
-  const subscriptionLabel =
-    subscriptions.find((s) => s.id === savedSubscriptionId)?.displayName ?? (savedSubscriptionId || undefined);
+  const subscriptionLabel = subscriptions.find((s) => s.id === savedSubscriptionId)?.displayName ?? (savedSubscriptionId || undefined);
 
   const azureConfigured = !!AZURE_CLIENT_ID;
   // Assumes prerequisites are met — App locks this card (via cardRequirements) whenever they're not,
   // which overrides this status to "idle" regardless of what's computed here.
-  const status: CardStatus = subscriptionConfirmed
-    ? "complete"
-    : subscriptionDrift || subscriptionNoAccess
-      ? "warning"
-      : "idle";
+  const status: CardStatus = subscriptionConfirmed ? "complete" : subscriptionDrift || subscriptionNoAccess ? "warning" : "idle";
   const summary = !azureConfigured
     ? "Unavailable"
     : subscriptionConfirmed

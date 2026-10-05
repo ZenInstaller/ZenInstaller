@@ -1,3 +1,8 @@
+/**
+ * @license SPDX-FileCopyrightText: © 2026 Zenme Pty Ltd <info@zenme.com.au>
+ * @license SPDX-License-Identifier: MIT
+ */
+
 import { Box, Button, CircularProgress, Typography } from "@mui/material";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import LockIcon from "@mui/icons-material/Lock";
@@ -60,11 +65,7 @@ export default function EnvDetail({
   // Show EnvBranchDetail only when the error is "no branch found" (not PR mismatch / multiple)
   const showBranchCreate = !!selectedEnv && !!branchMatchError && branchMatchError.startsWith("No branch found");
   // Always available once a repo is known — points at the specific env once one's picked, otherwise the environments list (e.g. to add a new one).
-  const githubEnvironmentsUrl = repoFullName
-    ? selectedEnv
-      ? getEnvSettingsUrl(repoFullName, selectedEnv.id)
-      : getEnvironmentsUrl(repoFullName)
-    : null;
+  const githubEnvironmentsUrl = repoFullName ? (selectedEnv ? getEnvSettingsUrl(repoFullName, selectedEnv.id) : getEnvironmentsUrl(repoFullName)) : null;
 
   return (
     <Box>
@@ -105,9 +106,7 @@ export default function EnvDetail({
         {loading ? (
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
             <CircularProgress size={14} sx={{ color: "#cbd5e1" }} />
-            <Typography sx={{ fontSize: "0.75rem", color: "#94a3b8", fontFamily: "'IBM Plex Mono', monospace" }}>
-              Loading environments...
-            </Typography>
+            <Typography sx={{ fontSize: "0.75rem", color: "#94a3b8", fontFamily: "'IBM Plex Mono', monospace" }}>Loading environments...</Typography>
           </Box>
         ) : filteredEnvs.length === 0 ? (
           <Typography sx={{ fontSize: "0.78rem", color: "#94a3b8", fontFamily: "'IBM Plex Mono', monospace" }}>
@@ -149,10 +148,7 @@ export default function EnvDetail({
                   {isSelected && lockedByPR && <LockIcon sx={{ fontSize: 13 }} />}
                   {env.name}
                   {isSelected && lockedByPR && (
-                    <Typography
-                      component="span"
-                      sx={{ fontSize: "0.65rem", fontFamily: "'IBM Plex Mono', monospace", opacity: 0.75, ml: 0.25 }}
-                    >
+                    <Typography component="span" sx={{ fontSize: "0.65rem", fontFamily: "'IBM Plex Mono', monospace", opacity: 0.75, ml: 0.25 }}>
                       from PR
                     </Typography>
                   )}

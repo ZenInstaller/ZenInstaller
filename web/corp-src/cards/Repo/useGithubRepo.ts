@@ -1,3 +1,8 @@
+/**
+ * @license SPDX-FileCopyrightText: © 2026 Zenme Pty Ltd <info@zenme.com.au>
+ * @license SPDX-License-Identifier: MIT
+ */
+
 import { useCallback, useEffect, useRef, useState } from "react";
 import { checkTemplate, createBranch, fetchBranches, fetchOrgList, fetchRepos, generateRepo } from "../../api";
 import { TEMPLATE_REPO, VALID_ENVS } from "../../config/githubConfig";
@@ -91,8 +96,7 @@ export function useGithubRepo(user: User | null): UseGithubRepo {
 
   // ── Derived ───────────────────────────────────────────────────────────────
   const isNewRepo = selectedRepo?.isNew ?? false;
-  const repoFullName =
-    selectedAccount && selectedRepo && !isNewRepo ? `${selectedAccount.login}/${selectedRepo.name}` : null;
+  const repoFullName = selectedAccount && selectedRepo && !isNewRepo ? `${selectedAccount.login}/${selectedRepo.name}` : null;
 
   // Auto-clear clone error when a different repo is selected
   useEffect(() => {
@@ -138,7 +142,7 @@ export function useGithubRepo(user: User | null): UseGithubRepo {
         setStatus("warning");
       }
     },
-    [loadBranches],
+    [loadBranches]
   );
 
   // ── Effects ───────────────────────────────────────────────────────────────
@@ -215,11 +219,7 @@ export function useGithubRepo(user: User | null): UseGithubRepo {
     setCloneError(null);
     setCloneEnvWarning(null);
     try {
-      const {
-        repo: newRepo,
-        envSuccess,
-        results,
-      } = await generateRepo(acc, name, isPrivate, includeAllBranch, createEnvs, TEMPLATE_REPO, VALID_ENVS);
+      const { repo: newRepo, envSuccess, results } = await generateRepo(acc, name, isPrivate, includeAllBranch, createEnvs, TEMPLATE_REPO, VALID_ENVS);
       const updated = [...repoListRef.current, newRepo];
       setRepoList(updated);
       repoCache.current[String(acc.id)] = updated;
@@ -279,7 +279,7 @@ export function useGithubRepo(user: User | null): UseGithubRepo {
       setSelectedAccount(match ?? accountList[0] ?? null);
       return !!match;
     },
-    [accountList],
+    [accountList]
   );
 
   const restoreRepo = useCallback(
@@ -289,7 +289,7 @@ export function useGithubRepo(user: User | null): UseGithubRepo {
       setSelectedRepo({ id: match.id, name: match.name });
       return true;
     },
-    [repoList],
+    [repoList]
   );
 
   return {

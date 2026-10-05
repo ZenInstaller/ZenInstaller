@@ -1,3 +1,8 @@
+/**
+ * @license SPDX-FileCopyrightText: © 2026 Zenme Pty Ltd <info@zenme.com.au>
+ * @license SPDX-License-Identifier: MIT
+ */
+
 // ── App registration client ID (ZenInstaller SPA) ─────────────────────────────
 
 export const AZURE_CLIENT_ID = import.meta.env.VITE_AZURE_CLIENT_ID as string | undefined;
@@ -9,20 +14,14 @@ export const AZURE_CLIENT_ID = import.meta.env.VITE_AZURE_CLIENT_ID as string | 
 export const LOGIN_SCOPES = ["openid", "profile", "User.Read"];
 
 // App-registration card: create/read the app + SP, manage federated credentials.
-export const APP_SCOPES = [
-  "https://graph.microsoft.com/Application.ReadWrite.All",
-  "https://graph.microsoft.com/AppRoleAssignment.ReadWrite.All",
-];
+export const APP_SCOPES = ["https://graph.microsoft.com/Application.ReadWrite.All", "https://graph.microsoft.com/AppRoleAssignment.ReadWrite.All"];
 
 export const ARM_SCOPES = ["https://management.azure.com/user_impersonation"];
 export const DOMAIN_SCOPES = ["https://graph.microsoft.com/Domain.ReadWrite.All"];
 export const ORGANIZATION_SCOPES = ["https://graph.microsoft.com/Organization.Read.All"];
 
 // Domain card: granting DomainReadWriteAll to the pipeline's service principal.
-export const GRANT_CONSENT_SCOPES = [
-  "https://graph.microsoft.com/AppRoleAssignment.ReadWrite.All",
-  "https://graph.microsoft.com/Application.Read.All",
-];
+export const GRANT_CONSENT_SCOPES = ["https://graph.microsoft.com/AppRoleAssignment.ReadWrite.All", "https://graph.microsoft.com/Application.Read.All"];
 
 export const ACCESS_PASS_SCOPES = [
   "https://graph.microsoft.com/User.ReadWrite.All",
@@ -73,11 +72,7 @@ export const BACKEND_VERSION_KEYS = {
 } as const;
 
 // ── Resource provider namespaces ───────────────────────────────────────────────
-export const CORE_INFRA_PROVIDERS = [
-  "Microsoft.OperationalInsights",
-  "Microsoft.Insights",
-  "Microsoft.Storage",
-] as const;
+export const CORE_INFRA_PROVIDERS = ["Microsoft.OperationalInsights", "Microsoft.Insights", "Microsoft.Storage"] as const;
 export const DNS_PROVIDERS = ["Microsoft.Network"] as const;
 export const REMOTE_TERMINAL_PROVIDERS = [
   "Microsoft.OperationalInsights",

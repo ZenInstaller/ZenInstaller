@@ -1,3 +1,8 @@
+/**
+ * @license SPDX-FileCopyrightText: © 2026 Zenme Pty Ltd <info@zenme.com.au>
+ * @license SPDX-License-Identifier: MIT
+ */
+
 import { useEffect } from "react";
 import { Box, Button, CircularProgress, MenuItem, Select, Typography } from "@mui/material";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
@@ -33,8 +38,8 @@ type Props = {
 function Intro() {
   return (
     <Typography sx={{ fontSize: "0.78rem", color: "#475569", lineHeight: 1.7 }}>
-      Pick the subscription to deploy into. This is where the resource group, storage account and DNS zone will be
-      created, and it's saved to GitHub so the pipeline uses the same target.
+      Pick the subscription to deploy into. This is where the resource group, storage account and DNS zone will be created, and it's saved to GitHub so the
+      pipeline uses the same target.
     </Typography>
   );
 }
@@ -47,9 +52,7 @@ function Intro() {
  * group; the selection is fed to the infra, domain, and app-registration cards.
  */
 function Action({ subscriptionId, tenantId }: { subscriptionId: string; tenantId?: string }) {
-  return (
-    <ViewLink href={subscriptionId ? getAzureSubscriptionUrl(tenantId, subscriptionId) : AZURE_SUBSCRIPTIONS_URL} />
-  );
+  return <ViewLink href={subscriptionId ? getAzureSubscriptionUrl(tenantId, subscriptionId) : AZURE_SUBSCRIPTIONS_URL} />;
 }
 
 export default function AzureSubscriptionCard({
@@ -65,14 +68,7 @@ export default function AzureSubscriptionCard({
   onUserInteract,
 }: Props) {
   const { tenants, manualTenantId } = azure;
-  const {
-    subscriptions,
-    selectedSubscriptionId,
-    setSelectedSubscriptionId,
-    subsError,
-    subscriptionDrift,
-    subscriptionNoAccess,
-  } = subscription;
+  const { subscriptions, selectedSubscriptionId, setSelectedSubscriptionId, subsError, subscriptionDrift, subscriptionNoAccess } = subscription;
 
   // Pre-select subscription from the saved AZURE_SUBSCRIPTION_ID once its list is loaded — unless
   // a URL restore is trying to apply a (possibly different) ?subscription= value, which should win.
@@ -126,9 +122,7 @@ export default function AzureSubscriptionCard({
           </Button>
         </Box>
 
-        {subsError && !subscriptionNoAccess && (
-          <Typography sx={{ fontSize: "0.72rem", color: "#ef4444" }}>{subsError}</Typography>
-        )}
+        {subsError && !subscriptionNoAccess && <Typography sx={{ fontSize: "0.72rem", color: "#ef4444" }}>{subsError}</Typography>}
 
         {/* Subscription */}
         <Box>
@@ -143,22 +137,25 @@ export default function AzureSubscriptionCard({
               }}
               displayEmpty
               renderValue={(v) => {
-                if (!v)
-                  return (
-                    <Typography sx={{ fontSize: "0.8rem", color: "#94a3b8", ...mono }}>
-                      Select a subscription
-                    </Typography>
-                  );
+                if (!v) return <Typography sx={{ fontSize: "0.8rem", color: "#94a3b8", ...mono }}>Select a subscription</Typography>;
                 const name = subscriptionOptions.find((s) => s.id === v)?.displayName ?? v;
-                return <Typography data-sensitive="true" sx={{ fontSize: "0.8rem", ...mono }}>{name}</Typography>;
+                return (
+                  <Typography data-sensitive="true" sx={{ fontSize: "0.8rem", ...mono }}>
+                    {name}
+                  </Typography>
+                );
               }}
               sx={{ minWidth: { xs: 0, sm: 380 }, width: "100%", fontSize: "0.8rem", ...mono }}
             >
               {subscriptionOptions.map((s) => (
                 <MenuItem key={s.id} value={s.id} sx={{ py: 0.75 }}>
                   <Box>
-                    <Typography data-sensitive="true" sx={{ fontSize: "0.8rem", ...mono }}>{s.displayName}</Typography>
-                    <Typography data-sensitive="true" sx={{ fontSize: "0.68rem", color: "#94a3b8", ...mono }}>{s.id}</Typography>
+                    <Typography data-sensitive="true" sx={{ fontSize: "0.8rem", ...mono }}>
+                      {s.displayName}
+                    </Typography>
+                    <Typography data-sensitive="true" sx={{ fontSize: "0.68rem", color: "#94a3b8", ...mono }}>
+                      {s.id}
+                    </Typography>
                   </Box>
                 </MenuItem>
               ))}
@@ -166,9 +163,7 @@ export default function AzureSubscriptionCard({
           ) : subscriptionNoAccess ? (
             <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
               <WarningAmberIcon sx={{ fontSize: 14, color: "#d97706" }} />
-              <Typography sx={{ fontSize: "0.75rem", color: "#d97706" }}>
-                This tenant has no subscriptions you can access.
-              </Typography>
+              <Typography sx={{ fontSize: "0.75rem", color: "#d97706" }}>This tenant has no subscriptions you can access.</Typography>
             </Box>
           ) : (
             <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>

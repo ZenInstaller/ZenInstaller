@@ -1,3 +1,8 @@
+/**
+ * @license SPDX-FileCopyrightText: © 2026 Zenme Pty Ltd <info@zenme.com.au>
+ * @license SPDX-License-Identifier: MIT
+ */
+
 import { Box, Button, CircularProgress, Typography } from "@mui/material";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
@@ -18,20 +23,7 @@ type Props = {
 };
 
 export default function BackendDeployCard({ card, backend, repoFullName }: Props) {
-  const {
-    appName,
-    latest,
-    deployed,
-    loadingLatest,
-    loadingDeployed,
-    building,
-    build,
-    updateAvailable,
-    error,
-    steps,
-    running,
-    run,
-  } = backend;
+  const { appName, latest, deployed, loadingLatest, loadingDeployed, building, build, updateAvailable, error, steps, running, run } = backend;
 
   return (
     <Card
@@ -54,11 +46,7 @@ export default function BackendDeployCard({ card, backend, repoFullName }: Props
             <Typography sx={{ fontSize: "0.75rem", color: "#64748b", ...mono }}>
               Latest build:{" "}
               <Box component="span" sx={{ color: "#0f172a" }}>
-                {loadingLatest
-                  ? "checking..."
-                  : latest
-                    ? `${latest.sha.slice(0, 7)} · ${when(latest.builtAt)}`
-                    : "none yet"}
+                {loadingLatest ? "checking..." : latest ? `${latest.sha.slice(0, 7)} · ${when(latest.builtAt)}` : "none yet"}
               </Box>
             </Typography>
             <Typography sx={{ fontSize: "0.75rem", color: "#64748b", ...mono }}>
@@ -78,17 +66,13 @@ export default function BackendDeployCard({ card, backend, repoFullName }: Props
         {!loadingLatest && latest && !updateAvailable && (
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
             <CheckCircleIcon sx={{ fontSize: 14, color: "#22c55e" }} />
-            <Typography sx={{ fontSize: "0.75rem", color: "#15803d", ...mono }}>
-              The Function App is running the latest build.
-            </Typography>
+            <Typography sx={{ fontSize: "0.75rem", color: "#15803d", ...mono }}>The Function App is running the latest build.</Typography>
           </Box>
         )}
         {!loadingLatest && updateAvailable && deployed && (
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
             <WarningAmberIcon sx={{ fontSize: 14, color: "#d97706" }} />
-            <Typography sx={{ fontSize: "0.75rem", color: "#92400e", ...mono }}>
-              A newer build is available — deploy to pick it up.
-            </Typography>
+            <Typography sx={{ fontSize: "0.75rem", color: "#92400e", ...mono }}>A newer build is available — deploy to pick it up.</Typography>
           </Box>
         )}
 

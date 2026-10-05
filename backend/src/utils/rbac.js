@@ -1,3 +1,8 @@
+/**
+ * @license SPDX-FileCopyrightText: © 2026 Zenme Pty Ltd <info@zenme.com.au>
+ * @license SPDX-License-Identifier: MIT
+ */
+
 import { Forbidden, InternalError } from "../error/index.js";
 import { webPubSubResourceId } from "./webPubSub.js";
 import { sessionTableResourceId } from "./sessionTable.js";

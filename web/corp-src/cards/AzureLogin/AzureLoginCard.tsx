@@ -1,3 +1,8 @@
+/**
+ * @license SPDX-FileCopyrightText: © 2026 Zenme Pty Ltd <info@zenme.com.au>
+ * @license SPDX-License-Identifier: MIT
+ */
+
 import { Box, Button, CircularProgress, MenuItem, Select, TextField, Typography } from "@mui/material";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import { CLOUD_DOCS } from "./config.ts";
@@ -18,8 +23,8 @@ type Props = {
 function Intro() {
   return (
     <Typography sx={{ fontSize: "0.78rem", color: "#475569", lineHeight: 1.7 }}>
-      Sign in with Azure so we can create the app registration and cloud resources for you. We never store your Azure
-      credentials — sign-in happens directly with Microsoft, and only a short-lived access token is used.
+      Sign in with Azure so we can create the app registration and cloud resources for you. We never store your Azure credentials — sign-in happens directly
+      with Microsoft, and only a short-lived access token is used.
     </Typography>
   );
 }
@@ -57,11 +62,7 @@ export default function AzureLoginCard({ card, azureLogin }: Props) {
   } = azureLogin;
 
   // A tenant list was fetched, but the saved tenant doesn't appear in it — an error, not just a warning.
-  const savedTenantNotInList =
-    !!savedTenantId &&
-    manualTenantId === savedTenantId &&
-    tenants.length > 0 &&
-    !tenants.some((t) => t.tenantId === savedTenantId);
+  const savedTenantNotInList = !!savedTenantId && manualTenantId === savedTenantId && tenants.length > 0 && !tenants.some((t) => t.tenantId === savedTenantId);
 
   return (
     <Card title="Azure login" action={<Action />} lockedIntro={<Intro />} {...card}>
@@ -127,12 +128,7 @@ export default function AzureLoginCard({ card, azureLogin }: Props) {
             <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
               <Typography sx={{ fontSize: "0.78rem", color: "#64748b" }}>
                 Signed in as{" "}
-                <Box
-                  component="span"
-                  data-sensitive="true"
-                  data-id="txtAzureUsername"
-                  sx={{ fontWeight: 600, ...mono }}
-                >
+                <Box component="span" data-sensitive="true" data-id="txtAzureUsername" sx={{ fontWeight: 600, ...mono }}>
                   {azureAccount.username}
                 </Box>
               </Typography>
@@ -197,13 +193,8 @@ export default function AzureLoginCard({ card, azureLogin }: Props) {
                   onChange={(e) => selectTenant(e.target.value)}
                   displayEmpty
                   renderValue={(v) => {
-                    if (!v)
-                      return (
-                        <Typography sx={{ fontSize: "0.8rem", color: "#94a3b8", ...mono }}>Select a tenant</Typography>
-                      );
-                    return (
-                      <Typography sx={{ fontSize: "0.8rem", ...mono }}>{tenantDisplayName(tenants, v)}</Typography>
-                    );
+                    if (!v) return <Typography sx={{ fontSize: "0.8rem", color: "#94a3b8", ...mono }}>Select a tenant</Typography>;
+                    return <Typography sx={{ fontSize: "0.8rem", ...mono }}>{tenantDisplayName(tenants, v)}</Typography>;
                   }}
                   sx={{ minWidth: { xs: 0, sm: 380 }, width: "100%", fontSize: "0.8rem", ...mono }}
                 >
@@ -264,13 +255,9 @@ export default function AzureLoginCard({ card, azureLogin }: Props) {
                 </Box>
               )}
               {savedTenantNotInList ? (
-                <Typography sx={{ fontSize: "0.72rem", color: "#ef4444", mt: 0.75 }}>
-                  Saved tenant not found — please pick another.
-                </Typography>
+                <Typography sx={{ fontSize: "0.72rem", color: "#ef4444", mt: 0.75 }}>Saved tenant not found — please pick another.</Typography>
               ) : (
-                tenantIdError && (
-                  <Typography sx={{ fontSize: "0.72rem", color: "#ef4444", mt: 0.75 }}>{tenantIdError}</Typography>
-                )
+                tenantIdError && <Typography sx={{ fontSize: "0.72rem", color: "#ef4444", mt: 0.75 }}>{tenantIdError}</Typography>
               )}
             </Box>
           </Box>

@@ -1,3 +1,8 @@
+/**
+ * @license SPDX-FileCopyrightText: © 2026 Zenme Pty Ltd <info@zenme.com.au>
+ * @license SPDX-License-Identifier: MIT
+ */
+
 import type {
   ActionType,
   CardId,
@@ -51,21 +56,18 @@ export function computePlanSummary(items: PlanItem[]): PlanSummary {
       if (t === "replace") acc.replace++;
       return acc;
     },
-    { create: 0, update: 0, delete: 0, replace: 0 },
+    { create: 0, update: 0, delete: 0, replace: 0 }
   );
 }
 
 export function isNoChanges(summary?: PlanSummary): boolean {
-  return (
-    summary != null && summary.create === 0 && summary.update === 0 && summary.delete === 0 && summary.replace === 0
-  );
+  return summary != null && summary.create === 0 && summary.update === 0 && summary.delete === 0 && summary.replace === 0;
 }
 
 export function getEffectiveStatus(stage: Stage, summary?: PlanSummary, isOptional?: boolean): StageStatus {
   // The deploy records its plan run whatever the outcome, so the status has to be checked too —
   // a failed or cancelled apply must stay "success" and keep offering Deploy.
-  if (stage.deployStatus === "success" && stage.deployPlanRunId && stage.runId && stage.deployPlanRunId === stage.runId)
-    return "deployed";
+  if (stage.deployStatus === "success" && stage.deployPlanRunId && stage.runId && stage.deployPlanRunId === stage.runId) return "deployed";
   if (isNoChanges(summary)) return "deployed";
   if (isOptional && stage.status === "pending") return "skipped";
   return stage.status;
@@ -76,13 +78,7 @@ export function isPlanBehind(stage: Stage, latestSha?: string): boolean {
   return !!stage.planSha && !!latestSha && stage.planSha !== latestSha;
 }
 
-export function getStageSummaryText(
-  stage: Stage,
-  summary: PlanSummary | undefined,
-  loading: boolean,
-  stale: boolean,
-  optional?: boolean,
-): string {
+export function getStageSummaryText(stage: Stage, summary: PlanSummary | undefined, loading: boolean, stale: boolean, optional?: boolean): string {
   if (stale) return "Status update required";
   if (loading) return "Loading status...";
   if (isNoChanges(summary)) return "No changes";
@@ -108,18 +104,11 @@ export function stageToCardStatus(effectiveStatus: StageStatus, isStale: boolean
   return "idle";
 }
 
-export function hasVariableDiff(
-  prerequisites: Prerequisite[],
-  currentVars: Record<string, string>,
-  deployedEnv: Record<string, string>,
-): boolean {
+export function hasVariableDiff(prerequisites: Prerequisite[], currentVars: Record<string, string>, deployedEnv: Record<string, string>): boolean {
   return prerequisites.some((p) => {
-    if (p.type === "var")
-      return (currentVars[(p as PrerequisiteVar).key] ?? "") !== (deployedEnv[(p as PrerequisiteVar).key] ?? "");
+    if (p.type === "var") return (currentVars[(p as PrerequisiteVar).key] ?? "") !== (deployedEnv[(p as PrerequisiteVar).key] ?? "");
     if (p.type === "varGroup" || p.type === "stageVar")
-      return (p as PrerequisiteVarGroup | PrerequisiteStageVar).keys.some(
-        (k) => (currentVars[k] ?? "") !== (deployedEnv[k] ?? ""),
-      );
+      return (p as PrerequisiteVarGroup | PrerequisiteStageVar).keys.some((k) => (currentVars[k] ?? "") !== (deployedEnv[k] ?? ""));
     return false;
   });
 }

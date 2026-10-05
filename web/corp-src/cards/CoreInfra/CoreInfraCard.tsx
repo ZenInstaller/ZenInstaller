@@ -1,3 +1,8 @@
+/**
+ * @license SPDX-FileCopyrightText: © 2026 Zenme Pty Ltd <info@zenme.com.au>
+ * @license SPDX-License-Identifier: MIT
+ */
+
 import { useState } from "react";
 import { Box, Button, CircularProgress, IconButton, MenuItem, Select, TextField, Typography } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
@@ -32,8 +37,7 @@ type Props = {
 function Intro({ containerName }: { containerName: string }) {
   return (
     <Typography sx={{ fontSize: "0.78rem", color: "#475569", lineHeight: 1.7 }}>
-      Creates the root Azure resources — resource group, Log Analytics, Application Insights, the private storage
-      account — then the{" "}
+      Creates the root Azure resources — resource group, Log Analytics, Application Insights, the private storage account — then the{" "}
       <Box component="span" sx={mono}>
         {containerName}
       </Box>{" "}
@@ -93,10 +97,7 @@ export default function CoreInfraCard({
 
   const locationDisplayName = locations.find((l) => l.name === location)?.displayName ?? location;
 
-  const rgExists =
-    !!subscriptionId &&
-    !!infra.resourceGroupName &&
-    (infra.infraRbacStatus === "ready" || infra.infraRbacStatus === "missing-role");
+  const rgExists = !!subscriptionId && !!infra.resourceGroupName && (infra.infraRbacStatus === "ready" || infra.infraRbacStatus === "missing-role");
 
   return (
     <Card
@@ -111,9 +112,7 @@ export default function CoreInfraCard({
         {/* Gating hints */}
         {!azureAccount && (
           <Box sx={{ background: "#fef9c3", border: "1px solid #fde047", borderRadius: "8px", px: 2, py: 1.25 }}>
-            <Typography sx={{ fontSize: "0.75rem", color: "#713f12" }}>
-              Sign in with Azure first — this card reuses that session.
-            </Typography>
+            <Typography sx={{ fontSize: "0.75rem", color: "#713f12" }}>Sign in with Azure first — this card reuses that session.</Typography>
           </Box>
         )}
         {azureAccount && missing.length > 0 && (
@@ -166,9 +165,7 @@ export default function CoreInfraCard({
             }}
           >
             <WarningAmberIcon sx={{ fontSize: 16, color: "#d97706", flexShrink: 0 }} />
-            <Typography sx={{ fontSize: "0.75rem", color: "#713f12" }}>
-              GitHub Actions has no access on the resource group — re-run to grant it.
-            </Typography>
+            <Typography sx={{ fontSize: "0.75rem", color: "#713f12" }}>GitHub Actions has no access on the resource group — re-run to grant it.</Typography>
           </Box>
         )}
 
@@ -177,9 +174,7 @@ export default function CoreInfraCard({
           <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
             <Box>
               <Typography sx={{ ...labelSx, mb: 0.75 }}>Resources</Typography>
-              <Box
-                sx={{ borderLeft: "2px solid #e2e8f0", pl: 1.5, display: "flex", flexDirection: "column", gap: 0.25 }}
-              >
+              <Box sx={{ borderLeft: "2px solid #e2e8f0", pl: 1.5, display: "flex", flexDirection: "column", gap: 0.25 }}>
                 {[
                   ["Resource group", resourceGroupName],
                   ["Log Analytics", lawName],
@@ -227,11 +222,7 @@ export default function CoreInfraCard({
                         />
                       )}
                       {locationsLoading && <CircularProgress size={12} />}
-                      <IconButton
-                        size="small"
-                        onClick={() => setEditingLocation(false)}
-                        sx={{ color: "#22c55e", p: 0.25 }}
-                      >
+                      <IconButton size="small" onClick={() => setEditingLocation(false)} sx={{ color: "#22c55e", p: 0.25 }}>
                         <CheckIcon sx={{ fontSize: 14 }} />
                       </IconButton>
                     </>
@@ -243,11 +234,7 @@ export default function CoreInfraCard({
                           {locationDisplayName}
                         </Box>
                       </Typography>
-                      <IconButton
-                        size="small"
-                        onClick={() => setEditingLocation(true)}
-                        sx={{ color: "#cbd5e1", p: 0.25, "&:hover": { color: "#2563eb" } }}
-                      >
+                      <IconButton size="small" onClick={() => setEditingLocation(true)} sx={{ color: "#cbd5e1", p: 0.25, "&:hover": { color: "#2563eb" } }}>
                         <EditIcon sx={{ fontSize: 12 }} />
                       </IconButton>
                     </>

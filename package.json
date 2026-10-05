@@ -1,7 +1,7 @@
 {
   "name": "zeninstaller-monorepo",
   "version": "1.0.0",
-  "description": "Zen Installer - Monorepo for web and backend",
+  "description": "Zen Installer Public - Monorepo",
   "private": true,
   "type": "module",
   "scripts": {
@@ -9,8 +9,8 @@
     "dev:all": "pnpm -r dev",
     "build": "pnpm --filter web build",
     "build:all": "pnpm -r build",
-    "lint": "pnpm --filter web lint",
-    "lint:all": "pnpm -r lint",
+    "lint": "pnpm exec eslint",
+    "lint:all": "pnpm exec eslint",
     "test": "pnpm --filter web test",
     "test:all": "pnpm -r test",
     "test:watch": "pnpm --filter web test:watch",
@@ -23,11 +23,20 @@
     "install-all": "pnpm install -r",
     "knip": "knip"
   },
-  "engines": {
-    "pnpm": ">=11.0.0"
-  },
-  "packageManager": "pnpm@11.22.0+sha512.1ff870c4c6133dfd88fb2afc46dd13d47f09c9794b438c6fdb47ca98caf3bc16381ee0be93a091b8e3824cf01f889f46d7d9e20910fb0be1ab0fb5baa80dd621",
   "devDependencies": {
-    "knip": "^6.32.2"
-  }
+    "@eslint/js": "^9.39.5",
+    "eslint": "^9.39.5",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-license-header": "^0.8.0",
+    "eslint-plugin-prettier": "^5.5.6",
+    "globals": "^16.5.0",
+    "husky": "^9.1.7",
+    "knip": "^6.32.2",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.67.0"
+  },
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "packageManager": "pnpm@11.22.0+sha512.1ff870c4c6133dfd88fb2afc46dd13d47f09c9794b438c6fdb47ca98caf3bc16381ee0be93a091b8e3824cf01f889f46d7d9e20910fb0be1ab0fb5baa80dd621"
 }

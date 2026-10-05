@@ -1,3 +1,8 @@
+/**
+ * @license SPDX-FileCopyrightText: © 2026 Zenme Pty Ltd <info@zenme.com.au>
+ * @license SPDX-License-Identifier: MIT
+ */
+
 import { readFileSync, writeFileSync } from "fs";
 import { resolve, dirname } from "path";
 import { fileURLToPath } from "url";
@@ -16,9 +21,7 @@ if (!env.SUBSCRIPTION_ID?.trim()) throw new Error("SUBSCRIPTION_ID is required i
 // storage account: remove dashes, lowercase, append "storage"  (e.g. zen-terminal → zenterminalstorage)
 const storageAccountName = target.replace(/-/g, "").toLowerCase() + "storage";
 if (storageAccountName.length > 24) {
-  throw new Error(
-    `Storage account name "${storageAccountName}" is ${storageAccountName.length} chars; Azure allows 24. Shorten TARGET_ENV.`,
-  );
+  throw new Error(`Storage account name "${storageAccountName}" is ${storageAccountName.length} chars; Azure allows 24. Shorten TARGET_ENV.`);
 }
 
 // No sensible default: a wrong sub claim produces a principal that can never authenticate.
@@ -28,7 +31,7 @@ const subjects = (env.GITHUB_OIDC_SUBJECTS ?? "")
   .filter(Boolean);
 if (subjects.length === 0) {
   throw new Error(
-    'GITHUB_OIDC_SUBJECTS is required in .env — copy the exact "subject" from an existing federated credential on the pipeline repo, comma separated for each environment',
+    'GITHUB_OIDC_SUBJECTS is required in .env — copy the exact "subject" from an existing federated credential on the pipeline repo, comma separated for each environment'
   );
 }
 

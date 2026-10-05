@@ -1,14 +1,15 @@
+/**
+ * @license SPDX-FileCopyrightText: © 2026 Zenme Pty Ltd <info@zenme.com.au>
+ * @license SPDX-License-Identifier: MIT
+ */
+
 import type { Branch, GhEnv } from "../../types";
 
 export function isValidEnvName(name: string, validEnvs: readonly string[]): boolean {
   return validEnvs.some((v) => v.toLowerCase() === name.toLowerCase());
 }
 
-export type EnvMatchResult =
-  | { status: "exact"; env: GhEnv }
-  | { status: "case"; env: GhEnv }
-  | { status: "multiple"; envs: GhEnv[] }
-  | { status: "none" };
+export type EnvMatchResult = { status: "exact"; env: GhEnv } | { status: "case"; env: GhEnv } | { status: "multiple"; envs: GhEnv[] } | { status: "none" };
 
 export function matchEnv(name: string, envList: GhEnv[], validEnvs: readonly string[]): EnvMatchResult {
   const filtered = envList.filter((e) => isValidEnvName(e.name, validEnvs));
@@ -20,10 +21,7 @@ export function matchEnv(name: string, envList: GhEnv[], validEnvs: readonly str
 }
 
 export type BranchMatchResult =
-  | { status: "exact"; branch: Branch }
-  | { status: "case"; branch: Branch }
-  | { status: "multiple"; branches: Branch[] }
-  | { status: "none" };
+  { status: "exact"; branch: Branch } | { status: "case"; branch: Branch } | { status: "multiple"; branches: Branch[] } | { status: "none" };
 
 export function matchBranch(envName: string, branches: Branch[]): BranchMatchResult {
   const matches = branches.filter((b) => b.name.toLowerCase() === envName.toLowerCase());

@@ -13,33 +13,6 @@
       "path": "./backend",
     },
   ],
-  "launch": {
-    "version": "0.2.0",
-    "configurations": [
-      {
-        "name": "Run web",
-        "type": "node-terminal",
-        "request": "launch",
-        "command": "pnpm run dev",
-        "cwd": "${workspaceFolder:ROOT}",
-      },
-      {
-        "name": "Run backend",
-        "type": "node-terminal",
-        "request": "launch",
-        "command": "pnpm run backend:start",
-        "cwd": "${workspaceFolder:ROOT}",
-      },
-      {
-        "name": "Run docs",
-        "type": "node-terminal",
-        "request": "launch",
-        "command": "pnpm run docs:dev",
-        "cwd": "${workspaceFolder:ROOT}",
-      },
-    ],
-    "compounds": [],
-  },
   "settings": {
     // These settings apply to all workspaces.
     "files.exclude": {

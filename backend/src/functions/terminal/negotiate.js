@@ -1,3 +1,8 @@
+/**
+ * @license SPDX-FileCopyrightText: © 2026 Zenme Pty Ltd <info@zenme.com.au>
+ * @license SPDX-License-Identifier: MIT
+ */
+
 import { app } from "@azure/functions";
 import { requireAuth } from "../../utils/auth.js";
 import { anyOf } from "../../utils/rbac.js";
@@ -45,6 +50,6 @@ app.http("negotiate", {
       });
 
       return { jsonBody: { url: normalizeTokenResponse(tokenResponse) } };
-    }),
+    })
   ),
 });

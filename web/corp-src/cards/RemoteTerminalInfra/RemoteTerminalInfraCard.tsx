@@ -1,3 +1,8 @@
+/**
+ * @license SPDX-FileCopyrightText: © 2026 Zenme Pty Ltd <info@zenme.com.au>
+ * @license SPDX-License-Identifier: MIT
+ */
+
 import { useEffect, useRef, useState } from "react";
 import { Box, Button, CircularProgress, Collapse, Typography } from "@mui/material";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
@@ -25,17 +30,7 @@ type Props = {
   githubUrl?: string;
 };
 
-export default function RemoteTerminalInfraCard({
-  card,
-  infra,
-  subscriptionId,
-  tenantId,
-  githubAccount,
-  repoName,
-  selectedEnv,
-  variables,
-  githubUrl,
-}: Props) {
+export default function RemoteTerminalInfraCard({ card, infra, subscriptionId, tenantId, githubAccount, repoName, selectedEnv, variables, githubUrl }: Props) {
   const [varExpanded, setVarExpanded] = useState(false);
   const [autoSaveCounter, setAutoSaveCounter] = useState(0);
   const prevRunNonceRef = useRef(infra.runNonce);
@@ -50,9 +45,7 @@ export default function RemoteTerminalInfraCard({
     return () => clearTimeout(t);
   }, [infra.runNonce]);
 
-  const rgUrl = subscriptionId
-    ? getAzureResourceUrl(tenantId, resourceGroupScope(subscriptionId, infra.resourceGroupName))
-    : null;
+  const rgUrl = subscriptionId ? getAzureResourceUrl(tenantId, resourceGroupScope(subscriptionId, infra.resourceGroupName)) : null;
 
   const populate =
     infra.result && infra.resultMatches
@@ -68,8 +61,8 @@ export default function RemoteTerminalInfraCard({
     <Card title="Private Zeninstaller Environment" action={rgUrl ? <ViewLink href={rgUrl} /> : undefined} {...card}>
       <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
         <Typography sx={{ fontSize: "0.78rem", color: "#475569", lineHeight: 1.6 }}>
-          The relay behind the stage-card terminal: Web PubSub, the session table, and the Function App that issues
-          group-scoped tokens. Everything connects by managed identity — no access key is stored.
+          The relay behind the stage-card terminal: Web PubSub, the session table, and the Function App that issues group-scoped tokens. Everything connects by
+          managed identity — no access key is stored.
         </Typography>
 
         {infra.steps.length === 0 && (

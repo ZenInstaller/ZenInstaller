@@ -1,3 +1,8 @@
+/**
+ * @license SPDX-FileCopyrightText: © 2026 Zenme Pty Ltd <info@zenme.com.au>
+ * @license SPDX-License-Identifier: MIT
+ */
+
 import { useCallback } from "react";
 import { getProviderRegistrationState, registerProvider } from "../../api/azureArm";
 import type { AzureAccount } from "../../types";
@@ -29,9 +34,7 @@ export function useProviderRegistration({ azureAccount, subscriptionId, tenantId
         let delay = POLL_START_MS;
         for (;;) {
           await new Promise((r) => setTimeout(r, delay));
-          if (
-            (await getProviderRegistrationState(azureAccount, subscriptionId, namespace, tenantId)) === "Registered"
-          ) {
+          if ((await getProviderRegistrationState(azureAccount, subscriptionId, namespace, tenantId)) === "Registered") {
             return true;
           }
           if (Date.now() - start > TIMEOUT_MS) throw new Error(`Timed out registering resource provider ${namespace}`);
@@ -43,7 +46,7 @@ export function useProviderRegistration({ azureAccount, subscriptionId, tenantId
       const results = await Promise.all(namespaces.map(async (ns) => ({ ns, registered: await registerOne(ns) })));
       return { registered: results.filter((r) => r.registered).map((r) => r.ns) };
     },
-    [azureAccount, subscriptionId, tenantId],
+    [azureAccount, subscriptionId, tenantId]
   );
 
   return { ensureRegistered };

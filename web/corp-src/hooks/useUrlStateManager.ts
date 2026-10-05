@@ -1,3 +1,8 @@
+/**
+ * @license SPDX-FileCopyrightText: © 2026 Zenme Pty Ltd <info@zenme.com.au>
+ * @license SPDX-License-Identifier: MIT
+ */
+
 import { useCallback, useEffect, useRef, useState } from "react";
 import { captureOAuthReturn } from "../logic/oauth";
 
@@ -52,7 +57,7 @@ function readySignature(chains: UrlRestoreChainConfig[]): string {
         `${chain.active ? 1 : 0}:${chain.disabled ? 1 : 0}:` +
         Object.entries(chain.fields)
           .map(([key, field]) => `${key}:${field.ready ? 1 : 0}:${field.scope ?? "-"}`)
-          .join("|"),
+          .join("|")
     )
     .join("||");
 }
@@ -130,7 +135,7 @@ export function useUrlRestore(chains: UrlRestoreChainConfig[]): UseUrlRestoreRes
           setWarnings((prev) => [...prev, `Could not restore from link: ${dropped.join(", ")}`]);
           if (Object.keys(pendingRef.current).length === 0) setCompleted(true);
           setRestoring(computeRestoring(chainsRef.current, pendingRef.current));
-        }, RESTORE_TIMEOUT_MS),
+        }, RESTORE_TIMEOUT_MS)
       );
     }
     return () => timers.forEach(clearTimeout);

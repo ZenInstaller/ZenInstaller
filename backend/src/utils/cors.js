@@ -1,3 +1,8 @@
+/**
+ * @license SPDX-FileCopyrightText: © 2026 Zenme Pty Ltd <info@zenme.com.au>
+ * @license SPDX-License-Identifier: MIT
+ */
+
 import { toHttpResponse } from "../error/index.js";
 import { GH_TOKEN_HEADER, MS_TOKEN_HEADER } from "./auth.js";
 

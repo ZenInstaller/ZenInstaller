@@ -1,3 +1,8 @@
+/**
+ * @license SPDX-FileCopyrightText: © 2026 Zenme Pty Ltd <info@zenme.com.au>
+ * @license SPDX-License-Identifier: MIT
+ */
+
 import sodium from "libsodium-wrappers";
 
 export async function sha256(plain: string): Promise<ArrayBuffer> {

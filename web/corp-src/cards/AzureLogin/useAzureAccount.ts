@@ -1,3 +1,8 @@
+/**
+ * @license SPDX-FileCopyrightText: © 2026 Zenme Pty Ltd <info@zenme.com.au>
+ * @license SPDX-License-Identifier: MIT
+ */
+
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { getMsal, MSA_TENANT } from "../../auth/msal";
 import { LOGIN_SCOPES, ARM_SCOPES } from "../../config/azureConfig";
@@ -68,8 +73,7 @@ export function useAzureAccount(): UseAzureAccount {
     setManualTenantId((current) => {
       if (!current) return current;
       const match =
-        list.find((t) => t.tenantId.toLowerCase() === current.toLowerCase()) ??
-        list.find((t) => t.displayName.toLowerCase() === current.toLowerCase());
+        list.find((t) => t.tenantId.toLowerCase() === current.toLowerCase()) ?? list.find((t) => t.displayName.toLowerCase() === current.toLowerCase());
       return match ? match.tenantId : current;
     });
   }, []);
@@ -95,7 +99,7 @@ export function useAzureAccount(): UseAzureAccount {
         setTenantsLoaded(true);
       }
     },
-    [applyTenantList],
+    [applyTenantList]
   );
 
   // Load the tenant list once signed in.
@@ -143,8 +147,7 @@ export function useAzureAccount(): UseAzureAccount {
           }
         };
 
-        const msaTenant = (acc: AzureAccount) =>
-          acc.tenantId === MSA_TENANT ? (azureResult.load()?.tenantId ?? undefined) : undefined;
+        const msaTenant = (acc: AzureAccount) => (acc.tenantId === MSA_TENANT ? (azureResult.load()?.tenantId ?? undefined) : undefined);
 
         if (result?.account) {
           setAccount(result.account);
@@ -156,9 +159,7 @@ export function useAzureAccount(): UseAzureAccount {
           if (accounts.length > 0) {
             const preferredTid = savedTenant ?? azureResult.load()?.tenantId;
             const acc =
-              (preferredTid ? accounts.find((a) => a.tenantId === preferredTid) : undefined) ??
-              accounts.find((a) => a.tenantId !== MSA_TENANT) ??
-              accounts[0];
+              (preferredTid ? accounts.find((a) => a.tenantId === preferredTid) : undefined) ?? accounts.find((a) => a.tenantId !== MSA_TENANT) ?? accounts[0];
             setAccount(acc);
             const tenant = savedTenant ?? msaTenant(acc);
             if (tenant) setManualTenantId(tenant);
@@ -226,8 +227,7 @@ export function useAzureAccount(): UseAzureAccount {
         return;
       } catch (err) {
         const msg = err instanceof Error ? err.message : "";
-        const needsConsent =
-          msg.includes("AADSTS65001") || msg.includes("interaction_required") || msg.includes("MSA_NEEDS_TENANT");
+        const needsConsent = msg.includes("AADSTS65001") || msg.includes("interaction_required") || msg.includes("MSA_NEEDS_TENANT");
         if (!needsConsent) {
           setTenantIdError(friendlyTenantError(err));
           return;
@@ -247,7 +247,7 @@ export function useAzureAccount(): UseAzureAccount {
         setTenantIdError(err instanceof Error ? err.message : "Failed to redirect");
       }
     },
-    [account, manualTenantId],
+    [account, manualTenantId]
   );
 
   // Pick a tenant from the dropdown → point at it and confirm ARM access.
@@ -269,12 +269,12 @@ export function useAzureAccount(): UseAzureAccount {
       setTenantIdError(null);
       void confirmTenantId(tid);
     },
-    [confirmTenantId],
+    [confirmTenantId]
   );
 
   const clearSession = useCallback(async () => {
     const msal = await getMsal();
-    if (msal) await msal.clearCache().catch(() => { });
+    if (msal) await msal.clearCache().catch(() => {});
     setAccount(null);
     setTenants([]);
     setManualTenantId("");
@@ -291,7 +291,7 @@ export function useAzureAccount(): UseAzureAccount {
     account,
     login,
     logout,
-    refresh: () => { },
+    refresh: () => {},
     loggingIn,
 
     loginError,

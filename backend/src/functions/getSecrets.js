@@ -1,3 +1,8 @@
+/**
+ * @license SPDX-FileCopyrightText: © 2026 Zenme Pty Ltd <info@zenme.com.au>
+ * @license SPDX-License-Identifier: MIT
+ */
+
 import { app } from "@azure/functions";
 import { Octokit } from "octokit";
 import { requireAuth } from "../utils/auth.js";
@@ -15,9 +20,7 @@ app.http("getSecrets", {
 
       const octokit = new Octokit({ auth: accessToken });
 
-      const uri = env
-        ? "GET /repos/{owner}/{repo}/environments/{environment_name}/secrets"
-        : "GET /repos/{owner}/{repo}/actions/secrets";
+      const uri = env ? "GET /repos/{owner}/{repo}/environments/{environment_name}/secrets" : "GET /repos/{owner}/{repo}/actions/secrets";
       const params = { owner, repo, environment_name: env, per_page: 100 };
       console.log("uri:", uri);
       console.log("Requesting secrets with params:", params);
@@ -25,6 +28,6 @@ app.http("getSecrets", {
       return {
         jsonBody: { success: true, secrets: secretList },
       };
-    }),
+    })
   ),
 });

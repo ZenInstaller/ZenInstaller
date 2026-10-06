@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState, useRef } from "react";
 import { verifyAuth, switchToDirect, switchToBackend, fetchGithubUser } from "../../api";
-import { exchangeGithubCode } from "../../api/backend";
+import { BACKEND_CONFIGURED, exchangeGithubCode } from "../../api/backend";
 import { requestAuthorizationCode, takePendingCode } from "../../logic/oauth";
 import { read, remove } from "../../logic/browserStore";
 import { clearStoredToken, getStoredToken, setLoginStatus, setStoredToken } from "../../logic/tokenStore";
@@ -31,6 +31,7 @@ export interface UseGithubLoginCard extends CardHook, LoginHook<User> {
 
   mode: GithubAuthRecord["mode"] | null;
   setMode: (mode: GithubAuthRecord["mode"]) => void;
+  backendAvailable: boolean; // False without VITE_API_URL: the OAuth flow has no backend to exchange the code.
   token: string | null;
   setToken: (token: string | null) => void;
 }
@@ -115,11 +116,14 @@ export function useGithubLoginCard(): UseGithubLoginCard {
   const [account, setAccount] = useState<User | null>(null);
   const [sessionExpired, setSessionExpired] = useState(false); // TODO: check if this is still needed
   const [redirecting, setRedirecting] = useState<"login" | "logout" | null>(null);
-  const [mode, setMode] = useState<GithubAuthRecord["mode"]>("backend");
+  const [mode, setMode] = useState<GithubAuthRecord["mode"]>(BACKEND_CONFIGURED ? "backend" : "direct");
   const [token, setToken] = useState<string | null>(null);
-  const loginConfigRef = useRef<GithubAuthRecord>({ mode: "backend" });
+  const loginConfigRef = useRef<GithubAuthRecord>(
+    BACKEND_CONFIGURED ? { mode: "backend" } : { mode: "direct", token: "" },
+  );
 
   const setModeState = useCallback((nextMode: GithubAuthRecord["mode"]) => {
+    if (nextMode === "backend" && !BACKEND_CONFIGURED) return;
     setMode(nextMode);
 
     if (nextMode === "backend") {
@@ -171,6 +175,11 @@ export function useGithubLoginCard(): UseGithubLoginCard {
       }
 
       const record = readGithubAuthRecord();
+      if (record?.mode === "backend" && !BACKEND_CONFIGURED) {
+        writeGithubAuthRecord(null);
+        setLoggingIn(false);
+        return;
+      }
       if (!record) {
         setLoggingIn(false);
         return;
@@ -224,6 +233,10 @@ export function useGithubLoginCard(): UseGithubLoginCard {
         break;
 
       case "backend":
+        if (!BACKEND_CONFIGURED) {
+          console.error("Backend sign-in needs VITE_API_URL");
+          return;
+        }
         // No stored token: send the user to GitHub and pick things up in the callback above.
         setRedirecting("login");
         await requestCode();
@@ -279,6 +292,7 @@ export function useGithubLoginCard(): UseGithubLoginCard {
     redirecting,
     mode,
     setMode: setModeState,
+    backendAvailable: BACKEND_CONFIGURED,
     token,
     setToken: setTokenState,
   };

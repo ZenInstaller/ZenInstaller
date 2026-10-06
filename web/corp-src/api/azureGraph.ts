@@ -152,7 +152,7 @@ export async function createSpaAppRegistration(
     method: "POST",
     body: JSON.stringify({
       displayName,
-      signInAudience: "AzureADandPersonalMicrosoftAccount",
+      signInAudience: "AzureADMyOrg",
       api: { requestedAccessTokenVersion: 2 },
       spa: { redirectUris },
       requiredResourceAccess,

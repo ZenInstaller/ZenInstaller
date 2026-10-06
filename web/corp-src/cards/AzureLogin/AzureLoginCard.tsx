@@ -218,7 +218,9 @@ export default function AzureLoginCard({ card, azureLogin }: Props) {
                       data-tenant-name={t.displayName}
                     >
                       <Box>
-                        <Typography sx={{ fontSize: "0.8rem", ...mono }}>{t.displayName}</Typography>
+                        <Typography sx={{ fontSize: "0.8rem", ...mono }}>
+                          {tenantDisplayName(tenants, t.tenantId)}
+                        </Typography>
                         <Typography data-sensitive="true" sx={{ fontSize: "0.68rem", color: "#94a3b8", ...mono }}>
                           {t.tenantId}
                         </Typography>
@@ -246,6 +248,7 @@ export default function AzureLoginCard({ card, azureLogin }: Props) {
                     onChange={(e) => setManualTenantId(e.target.value)}
                     sx={{ minWidth: { xs: 0, sm: 320 }, width: "100%" }}
                     inputProps={{ style: { fontFamily: "'IBM Plex Mono', monospace", fontSize: "0.8rem" } }}
+                    helperText={tenants.length > 0 ? tenantDisplayName(tenants, manualTenantId) : undefined}
                   />
                   <Button
                     variant="contained"

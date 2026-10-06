@@ -33,6 +33,12 @@ vi.mock("../auth/msal", () => ({
   getMsal: apiMocks.getMsal,
   getToken: apiMocks.getToken,
   MSA_TENANT: "msa-tenant",
+  LOGIN_AUTHORITY: "https://login.microsoftonline.com/common",
+  PINNED_TENANT_ID: undefined,
+  cleanTenantId: (t?: string | null) => {
+    const tid = t?.trim();
+    return !tid || tid === "undefined" || tid === "null" ? undefined : tid;
+  },
 }));
 
 vi.mock("../api/azureGraph", () => ({

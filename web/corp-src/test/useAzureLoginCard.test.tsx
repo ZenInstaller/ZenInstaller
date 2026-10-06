@@ -59,6 +59,7 @@ describe("useAzureLoginCard", () => {
 			selectTenant: vi.fn(),
 			tenants: [{ tenantId: "tenant-1", displayName: "Tenant One" }],
 			tenantsLoaded: true,
+			tenantPinned: false,
 			login: vi.fn(),
 			logout: vi.fn(),
 			refresh: vi.fn(),

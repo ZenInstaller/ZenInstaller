@@ -223,7 +223,7 @@ function AppDashboard() {
               card={cardProps("remote_terminal_infra")}
               infra={remoteTerminalInfra}
               subscriptionId={azureSubscription.selectedSubscriptionId}
-              tenantId={githubVariableValues.AZURE_TENANT_ID}
+              tenantId={githubVariableValues.AZURE_TENANT_ID ?? ""}
               githubAccount={githubRepoEnv.repo.selectedAccount}
               repoName={githubRepoEnv.repo.selectedRepo?.name ?? ""}
               selectedEnv={githubRepoEnv.env.selectedEnv}

@@ -69,7 +69,7 @@ describe("useAzureSubscriptionCard", () => {
           onUpdate={(value) => {
             latest = value;
           }}
-        />,
+        />
       );
     });
 
@@ -107,7 +107,7 @@ describe("useAzureSubscriptionCard", () => {
           onUpdate={(value) => {
             latest = value;
           }}
-        />,
+        />
       );
     });
 
@@ -136,7 +136,7 @@ describe("useAzureSubscriptionCard", () => {
           onUpdate={(value) => {
             latest = value;
           }}
-        />,
+        />
       );
     });
 
@@ -166,7 +166,7 @@ describe("useAzureSubscriptionCard", () => {
           onUpdate={(value) => {
             latest = value;
           }}
-        />,
+        />
       );
     });
 
@@ -198,14 +198,14 @@ describe("useAzureSubscriptionCard", () => {
           onUpdate={(value) => {
             latest = value;
           }}
-        />,
+        />
       );
     });
 
     await waitFor(() => {
       expect(latest?.restore.subscription.ready).toBe(true);
       expect(latest?.subsError).toBe(
-        "This account isn't a member of that tenant — sign in with a different account, or have an admin add it as a guest first.",
+        "This account isn't a member of that tenant — sign in with a different account, or have an admin add it as a guest first."
       );
       expect(latest?.subscriptionNoAccess).toBe(true);
     });
@@ -231,7 +231,7 @@ describe("useAzureSubscriptionCard", () => {
           onUpdate={(value) => {
             latest = value;
           }}
-        />,
+        />
       );
     });
 

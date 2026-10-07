@@ -172,7 +172,7 @@ export function useWebDeployCard({
       updateStep("download", "running");
       const mb = (bytes: number) => (bytes / 1_000_000).toFixed(1);
       const zip = await fetchArtifactZip(githubAccount, repoName, latest.artifactId, (received, total) =>
-        updateStep("download", "running", total ? `${mb(received)} / ${mb(total)} MB` : `${mb(received)} MB`, total ? received / total : undefined),
+        updateStep("download", "running", total ? `${mb(received)} / ${mb(total)} MB` : `${mb(received)} MB`, total ? received / total : undefined)
       );
       updateStep("download", "done", `${mb(zip.size)} MB`);
 
@@ -181,14 +181,14 @@ export function useWebDeployCard({
       const files = await Promise.all(
         Object.values(archive.files)
           .filter((f) => !f.dir)
-          .map(async (f) => ({ path: f.name, body: await f.async("blob") })),
+          .map(async (f) => ({ path: f.name, body: await f.async("blob") }))
       );
       if (files.length === 0) throw new Error("The artifact contained no files");
       updateStep("unpack", "done", `${files.length} files`);
 
       updateStep("upload", "running");
       await uploadStaticSite(azureAccount, storageAccountName, files, tenantId, (uploaded, total) =>
-        updateStep("upload", "running", `${uploaded} / ${total} files`, uploaded / total),
+        updateStep("upload", "running", `${uploaded} / ${total} files`, uploaded / total)
       );
       updateStep("upload", "done", `${files.length} files`);
 

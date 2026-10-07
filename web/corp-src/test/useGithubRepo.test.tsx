@@ -8,7 +8,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { useGithubRepo, type UseGithubRepo } from "../cards/Repo/useGithubRepo";
-import type { Account, Branch, RepoOption, User } from "../types";
+import type { Account, Branch, User } from "../types";
 
 const { mockApi } = vi.hoisted(() => ({
   mockApi: {

@@ -43,7 +43,6 @@ for (const [viewportName, viewport] of Object.entries(viewports)) {
     });
 
     test("Happy path", async ({ page, context }, testInfo) => {
-      const runId = Date.now().toString(36);
       const repoName = safePathSegment(`mock-azure-app-${viewportName.toLowerCase()}`);
       const appName = `zeninstaller-${repoName}`;
       await installMockGitHub(page, context);

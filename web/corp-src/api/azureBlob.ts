@@ -1,3 +1,8 @@
+/**
+ * @license SPDX-FileCopyrightText: © 2026 Zenme Pty Ltd <info@zenme.com.au>
+ * @license SPDX-License-Identifier: MIT
+ */
+
 import { getToken } from "../auth/msal";
 import { STORAGE_SCOPES } from "../config/azureConfig";
 import type { AzureAccount } from "../types";
@@ -11,7 +16,7 @@ async function blobFetch(
   path: string,
   init: RequestInit,
   overrideTenantId?: string,
-  allowMissing = false,
+  allowMissing = false
 ): Promise<Response | null> {
   const token = await getToken(account, STORAGE_SCOPES, overrideTenantId);
   const res = await fetch(`https://${accountName}.blob.core.windows.net${path}`, {
@@ -25,7 +30,6 @@ async function blobFetch(
   }
   return res;
 }
-
 
 const CONTENT_TYPES: Record<string, string> = {
   html: "text/html; charset=utf-8",
@@ -61,7 +65,7 @@ export async function uploadStaticSite(
   accountName: string,
   files: SiteFile[],
   overrideTenantId?: string,
-  onProgress?: (uploaded: number, total: number) => void,
+  onProgress?: (uploaded: number, total: number) => void
 ): Promise<void> {
   let uploaded = 0;
   for (const file of files) {
@@ -74,7 +78,7 @@ export async function uploadStaticSite(
         body: file.body,
         headers: { "x-ms-blob-type": "BlockBlob", "Content-Type": contentTypeFor(file.path) },
       },
-      overrideTenantId,
+      overrideTenantId
     );
     onProgress?.(++uploaded, files.length);
   }
@@ -82,12 +86,7 @@ export async function uploadStaticSite(
 
 export type DeployedSite = { version: string; sha: string; builtAt: number };
 
-export async function recordDeployedSite(
-  account: AzureAccount,
-  accountName: string,
-  site: DeployedSite,
-  overrideTenantId?: string,
-): Promise<void> {
+export async function recordDeployedSite(account: AzureAccount, accountName: string, site: DeployedSite, overrideTenantId?: string): Promise<void> {
   await blobFetch(
     account,
     accountName,
@@ -100,23 +99,12 @@ export async function recordDeployedSite(
         "x-ms-meta-builtat": String(site.builtAt),
       },
     },
-    overrideTenantId,
+    overrideTenantId
   );
 }
 
-export async function readDeployedSite(
-  account: AzureAccount,
-  accountName: string,
-  overrideTenantId?: string,
-): Promise<DeployedSite | null> {
-  const res = await blobFetch(
-    account,
-    accountName,
-    `/${WEB_CONTAINER}?restype=container&comp=metadata`,
-    { method: "GET" },
-    overrideTenantId,
-    true,
-  );
+export async function readDeployedSite(account: AzureAccount, accountName: string, overrideTenantId?: string): Promise<DeployedSite | null> {
+  const res = await blobFetch(account, accountName, `/${WEB_CONTAINER}?restype=container&comp=metadata`, { method: "GET" }, overrideTenantId, true);
   const version = res?.headers.get("x-ms-meta-version");
   const sha = res?.headers.get("x-ms-meta-sha");
   if (!version || !sha) return null;

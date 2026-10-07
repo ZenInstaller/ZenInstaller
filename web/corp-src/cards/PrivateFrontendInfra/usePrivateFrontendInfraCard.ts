@@ -143,7 +143,7 @@ export function usePrivateFrontendInfraCard({
   const setSiteStorageAccount = useCallback((name: string) => {
     setSiteStorageOverride(name);
     setSiteStorageError(
-      name.length > 24 ? `${name.length} characters; Azure allows 24` : /^[a-z0-9]*$/.test(name) ? null : "Lowercase letters and digits only",
+      name.length > 24 ? `${name.length} characters; Azure allows 24` : /^[a-z0-9]*$/.test(name) ? null : "Lowercase letters and digits only"
     );
   }, []);
 
@@ -228,8 +228,7 @@ export function usePrivateFrontendInfraCard({
     ];
     setSteps(initialSteps);
 
-    const mark = (id: string, r: "created" | "exists") =>
-      updateStep(id, r === "exists" ? "skipped" : "done", r === "exists" ? "Already exists" : undefined);
+    const mark = (id: string, r: "created" | "exists") => updateStep(id, r === "exists" ? "skipped" : "done", r === "exists" ? "Already exists" : undefined);
 
     try {
       updateStep("providers", "running");
@@ -237,7 +236,7 @@ export function usePrivateFrontendInfraCard({
       updateStep(
         "providers",
         providers.registered.length === 0 ? "skipped" : "done",
-        providers.registered.length === 0 ? "Already registered" : providers.registered.join(", "),
+        providers.registered.length === 0 ? "Already registered" : providers.registered.join(", ")
       );
 
       updateStep("rg", "running");
@@ -273,8 +272,8 @@ export function usePrivateFrontendInfraCard({
           azureAccount.localAccountId,
           "Storage Blob Data Contributor",
           tenantId,
-          "User",
-        ),
+          "User"
+        )
       );
 
       // Audit trail: who touched the subscription, and who rewrote the site's contents.
@@ -287,7 +286,7 @@ export function usePrivateFrontendInfraCard({
         webStorageAccountName,
         DIAGNOSTIC_SETTING_NAME,
         law.id,
-        tenantId,
+        tenantId
       );
       mark("diagnostics", activity === "exists" && blobLogs === "exists" ? "exists" : "created");
 
@@ -297,8 +296,7 @@ export function usePrivateFrontendInfraCard({
       if (!siteUrl) throw new Error("The site's web endpoint is not available yet");
       const existingInstaller = await getExistingApp(azureAccount, getPrivateInstallerAppName(), tenantId);
       const installerApp =
-        existingInstaller ??
-        (await createSpaAppRegistration(azureAccount, getPrivateInstallerAppName(), [siteUrl], PRIVATE_INSTALLER_DELEGATED, tenantId));
+        existingInstaller ?? (await createSpaAppRegistration(azureAccount, getPrivateInstallerAppName(), [siteUrl], PRIVATE_INSTALLER_DELEGATED, tenantId));
       // An app created just now already carries the uri; an older one predates this storage account.
       const addedUri = existingInstaller ? await ensureSpaRedirectUri(azureAccount, existingInstaller.id, siteUrl, tenantId) : false;
       if (addedUri) updateStep("installerApp", "done", `Added redirect URI ${siteUrl}`);

@@ -6,7 +6,7 @@
 import { expect, Locator, Page, test as setup } from "@playwright/test";
 import fs from "fs";
 import { CORP_URL } from "../../testInit";
-import { authDir, azureSessionStorageFile, azureStorageStateFile, corpAzureAuthStateExists, saveAzureSessionStorage } from "../util/setupHelper.mts";
+import { authDir, azureSessionStorageFile, azureStorageStateFile, saveAzureSessionStorage } from "../util/setupHelper.mts";
 
 async function selectAzureTenant(page: Page, azureCard: Locator): Promise<string> {
   const tenantSelect = azureCard.getByTestId("tenant-select");

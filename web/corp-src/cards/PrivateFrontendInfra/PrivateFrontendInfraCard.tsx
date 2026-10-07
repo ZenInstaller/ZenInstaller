@@ -4,17 +4,7 @@
  */
 
 import { useEffect, useRef, useState } from "react";
-import {
-  Box,
-  Button,
-  CircularProgress,
-  Collapse,
-  IconButton,
-  MenuItem,
-  Select,
-  TextField,
-  Typography,
-} from "@mui/material";
+import { Box, Button, CircularProgress, Collapse, IconButton, MenuItem, Select, TextField, Typography } from "@mui/material";
 import CheckIcon from "@mui/icons-material/Check";
 import EditIcon from "@mui/icons-material/Edit";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
@@ -54,7 +44,17 @@ type Props = {
   githubUrl?: string;
 };
 
-export default function PrivateFrontendInfraCard({ card, infra, subscriptionId, tenantId, githubAccount, repoName, selectedEnv, variables, githubUrl }: Props) {
+export default function PrivateFrontendInfraCard({
+  card,
+  infra,
+  subscriptionId,
+  tenantId,
+  githubAccount,
+  repoName,
+  selectedEnv,
+  variables,
+  githubUrl,
+}: Props) {
   const [varExpanded, setVarExpanded] = useState(false);
   const [editingLocation, setEditingLocation] = useState(false);
   const [editingStorage, setEditingStorage] = useState(false);
@@ -85,8 +85,8 @@ export default function PrivateFrontendInfraCard({ card, infra, subscriptionId, 
     <Card title="Private Zeninstaller Environment" action={rgUrl ? <ViewLink href={rgUrl} /> : undefined} {...card}>
       <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
         <Typography sx={{ fontSize: "0.78rem", color: "#475569", lineHeight: 1.6 }}>
-          The relay behind the stage-card terminal: Web PubSub, the session table, and the Function App that issues group-scoped tokens. Everything connects by
-          managed identity — no access key is stored.
+          The relay behind the stage-card terminal: Web PubSub, the session table, and the Function App that issues group-scoped tokens. Everything
+          connects by managed identity — no access key is stored.
         </Typography>
 
         {infra.steps.length === 0 && (
@@ -122,9 +122,7 @@ export default function PrivateFrontendInfraCard({ card, infra, subscriptionId, 
                   </>
                 ) : (
                   <>
-                    <Typography sx={{ fontSize: "0.75rem", color: "#0f172a", ...mono }}>
-                      {infra.siteStorageAccount}
-                    </Typography>
+                    <Typography sx={{ fontSize: "0.75rem", color: "#0f172a", ...mono }}>{infra.siteStorageAccount}</Typography>
                     <IconButton
                       size="small"
                       onClick={() => setEditingStorage(true)}
@@ -170,11 +168,7 @@ export default function PrivateFrontendInfraCard({ card, infra, subscriptionId, 
                       />
                     )}
                     {infra.locationsLoading && <CircularProgress size={12} />}
-                    <IconButton
-                      size="small"
-                      onClick={() => setEditingLocation(false)}
-                      sx={{ color: "#22c55e", p: 0.25 }}
-                    >
+                    <IconButton size="small" onClick={() => setEditingLocation(false)} sx={{ color: "#22c55e", p: 0.25 }}>
                       <CheckIcon sx={{ fontSize: 14 }} />
                     </IconButton>
                   </>
@@ -235,9 +229,7 @@ export default function PrivateFrontendInfraCard({ card, infra, subscriptionId, 
             {infra.steps.map((s) => (
               <StepRow key={s.id} step={s} />
             ))}
-            {infra.running && (
-              <Typography sx={{ fontSize: "0.68rem", color: "#94a3b8", mt: 0.5 }}>Running...</Typography>
-            )}
+            {infra.running && <Typography sx={{ fontSize: "0.68rem", color: "#94a3b8", mt: 0.5 }}>Running...</Typography>}
           </Box>
         )}
 

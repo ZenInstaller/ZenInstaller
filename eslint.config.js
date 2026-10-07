@@ -11,6 +11,8 @@ import globals from "globals";
 import eslintPluginPrettierRecommended from "eslint-plugin-prettier/recommended";
 
 export default [
+  // web/ has its own eslint config; linting it from here applies the wrong prettier width and rules.
+  { ignores: [".claude/**", "**/dist/**", "docs/.vitepress/cache/**", "web/**"] },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   eslintPluginPrettierRecommended,

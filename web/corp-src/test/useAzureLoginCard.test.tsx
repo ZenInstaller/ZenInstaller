@@ -91,7 +91,7 @@ describe("useAzureLoginCard", () => {
           onUpdate={(value) => {
             latest = value;
           }}
-        />,
+        />
       );
     });
 
@@ -223,7 +223,7 @@ describe("useAzureLoginCard", () => {
           onUpdate={(value) => {
             latest = value;
           }}
-        />,
+        />
       );
     });
 

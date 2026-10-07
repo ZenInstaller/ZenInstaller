@@ -36,7 +36,7 @@ for (const [viewportName, viewport] of Object.entries(viewports)) {
     test("Happy path", async ({ page, context }, testInfo) => {
       await page.goto(CORP_URL);
 
-      const githubCard = await test.step("Expand Unauthenticated Github Login Card", async () => {
+      await test.step("Expand Unauthenticated Github Login Card", async () => {
         const githubCard = await expandGithubLoginCard(page);
         await expect(githubCard.getByRole("button", { name: "Login with GitHub" })).toBeVisible();
         await expectSnapshot(page, githubCard, testInfo, "start", viewportName);
@@ -78,7 +78,7 @@ for (const [viewportName, viewport] of Object.entries(viewports)) {
       await expectSnapshot(page, githubCard, testInfo, "invalid-pat", viewportName);
     });
 
-    test("Can switch from Direct mode back to Backend mode", async ({ page, context }) => {
+    test("Can switch from Direct mode back to Backend mode", async ({ page }) => {
       await page.goto(CORP_URL);
       const githubCard = await expandGithubLoginCard(page);
       await githubCard.getByRole("button", { name: "Direct (PAT)", exact: true }).click();

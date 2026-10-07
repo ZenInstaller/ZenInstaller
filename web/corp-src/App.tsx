@@ -50,7 +50,7 @@ function AppDashboard() {
   const githubRepoEnv = addCard(
     useRepoCard({
       user: githubLogin.account,
-    }),
+    })
   );
   const githubVariables = useGithubVariables({
     account: githubRepoEnv.repo.selectedAccount,
@@ -63,7 +63,7 @@ function AppDashboard() {
   const azureLogin = addCard(
     useAzureLoginCard({
       savedTenantId: githubVariableValues.AZURE_TENANT_ID ?? "",
-    }),
+    })
   );
 
   const azureSubscription = addCard(
@@ -72,7 +72,7 @@ function AppDashboard() {
       confirmedTenantId: azureLogin.confirmedTenantId,
       manualTenantId: azureLogin.manualTenantId,
       savedSubscriptionId: githubVariableValues.AZURE_SUBSCRIPTION_ID ?? "",
-    }),
+    })
   );
 
   const privateFrontendInfra = addCard(
@@ -82,7 +82,7 @@ function AppDashboard() {
       subscriptionId: azureSubscription.selectedSubscriptionId,
       tenantId: githubVariableValues.AZURE_TENANT_ID ?? "",
       allowedOrigins: [window.location.origin],
-    }),
+    })
   );
   const webDeploy = addCard(
     useWebDeployCard({
@@ -93,7 +93,7 @@ function AppDashboard() {
       githubAccount: githubRepoEnv.repo.selectedAccount,
       repoName: githubRepoEnv.repo.selectedRepo?.name ?? "",
       selectedEnv: githubRepoEnv.env.selectedEnv,
-    }),
+    })
   );
 
   // ── URL restore + sync ───────────────────────────────────────────────────────
@@ -124,7 +124,7 @@ function AppDashboard() {
       tenant: azureLogin.confirmedTenantId || undefined,
       subscription: azureSubscription.selectedSubscriptionId || undefined,
     },
-    urlRestore.completed && !githubLogin.loggingIn,
+    urlRestore.completed && !githubLogin.loggingIn
   );
 
   // ── Accordion + completion flags ───────────────────────────────────────────
@@ -191,11 +191,11 @@ function AppDashboard() {
             }}
           >
             <Typography sx={{ color: "#475569", lineHeight: 1.7 }}>
-              ZenInstaller is used to create your organisation configuration on a number of cloud hosting providers of your choosing. Before starting,
-              you will need the following: <br />
+              ZenInstaller is used to create your organisation configuration on a number of cloud hosting providers of your choosing. Before starting, you will
+              need the following: <br />
               1. A personal email address, using Google, or any other email hosting provider. <br />
-              2. An organisation name and domain name. We recommend that you register the domain name with Godaddy https://www.godaddy.com/ because we
-              will have automations in place with them. <br />
+              2. An organisation name and domain name. We recommend that you register the domain name with Godaddy https://www.godaddy.com/ because we will have
+              automations in place with them. <br />
               Complete the cards below in any order — each shows what it needs before it can run.
             </Typography>
           </Box>

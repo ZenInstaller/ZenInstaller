@@ -213,9 +213,7 @@ export default function AzureLoginCard({ card, azureLogin }: Props) {
                       data-tenant-name={t.displayName}
                     >
                       <Box>
-                        <Typography sx={{ fontSize: "0.8rem", ...mono }}>
-                          {tenantDisplayName(tenants, t.tenantId)}
-                        </Typography>
+                        <Typography sx={{ fontSize: "0.8rem", ...mono }}>{tenantDisplayName(tenants, t.tenantId)}</Typography>
                         <Typography data-sensitive="true" sx={{ fontSize: "0.68rem", color: "#94a3b8", ...mono }}>
                           {t.tenantId}
                         </Typography>

@@ -10,25 +10,19 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 type UrlHooksModule = typeof import("../hooks/useUrlStateManager");
 
-function waitFor(assertion: () => void, timeoutMs = 1500) {
-  const start = Date.now();
-  return new Promise<void>(async (resolve, reject) => {
-    while (true) {
-      try {
-        assertion();
-        resolve();
-        return;
-      } catch (error) {
-        if (Date.now() - start > timeoutMs) {
-          reject(error);
-          return;
-        }
-        await act(async () => {
-          await new Promise((done) => setTimeout(done, 0));
-        });
-      }
+async function waitFor(assertion: () => void, timeoutMs = 1500) {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() <= deadline) {
+    try {
+      assertion();
+      return;
+    } catch {
+      await act(async () => {
+        await new Promise((done) => setTimeout(done, 0));
+      });
     }
-  });
+  }
+  assertion(); // Past the deadline: run it once more so the caller sees the real assertion error.
 }
 
 async function importUrlHooks(search = ""): Promise<UrlHooksModule> {

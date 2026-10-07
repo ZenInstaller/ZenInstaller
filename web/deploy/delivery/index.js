@@ -4,10 +4,9 @@
  */
 
 import { updateKeyVaultSecrets } from "./keyvault.js";
-import { buildFunctionApp, zipFunctionApp, deployFunctionAppZip, deleteAppSetting } from "./functionApp.js";
+import { zipFunctionApp, deployFunctionAppZip, deleteAppSetting } from "./functionApp.js";
 import { execSync } from "child_process";
 import { resolve } from "path";
-import { exit } from "process";
 
 function getCurrentSubscription() {
   return execSync(`az account show --query id -o tsv`, { encoding: "utf8" }).trim();

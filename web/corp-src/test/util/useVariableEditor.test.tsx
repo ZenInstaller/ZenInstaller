@@ -8,7 +8,6 @@ import { createRoot } from "react-dom/client";
 import { useEffect } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useVariableEditor } from "../../hooks/util/useVariableEditor";
-import type { Account } from "../../types";
 
 async function waitFor(assertion: () => void, timeoutMs = 1000) {
   const deadline = Date.now() + timeoutMs;
@@ -43,7 +42,7 @@ vi.mock("../../api", () => ({
 function HookHarness(
   props: Parameters<typeof useVariableEditor>[0] & {
     onUpdate: (value: ReturnType<typeof useVariableEditor>) => void;
-  },
+  }
 ) {
   const value = useVariableEditor(props);
   useEffect(() => {
@@ -88,7 +87,7 @@ describe("useVariableEditor", () => {
           account={{ login: "org-one", type: "Organization", id: 101 }}
           repo="repo-one"
           envName="prod"
-        />,
+        />
       );
     });
 
@@ -115,13 +114,7 @@ describe("useVariableEditor", () => {
       newlySaved: { NAME: "Zenblox", DNS: "zenblox.io" },
     });
     expect(apiMocks.updateVariable).toHaveBeenCalledWith({ login: "org-one", type: "Organization", id: 101 }, "repo-one", "NAME", "Zenblox", "prod");
-    expect(apiMocks.createVariable).toHaveBeenCalledWith(
-      { login: "org-one", type: "Organization", id: 101 },
-      "repo-one",
-      "DNS",
-      "zenblox.io",
-      "prod",
-    );
+    expect(apiMocks.createVariable).toHaveBeenCalledWith({ login: "org-one", type: "Organization", id: 101 }, "repo-one", "DNS", "zenblox.io", "prod");
 
     await act(async () => {
       latest?.onChange("NAME", "Zenblox2");
@@ -160,7 +153,7 @@ describe("useVariableEditor", () => {
           account={{ login: "org-one", type: "Organization", id: 101 }}
           repo="repo-one"
           envName="prod"
-        />,
+        />
       );
     });
 
@@ -192,7 +185,7 @@ describe("useVariableEditor", () => {
           account={{ login: "org-one", type: "Organization", id: 101 }}
           repo="repo-one"
           envName="prod"
-        />,
+        />
       );
     });
 
@@ -228,7 +221,7 @@ describe("useVariableEditor", () => {
           account={null}
           repo="repo-one"
           envName="prod"
-        />,
+        />
       );
     });
 
@@ -267,7 +260,7 @@ describe("useVariableEditor", () => {
           account={{ login: "org-one", type: "Organization", id: 101 }}
           repo="repo-one"
           envName="prod"
-        />,
+        />
       );
     });
 
@@ -287,7 +280,7 @@ describe("useVariableEditor", () => {
       expect.arrayContaining([
         { key: "NAME", status: "error", error: "Save failed" },
         { key: "DNS", status: "success" },
-      ]),
+      ])
     );
     expect(consoleErrorSpy).toHaveBeenCalled();
 
@@ -314,7 +307,7 @@ describe("useVariableEditor", () => {
           repo="repo-one"
           envName="prod"
           onSavedKey={onSavedKey}
-        />,
+        />
       );
     });
 
@@ -347,7 +340,7 @@ describe("useVariableEditor", () => {
             account={{ login: "org-one", type: "Organization", id: 101 }}
             repo="repo-one"
             envName="prod"
-          />,
+          />
         );
       });
 
@@ -380,7 +373,7 @@ describe("useVariableEditor", () => {
           repo="repo-one"
           envName="prod"
           populate={{ NAME: "Suggested" }}
-        />,
+        />
       );
     });
 
@@ -412,7 +405,7 @@ describe("useVariableEditor", () => {
             populate={{ NAME: "Auto" }}
             autoSaveCounter={autoSaveCounter}
             onAutoSaveResult={onAutoSaveResult}
-          />,
+          />
         );
       });
 
@@ -444,7 +437,7 @@ describe("useVariableEditor", () => {
             envName="prod"
             autoSaveCounter={autoSaveCounter}
             onAutoSaveResult={onAutoSaveResult}
-          />,
+          />
         );
       });
 

@@ -123,9 +123,7 @@ export function useGithubLoginCard(): UseGithubLoginCard {
   const [redirecting, setRedirecting] = useState<"login" | "logout" | null>(null);
   const [mode, setMode] = useState<GithubAuthRecord["mode"]>(BACKEND_CONFIGURED ? "backend" : "direct");
   const [token, setToken] = useState<string | null>(null);
-  const loginConfigRef = useRef<GithubAuthRecord>(
-    BACKEND_CONFIGURED ? { mode: "backend" } : { mode: "direct", token: "" },
-  );
+  const loginConfigRef = useRef<GithubAuthRecord>(BACKEND_CONFIGURED ? { mode: "backend" } : { mode: "direct", token: "" });
 
   const setModeState = useCallback((nextMode: GithubAuthRecord["mode"]) => {
     if (nextMode === "backend" && !BACKEND_CONFIGURED) return;

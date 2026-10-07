@@ -3,7 +3,7 @@
  * @license SPDX-License-Identifier: MIT
  */
 
-import { expect, type Locator, type Page, type Route, type TestInfo } from "@playwright/test";
+import { expect, type Locator, type Page, type TestInfo } from "@playwright/test";
 import path from "node:path";
 import { expectVisibleWithin, waitForLocatorContentLoaded } from "../../util/testHelper";
 
@@ -107,7 +107,7 @@ export async function checkRepoExists(page: Page, card: Locator, reponame: strin
   await repoInput.fill(reponame);
   const escapedRepoName = reponame.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const alreadyClonedOption = page.getByRole("option", { name: new RegExp(`^(?:▪\\s*)?${escapedRepoName}$`, "i") });
-  const cloneOption = page.getByRole("option", { name: new RegExp(`^Clone as [\"'“‘]${escapedRepoName}[\"'”’]$`) });
+  const cloneOption = page.getByRole("option", { name: new RegExp(`^Clone as ["'“‘]${escapedRepoName}["'”’]$`) });
 
   await expect(alreadyClonedOption.or(cloneOption)).toBeVisible();
   const repoExists = await alreadyClonedOption.isVisible();
@@ -136,7 +136,7 @@ export async function createNewRepo(page: Page, card: Locator, reponame: string)
   await repoInput.fill(reponame);
   const escapedRepoName = reponame.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const alreadyClonedOption = page.getByRole("option", { name: new RegExp(`^(?:▪\\s*)?${escapedRepoName}$`, "i") });
-  const cloneOption = page.getByRole("option", { name: new RegExp(`^Clone as [\"'“‘]${escapedRepoName}[\"'”’]$`) });
+  const cloneOption = page.getByRole("option", { name: new RegExp(`^Clone as ["'“‘]${escapedRepoName}["'”’]$`) });
 
   await expect(alreadyClonedOption.or(cloneOption)).toBeVisible();
   if (await alreadyClonedOption.isVisible()) {

@@ -54,7 +54,7 @@ for (const [viewportName, viewport] of Object.entries(viewports)) {
         await createNewRepo(page, repoCard, repoName);
       });
 
-      await test.step("Select the existing repository", async (step) => {
+      await test.step("Select the existing repository", async () => {
         await chooseExistingRepo(page, repoCard, repoName);
       });
 
@@ -65,17 +65,17 @@ for (const [viewportName, viewport] of Object.entries(viewports)) {
         await expectVisibleWithin(PROD, "PROD environment", 50_000);
         await expectVisibleWithin(TEST, "TEST environment", 50_000);
 
-				await PROD.click();
-				const missingProdBranch = repoCard.getByText(/^No branch found matching environment "PROD"\.$/);
-				if (await missingProdBranch.isVisible()) {
-					const createProdButton = repoCard.getByRole("button", { name: "Create New Branch: PROD", });
-					await expectVisibleWithin(createProdButton, "Button: Create New Branch: PROD", 50_000);
-					await expect(createProdButton).toBeEnabled();
-					await createProdButton.click();
-					await expect(createProdButton).toBeHidden({ timeout: 50_000, });
-					await expect(missingProdBranch).toHaveCount(0);
-				}
-				await expect(repoCard.getByText("Failed to create branch", { exact: true, }),).toHaveCount(0);
+        await PROD.click();
+        const missingProdBranch = repoCard.getByText(/^No branch found matching environment "PROD"\.$/);
+        if (await missingProdBranch.isVisible()) {
+          const createProdButton = repoCard.getByRole("button", { name: "Create New Branch: PROD" });
+          await expectVisibleWithin(createProdButton, "Button: Create New Branch: PROD", 50_000);
+          await expect(createProdButton).toBeEnabled();
+          await createProdButton.click();
+          await expect(createProdButton).toBeHidden({ timeout: 50_000 });
+          await expect(missingProdBranch).toHaveCount(0);
+        }
+        await expect(repoCard.getByText("Failed to create branch", { exact: true })).toHaveCount(0);
 
         await expectSnapshot(page, repoCard, testInfo, "prod-cloned", viewportName);
       });
@@ -87,32 +87,31 @@ for (const [viewportName, viewport] of Object.entries(viewports)) {
         await expectVisibleWithin(PROD, "PROD environment", 50_000);
         await expectVisibleWithin(TEST, "TEST environment", 50_000);
 
-				await TEST.click();
-				const missingTestBranch = repoCard.getByText(/^No branch found matching environment "TEST"\.$/);
-				if (await missingTestBranch.isVisible()) {
-					const createTestButton = repoCard.getByRole("button", { name: "Create New Branch: TEST", });
-					await expectVisibleWithin(createTestButton, "Button: Create New Branch: TEST", 50_000);
-					await expect(createTestButton).toBeEnabled();
-					await createTestButton.click();
-					await expect(createTestButton).toBeHidden({ timeout: 30_000, });
-					await expect(missingTestBranch).toHaveCount(0);
-				}
-				await expect(repoCard.getByText("Failed to create branch", { exact: true, }),).toHaveCount(0);
+        await TEST.click();
+        const missingTestBranch = repoCard.getByText(/^No branch found matching environment "TEST"\.$/);
+        if (await missingTestBranch.isVisible()) {
+          const createTestButton = repoCard.getByRole("button", { name: "Create New Branch: TEST" });
+          await expectVisibleWithin(createTestButton, "Button: Create New Branch: TEST", 50_000);
+          await expect(createTestButton).toBeEnabled();
+          await createTestButton.click();
+          await expect(createTestButton).toBeHidden({ timeout: 30_000 });
+          await expect(missingTestBranch).toHaveCount(0);
+        }
+        await expect(repoCard.getByText("Failed to create branch", { exact: true })).toHaveCount(0);
 
         await expectSnapshot(page, repoCard, testInfo, "end", viewportName);
       });
     });
 
-
-		test("Creates valid repo with no environments", async ({ page, context}, testInfo) => {
-			await restoreGithubSessionStorage(context);
-			await page.goto(CORP_URL);
-			const reponame = safePathSegment(`${TEST_REPO_NO_ENV}-${viewportName}`);
-			const repoCard = await expandRepoCard(page,);
-			const repoExists = await checkRepoExists(page, repoCard, reponame);
-			if (repoExists) {
-				await chooseExistingRepo(page, repoCard, reponame);
-			}
+    test("Creates valid repo with no environments", async ({ page, context }, testInfo) => {
+      await restoreGithubSessionStorage(context);
+      await page.goto(CORP_URL);
+      const reponame = safePathSegment(`${TEST_REPO_NO_ENV}-${viewportName}`);
+      const repoCard = await expandRepoCard(page);
+      const repoExists = await checkRepoExists(page, repoCard, reponame);
+      if (repoExists) {
+        await chooseExistingRepo(page, repoCard, reponame);
+      }
 
       if (!repoExists) {
         const repoInput = repoCard.getByRole("combobox", { name: "Select or type repo name..." });
@@ -121,7 +120,7 @@ for (const [viewportName, viewport] of Object.entries(viewports)) {
         await repoInput.fill(reponame);
         const escapedRepoName = reponame.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
         const alreadyClonedOption = page.getByRole("option", { name: new RegExp(`^(?:▪\\s*)?${escapedRepoName}$`, "i") });
-        const cloneOption = page.getByRole("option", { name: new RegExp(`^Clone as [\"'“‘]${escapedRepoName}[\"'”’]$`) });
+        const cloneOption = page.getByRole("option", { name: new RegExp(`^Clone as ["'“‘]${escapedRepoName}["'”’]$`) });
 
         await expectVisibleWithin(alreadyClonedOption.or(cloneOption), "Existing repo or clone option", 50_000);
         if (await alreadyClonedOption.isVisible()) {
@@ -151,26 +150,26 @@ for (const [viewportName, viewport] of Object.entries(viewports)) {
       await expectSnapshot(page, repoCard, testInfo, "repo-no-env", viewportName);
     });
 
-		test("Creates PROD branch, then creates TEST from PROD", async ({ page, context}, testInfo) => {
-			test.setTimeout(300_000);
-			const repoName = safePathSegment(`${TEST_REPO_FROM_PROD}-${viewportName}`,);
-			await restoreGithubSessionStorage(context);
-			await page.goto(CORP_URL);
-			const repoCard = await expandRepoCard(page,);
-			const repoInput = repoCard.getByRole("combobox", { name: "Select or type repo name...", });
+    test("Creates PROD branch, then creates TEST from PROD", async ({ page, context }, testInfo) => {
+      test.setTimeout(300_000);
+      const repoName = safePathSegment(`${TEST_REPO_FROM_PROD}-${viewportName}`);
+      await restoreGithubSessionStorage(context);
+      await page.goto(CORP_URL);
+      const repoCard = await expandRepoCard(page);
+      const repoInput = repoCard.getByRole("combobox", { name: "Select or type repo name..." });
 
-			const repoExists = await checkRepoExists(page, repoCard, repoName);
-			if (repoExists) {
-				throw new Error(`The repo "${repoName}" already exists. Please delete it from your GitHub account before running this test.`);
-			}
-			await createNewRepo(page, repoCard, repoName);
-			await chooseExistingRepo(page, repoCard, repoName);
-			await expect(repoInput).toHaveValue(repoName);
-			const PROD = repoCard.getByText("PROD", { exact: true, });
-			const TEST = repoCard.getByText("TEST", { exact: true, });
-			await expect(repoCard.getByText("Loading environments...", { exact: true, })).toBeHidden();
-			await expectVisibleWithin(PROD, "PROD environment", 50_000);
-			await expectVisibleWithin(TEST, "TEST environment", 50_000);
+      const repoExists = await checkRepoExists(page, repoCard, repoName);
+      if (repoExists) {
+        throw new Error(`The repo "${repoName}" already exists. Please delete it from your GitHub account before running this test.`);
+      }
+      await createNewRepo(page, repoCard, repoName);
+      await chooseExistingRepo(page, repoCard, repoName);
+      await expect(repoInput).toHaveValue(repoName);
+      const PROD = repoCard.getByText("PROD", { exact: true });
+      const TEST = repoCard.getByText("TEST", { exact: true });
+      await expect(repoCard.getByText("Loading environments...", { exact: true })).toBeHidden();
+      await expectVisibleWithin(PROD, "PROD environment", 50_000);
+      await expectVisibleWithin(TEST, "TEST environment", 50_000);
 
       await PROD.click();
       const createProdButton = repoCard.getByRole("button", { name: "Create New Branch: PROD" });

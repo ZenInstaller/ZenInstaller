@@ -20,7 +20,7 @@ export async function readFunctionAppSettings(
   subscriptionId: string,
   resourceGroup: string,
   name: string,
-  overrideTenantId?: string,
+  overrideTenantId?: string
 ): Promise<Record<string, string>> {
   const token = await getToken(account, ARM_SCOPES, overrideTenantId);
   const path = `${appSettingsPath(subscriptionId, resourceGroup, name)}/list?api-version=${WEB_API}`;
@@ -33,7 +33,7 @@ export async function updateFunctionAppSettings(
   resourceGroup: string,
   name: string,
   settings: Record<string, string>,
-  overrideTenantId?: string,
+  overrideTenantId?: string
 ): Promise<void> {
   const current = await readFunctionAppSettings(account, subscriptionId, resourceGroup, name, overrideTenantId);
   const token = await getToken(account, ARM_SCOPES, overrideTenantId);
@@ -63,11 +63,11 @@ async function latestDeployment(
   token: string,
   subscriptionId: string,
   resourceGroup: string,
-  name: string,
+  name: string
 ): Promise<{ status?: number; message?: string; end_time?: string } | null> {
   const res = await fetch(
     `${ARM}/subscriptions/${subscriptionId}/resourceGroups/${resourceGroup}/providers/Microsoft.Web/sites/${name}/deployments?api-version=${WEB_API}`,
-    { headers: { Authorization: `Bearer ${token}` } },
+    { headers: { Authorization: `Bearer ${token}` } }
   );
   if (!res.ok) return null;
 
@@ -91,7 +91,7 @@ export async function fetchDeployedBackend(
   subscriptionId: string,
   resourceGroup: string,
   name: string,
-  overrideTenantId?: string,
+  overrideTenantId?: string
 ): Promise<DeployedBackend | null> {
   const settings = await readFunctionAppSettings(account, subscriptionId, resourceGroup, name, overrideTenantId);
   const version = settings[BACKEND_VERSION_KEYS.version];
@@ -117,7 +117,7 @@ export async function deployZipToFunctionApp(
   appName: string,
   zip: Blob,
   overrideTenantId?: string,
-  onProgress?: (phase: "uploading" | "deploying") => void,
+  onProgress?: (phase: "uploading" | "deploying") => void
 ): Promise<void> {
   const token = await getToken(account, ARM_SCOPES, overrideTenantId);
   const url = `${ARM}/subscriptions/${subscriptionId}/resourceGroups/${resourceGroup}/providers/Microsoft.Web/sites/${appName}/extensions/onedeploy?api-version=${ONEDEPLOY_API}`;
@@ -195,7 +195,7 @@ export async function getProviderRegistrationState(
   account: AzureAccount,
   subscriptionId: string,
   namespace: string,
-  overrideTenantId?: string,
+  overrideTenantId?: string
 ): Promise<ProviderRegistrationState> {
   const token = await getToken(account, ARM_SCOPES, overrideTenantId);
   const data = (await gFetch(token, ARM, `/subscriptions/${subscriptionId}/providers/${namespace}?api-version=${PROVIDER_API}`)) as {
@@ -238,7 +238,7 @@ export async function ensureResourceGroup(
   subscriptionId: string,
   name: string,
   location: string,
-  overrideTenantId?: string,
+  overrideTenantId?: string
 ): Promise<EnsureResult> {
   const token = await getToken(account, ARM_SCOPES, overrideTenantId);
   const path = resourceGroupPath(subscriptionId, name);
@@ -261,7 +261,7 @@ export async function ensureLogAnalyticsWorkspace(
   resourceGroup: string,
   name: string,
   location: string,
-  overrideTenantId?: string,
+  overrideTenantId?: string
 ): Promise<{ id: string; result: EnsureResult }> {
   const token = await getToken(account, ARM_SCOPES, overrideTenantId);
   const path = `/subscriptions/${subscriptionId}/resourceGroups/${resourceGroup}/providers/Microsoft.OperationalInsights/workspaces/${name}?api-version=2022-10-01`;
@@ -285,7 +285,7 @@ export async function ensureSubscriptionDiagnostics(
   subscriptionId: string,
   settingName: string,
   workspaceId: string,
-  overrideTenantId?: string,
+  overrideTenantId?: string
 ): Promise<EnsureResult> {
   const token = await getToken(account, ARM_SCOPES, overrideTenantId);
   const path = `/subscriptions/${subscriptionId}/providers/Microsoft.Insights/diagnosticSettings/${settingName}?api-version=2021-05-01-preview`;
@@ -312,7 +312,7 @@ export async function ensureBlobDiagnostics(
   storageAccountName: string,
   settingName: string,
   workspaceId: string,
-  overrideTenantId?: string,
+  overrideTenantId?: string
 ): Promise<EnsureResult> {
   const token = await getToken(account, ARM_SCOPES, overrideTenantId);
   const path = `/subscriptions/${subscriptionId}/resourceGroups/${resourceGroup}/providers/Microsoft.Storage/storageAccounts/${storageAccountName}/blobServices/default/providers/Microsoft.Insights/diagnosticSettings/${settingName}?api-version=2021-05-01-preview`;
@@ -340,7 +340,7 @@ export async function getAppInsightsConnectionString(
   subscriptionId: string,
   resourceGroup: string,
   name: string,
-  overrideTenantId?: string,
+  overrideTenantId?: string
 ): Promise<string> {
   const token = await getToken(account, ARM_SCOPES, overrideTenantId);
   const path = `/subscriptions/${subscriptionId}/resourceGroups/${resourceGroup}/providers/Microsoft.Insights/components/${name}?api-version=2020-02-02`;
@@ -355,7 +355,7 @@ export async function ensureAppInsights(
   name: string,
   location: string,
   workspaceId: string,
-  overrideTenantId?: string,
+  overrideTenantId?: string
 ): Promise<EnsureResult> {
   const token = await getToken(account, ARM_SCOPES, overrideTenantId);
   const path = `/subscriptions/${subscriptionId}/resourceGroups/${resourceGroup}/providers/Microsoft.Insights/components/${name}?api-version=2020-02-02`;
@@ -378,7 +378,7 @@ export async function ensureDnsZone(
   subscriptionId: string,
   resourceGroup: string,
   dnsName: string,
-  overrideTenantId?: string,
+  overrideTenantId?: string
 ): Promise<{ nameServers: string[]; result: EnsureResult }> {
   const token = await getToken(account, ARM_SCOPES, overrideTenantId);
   const path = `/subscriptions/${subscriptionId}/resourceGroups/${resourceGroup}/providers/Microsoft.Network/dnsZones/${dnsName}?api-version=2018-05-01`;
@@ -395,7 +395,7 @@ export async function ensureDnsTxtRecord(
   resourceGroup: string,
   dnsName: string,
   value: string,
-  overrideTenantId?: string,
+  overrideTenantId?: string
 ): Promise<EnsureResult> {
   const token = await getToken(account, ARM_SCOPES, overrideTenantId);
   const path = `/subscriptions/${subscriptionId}/resourceGroups/${resourceGroup}/providers/Microsoft.Network/dnsZones/${dnsName}/TXT/@?api-version=2018-05-01`;
@@ -420,31 +420,19 @@ async function findStorageAccount(token: string, subscriptionId: string, name: s
 
 // checkNameAvailability never says who holds a name; this is what tells "ours, elsewhere" apart.
 // ponytail: subscription-scoped, widen to Resource Graph if accounts spread across subscriptions.
-export async function findStorageAccountGroup(
-  account: AzureAccount,
-  subscriptionId: string,
-  name: string,
-  overrideTenantId?: string,
-): Promise<string | null> {
+export async function findStorageAccountGroup(account: AzureAccount, subscriptionId: string, name: string, overrideTenantId?: string): Promise<string | null> {
   const token = await getToken(account, ARM_SCOPES, overrideTenantId);
   const found = await findStorageAccount(token, subscriptionId, name);
   return found?.id?.match(/resourceGroups\/([^/]+)/i)?.[1] ?? null;
 }
 
 // Azure answers for the whole world, so "unavailable" can also mean someone else's account.
-export async function storageAccountNameAvailable(
-  account: AzureAccount,
-  subscriptionId: string,
-  name: string,
-  overrideTenantId?: string,
-): Promise<boolean> {
+export async function storageAccountNameAvailable(account: AzureAccount, subscriptionId: string, name: string, overrideTenantId?: string): Promise<boolean> {
   const token = await getToken(account, ARM_SCOPES, overrideTenantId);
-  const availability = await gFetch(
-    token,
-    ARM,
-    `/subscriptions/${subscriptionId}/providers/Microsoft.Storage/checkNameAvailability?api-version=2023-01-01`,
-    { method: "POST", body: JSON.stringify({ name, type: "Microsoft.Storage/storageAccounts" }) },
-  );
+  const availability = await gFetch(token, ARM, `/subscriptions/${subscriptionId}/providers/Microsoft.Storage/checkNameAvailability?api-version=2023-01-01`, {
+    method: "POST",
+    body: JSON.stringify({ name, type: "Microsoft.Storage/storageAccounts" }),
+  });
   return availability?.nameAvailable !== false;
 }
 
@@ -454,21 +442,16 @@ export async function ensureStorageAccount(
   resourceGroup: string,
   name: string,
   location: string,
-  overrideTenantId?: string,
+  overrideTenantId?: string
 ): Promise<EnsureResult> {
   const token = await getToken(account, ARM_SCOPES, overrideTenantId);
   const path = `/subscriptions/${subscriptionId}/resourceGroups/${resourceGroup}/providers/Microsoft.Storage/storageAccounts/${name}?api-version=2023-01-01`;
   if (await armGet(token, path)) return "exists";
 
-  const availability = await gFetch(
-    token,
-    ARM,
-    `/subscriptions/${subscriptionId}/providers/Microsoft.Storage/checkNameAvailability?api-version=2023-01-01`,
-    {
-      method: "POST",
-      body: JSON.stringify({ name, type: "Microsoft.Storage/storageAccounts" }),
-    },
-  );
+  const availability = await gFetch(token, ARM, `/subscriptions/${subscriptionId}/providers/Microsoft.Storage/checkNameAvailability?api-version=2023-01-01`, {
+    method: "POST",
+    body: JSON.stringify({ name, type: "Microsoft.Storage/storageAccounts" }),
+  });
   if (availability?.nameAvailable === false) {
     throw new Error(`Storage account name "${name}" unavailable: ${availability.message ?? availability.reason}`);
   }
@@ -491,7 +474,7 @@ export async function ensureBlobServiceProperties(
   name: string,
   allowedOrigins: string[],
   overrideTenantId?: string,
-  indexDocument = "index.html",
+  indexDocument = "index.html"
 ): Promise<void> {
   const token = await getToken(account, ARM_SCOPES, overrideTenantId);
   const path = `/subscriptions/${subscriptionId}/resourceGroups/${resourceGroup}/providers/Microsoft.Storage/storageAccounts/${name}/blobServices/default?api-version=2025-08-01`;
@@ -518,12 +501,7 @@ export async function ensureBlobServiceProperties(
 }
 
 // The web endpoint's host is assigned by Azure, so it is read back rather than composed.
-export async function getStaticWebsiteUrl(
-  account: AzureAccount,
-  subscriptionId: string,
-  name: string,
-  overrideTenantId?: string,
-): Promise<string | null> {
+export async function getStaticWebsiteUrl(account: AzureAccount, subscriptionId: string, name: string, overrideTenantId?: string): Promise<string | null> {
   const token = await getToken(account, ARM_SCOPES, overrideTenantId);
   const web = (await findStorageAccount(token, subscriptionId, name))?.properties?.primaryEndpoints?.web;
   return web ? web.replace(/\/+$/, "") : null;
@@ -535,7 +513,7 @@ export async function ensureStorageContainer(
   resourceGroup: string,
   storageAccountName: string,
   containerName: string,
-  overrideTenantId?: string,
+  overrideTenantId?: string
 ): Promise<EnsureResult> {
   const token = await getToken(account, ARM_SCOPES, overrideTenantId);
   const path = `/subscriptions/${subscriptionId}/resourceGroups/${resourceGroup}/providers/Microsoft.Storage/storageAccounts/${storageAccountName}/blobServices/default/containers/${containerName}?api-version=2023-01-01`;
@@ -551,17 +529,17 @@ export async function hasRbacRoleAtScope(
   scope: string,
   principalId: string,
   roleName: string,
-  overrideTenantId?: string,
+  overrideTenantId?: string
 ): Promise<boolean> {
   const token = await getToken(account, ARM_SCOPES, overrideTenantId);
   const roleId = RBAC_ROLE_IDS[roleName];
   const existing = await gFetch(
     token,
     ARM,
-    `${scope}/providers/Microsoft.Authorization/roleAssignments?api-version=2022-04-01&$filter=assignedTo('${principalId}')`,
+    `${scope}/providers/Microsoft.Authorization/roleAssignments?api-version=2022-04-01&$filter=assignedTo('${principalId}')`
   );
   return !!existing?.value?.some((a: { properties: { roleDefinitionId: string } }) =>
-    a.properties.roleDefinitionId.toLowerCase().endsWith(roleId.toLowerCase()),
+    a.properties.roleDefinitionId.toLowerCase().endsWith(roleId.toLowerCase())
   );
 }
 
@@ -571,7 +549,7 @@ export async function ensureRbacRoleAtScope(
   principalId: string,
   roleName: string,
   overrideTenantId?: string,
-  principalType: "ServicePrincipal" | "Group" | "User" = "ServicePrincipal",
+  principalType: "ServicePrincipal" | "Group" | "User" = "ServicePrincipal"
 ): Promise<EnsureResult> {
   if (await hasRbacRoleAtScope(account, scope, principalId, roleName, overrideTenantId)) return "exists";
 
@@ -618,7 +596,7 @@ export async function ensureWebPubSub(
   name: string,
   location: string,
   sku: string,
-  overrideTenantId?: string,
+  overrideTenantId?: string
 ): Promise<EnsureResult> {
   const token = await getToken(account, ARM_SCOPES, overrideTenantId);
   const path = `/subscriptions/${subscriptionId}/resourceGroups/${resourceGroup}/providers/Microsoft.SignalRService/webPubSub/${name}?api-version=${WEBPUBSUB_API}`;
@@ -643,7 +621,7 @@ export async function ensureWebPubSubHub(
   resourceGroup: string,
   webPubSubName: string,
   hubName: string,
-  overrideTenantId?: string,
+  overrideTenantId?: string
 ): Promise<EnsureResult> {
   const token = await getToken(account, ARM_SCOPES, overrideTenantId);
   const path = `/subscriptions/${subscriptionId}/resourceGroups/${resourceGroup}/providers/Microsoft.SignalRService/webPubSub/${webPubSubName}/hubs/${hubName}?api-version=${WEBPUBSUB_API}`;
@@ -661,7 +639,7 @@ export async function ensureStorageTable(
   resourceGroup: string,
   storageAccountName: string,
   tableName: string,
-  overrideTenantId?: string,
+  overrideTenantId?: string
 ): Promise<EnsureResult> {
   const token = await getToken(account, ARM_SCOPES, overrideTenantId);
   const path = `/subscriptions/${subscriptionId}/resourceGroups/${resourceGroup}/providers/Microsoft.Storage/storageAccounts/${storageAccountName}/tableServices/default/tables/${tableName}?api-version=2023-01-01`;
@@ -676,7 +654,7 @@ export async function ensureFlexServicePlan(
   resourceGroup: string,
   name: string,
   location: string,
-  overrideTenantId?: string,
+  overrideTenantId?: string
 ): Promise<EnsureResult> {
   const token = await getToken(account, ARM_SCOPES, overrideTenantId);
   const path = `/subscriptions/${subscriptionId}/resourceGroups/${resourceGroup}/providers/Microsoft.Web/serverfarms/${name}?api-version=${WEB_API}`;
@@ -707,7 +685,7 @@ export async function ensureFlexFunctionApp(
   deploymentContainerUrl: string,
   appSettings: FunctionAppSettings,
   allowedOrigins: string[],
-  overrideTenantId?: string,
+  overrideTenantId?: string
 ): Promise<{ result: EnsureResult; principalId: string }> {
   const token = await getToken(account, ARM_SCOPES, overrideTenantId);
   const path = `/subscriptions/${subscriptionId}/resourceGroups/${resourceGroup}/providers/Microsoft.Web/sites/${name}?api-version=${WEB_API}`;

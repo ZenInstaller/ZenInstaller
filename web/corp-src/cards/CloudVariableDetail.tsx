@@ -80,8 +80,9 @@ export default function CloudVariableDetail({
 
   const visibleKeys = hiddenKeys?.length ? keys.filter((k) => !hiddenKeys.includes(k)) : keys;
 
-  // Counts what is on screen; a hidden key has no row for the reader to go and fill in.
+  // Both count what is on screen; a hidden key has no row for the reader to fill in or to have edited.
   const notConfigured = visibleKeys.filter((k) => !variables.values[k]).length;
+  const visibleDirtyKeys = dirtyKeys.filter((k) => visibleKeys.includes(k));
 
   const complete = keys.every((k) => !!variables.values[k]);
   const scopedValues = Object.fromEntries(keys.map((k) => [k, variables.values[k] ?? ""]));
@@ -159,7 +160,7 @@ export default function CloudVariableDetail({
           <SaveButton
             verb="Save"
             noun="variable"
-            count={dirtyKeys.length}
+            count={visibleDirtyKeys.length}
             loading={updating}
             disabled={!!disabled || !account || !repo || !envName || updating || dirtyKeys.length === 0}
             onClick={() => void handleSave()}

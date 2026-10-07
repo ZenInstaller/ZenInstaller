@@ -146,7 +146,7 @@ export default function WebDeployCard({
                 {loadingLatest
                   ? "checking..."
                   : latest
-                    ? `${latest.sha.slice(0, 7)} · ${when(latest.builtAt)}`
+                    ? `${latest.sha.slice(0, 7)} (v${latest.version}) · ${when(latest.builtAt)}`
                     : "none yet"}
               </Box>
             </Typography>
@@ -156,7 +156,7 @@ export default function WebDeployCard({
                 {loadingDeployed
                   ? "checking..."
                   : deployed
-                    ? `${deployed.sha.slice(0, 7)} · ${when(deployed.builtAt)}`
+                    ? `${deployed.sha.slice(0, 7)} (v${deployed.version}) · ${when(deployed.builtAt)}`
                     : "nothing deployed"}
               </Box>
             </Typography>

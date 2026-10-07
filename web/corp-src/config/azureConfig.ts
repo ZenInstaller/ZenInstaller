@@ -101,7 +101,7 @@ export const BACKEND_VERSION_KEYS = {
 // ── Resource provider namespaces ───────────────────────────────────────────────
 export const CORE_INFRA_PROVIDERS = ["Microsoft.OperationalInsights", "Microsoft.Insights", "Microsoft.Storage"] as const;
 export const DNS_PROVIDERS = ["Microsoft.Network"] as const;
-export const REMOTE_TERMINAL_PROVIDERS = [
+export const PRIVATE_FRONTEND_PROVIDERS = [
   "Microsoft.OperationalInsights",
   "Microsoft.Insights",
   "Microsoft.Storage",

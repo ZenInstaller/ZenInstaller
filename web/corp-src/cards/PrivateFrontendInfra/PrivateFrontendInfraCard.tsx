@@ -18,7 +18,7 @@ import {
 import CheckIcon from "@mui/icons-material/Check";
 import EditIcon from "@mui/icons-material/Edit";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
-import type { UseRemoteTerminalInfraCard } from "./useRemoteTerminalInfraCard";
+import type { UsePrivateFrontendInfraCard } from "./usePrivateFrontendInfraCard";
 import StepRow from "../StepRow";
 import Card from "../../components/Card";
 import ViewLink from "../../components/ViewLink";
@@ -27,7 +27,7 @@ import { getPrivateInstallerAppName } from "../../logic/naming";
 import { resourceGroupScope } from "../../api/azureArm";
 import { MONO as mono, labelSx } from "../../config/styles";
 import CloudVariableDetail from "../CloudVariableDetail";
-import { DEPLOYMENT_TERMINAL_KEYS } from "../../logic/variables";
+import { PRIVATE_FRONTEND_KEYS } from "../../logic/variables";
 import type { UseGithubVariables } from "../../hooks/useGithubVariables";
 import type { Account, CardChrome, GhEnv } from "../../types";
 
@@ -44,7 +44,7 @@ function PlainRow({ label, value }: { label: string; value: string }) {
 
 type Props = {
   card: CardChrome;
-  infra: UseRemoteTerminalInfraCard;
+  infra: UsePrivateFrontendInfraCard;
   subscriptionId: string;
   tenantId?: string;
   githubAccount: Account | null;
@@ -54,7 +54,7 @@ type Props = {
   githubUrl?: string;
 };
 
-export default function RemoteTerminalInfraCard({ card, infra, subscriptionId, tenantId, githubAccount, repoName, selectedEnv, variables, githubUrl }: Props) {
+export default function PrivateFrontendInfraCard({ card, infra, subscriptionId, tenantId, githubAccount, repoName, selectedEnv, variables, githubUrl }: Props) {
   const [varExpanded, setVarExpanded] = useState(false);
   const [editingLocation, setEditingLocation] = useState(false);
   const [editingStorage, setEditingStorage] = useState(false);
@@ -267,7 +267,7 @@ export default function RemoteTerminalInfraCard({ card, infra, subscriptionId, t
             account={githubAccount}
             repo={repoName}
             envName={selectedEnv?.name ?? null}
-            keys={DEPLOYMENT_TERMINAL_KEYS}
+            keys={PRIVATE_FRONTEND_KEYS}
             hiddenKeys={["SITE_STORAGE_ACCOUNT"]}
             variables={variables}
             populate={populate}

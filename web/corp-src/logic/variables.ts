@@ -8,8 +8,8 @@ export const AZURE_VARIABLE_KEYS = ["AZURE_CLIENT_ID", "AZURE_PLAN_CLIENT_ID", "
 export const AZURE_TARGET_KEYS = ["AZURE_TENANT_ID", "AZURE_SUBSCRIPTION_ID", "VITE_AZURE_TENANT_ID"] as const;
 // App-registration client ids — saved by the Azure app registration card.
 export const AZURE_APP_KEYS = ["AZURE_CLIENT_ID", "AZURE_PLAN_CLIENT_ID"] as const;
-// Relay connection details — saved by the deployment terminal card.
-export const DEPLOYMENT_TERMINAL_KEYS = ["VITE_AZURE_CLIENT_ID", "SITE_STORAGE_ACCOUNT"] as const;
+// Private frontend — saved by the private frontend infra card.
+export const PRIVATE_FRONTEND_KEYS = ["VITE_AZURE_CLIENT_ID", "SITE_STORAGE_ACCOUNT"] as const;
 // Filled in by hand on the frontend card — the build bakes it in, so it cannot be derived.
 export const FRONTEND_VARIABLE_KEYS = ["VITE_GITHUB_CLIENT_ID"] as const;
 export const AWS_VARIABLE_KEYS = ["AWS_ROLE_ARN"] as const;

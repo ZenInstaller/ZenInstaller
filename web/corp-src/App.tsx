@@ -15,7 +15,7 @@ import { useGithubVariables } from "./hooks/useGithubVariables";
 import { useUrlRestore, useUrlSync } from "./hooks/useUrlStateManager";
 import { useAzureLoginCard } from "./cards/AzureLogin/useAzureLoginCard";
 import { useAzureSubscriptionCard } from "./cards/AzureSubscription/useAzureSubscriptionCard";
-import { useRemoteTerminalInfraCard } from "./cards/RemoteTerminalInfra/useRemoteTerminalInfraCard";
+import { usePrivateFrontendInfraCard } from "./cards/PrivateFrontendInfra/usePrivateFrontendInfraCard";
 import { useWebDeployCard } from "./cards/WebDeploy/useWebDeployCard";
 
 import Header from "./components/Header";
@@ -24,7 +24,7 @@ import GithubLoginCard from "./cards/GithubLogin/GithubLoginCard";
 import RepoCard from "./cards/Repo/RepoCard";
 import AzureLoginCard from "./cards/AzureLogin/AzureLoginCard";
 import AzureSubscriptionCard from "./cards/AzureSubscription/AzureSubscriptionCard";
-import RemoteTerminalInfraCard from "./cards/RemoteTerminalInfra/RemoteTerminalInfraCard";
+import PrivateFrontendInfraCard from "./cards/PrivateFrontendInfra/PrivateFrontendInfraCard";
 import WebDeployCard from "./cards/WebDeploy/WebDeployCard";
 
 import { withAITracking } from "@microsoft/applicationinsights-react-js";
@@ -75,8 +75,8 @@ function AppDashboard() {
     }),
   );
 
-  const remoteTerminalInfra = addCard(
-    useRemoteTerminalInfraCard({
+  const privateFrontendInfra = addCard(
+    usePrivateFrontendInfraCard({
       variableValues: githubVariableValues,
       azureAccount: azureLogin.account,
       subscriptionId: azureSubscription.selectedSubscriptionId,
@@ -220,9 +220,9 @@ function AppDashboard() {
               onUserInteract={() => urlRestore.cancel(["tenant", "subscription"])}
             />
 
-            <RemoteTerminalInfraCard
-              card={cardProps("remote_terminal_infra")}
-              infra={remoteTerminalInfra}
+            <PrivateFrontendInfraCard
+              card={cardProps("private_frontend_infra")}
+              infra={privateFrontendInfra}
               subscriptionId={azureSubscription.selectedSubscriptionId}
               tenantId={githubVariableValues.AZURE_TENANT_ID ?? ""}
               githubAccount={githubRepoEnv.repo.selectedAccount}

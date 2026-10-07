@@ -31,26 +31,26 @@ import {
   PRIVATE_RESOURCE_GROUP,
   getWebStorageAccountName,
 } from "../../logic/naming";
-import { PRIVATE_INSTALLER_DELEGATED, REMOTE_TERMINAL_PROVIDERS, STORAGE_SCOPES } from "../../config/azureConfig";
+import { PRIVATE_INSTALLER_DELEGATED, PRIVATE_FRONTEND_PROVIDERS, STORAGE_SCOPES } from "../../config/azureConfig";
 import { ensureScopeConsent } from "../../auth/msal";
 import { createResultStorage } from "../../logic/resultStorage";
 import type { AzureConfigHook, AzureTarget, CardHook, CardStatus, SetupStep } from "../../types";
 
-export type RemoteTerminalInfraResult = {
+export type PrivateFrontendInfraResult = {
   subscriptionId: string;
   siteStorageAccount: string;
   tenantId: string;
   installerClientId: string;
 };
 
-export interface UseRemoteTerminalInfraCardParams extends AzureTarget {
+export interface UsePrivateFrontendInfraCardParams extends AzureTarget {
   variableValues: Record<string, string>;
   // Origins the browser calls /register and /negotiate from; without them every session fails on CORS.
   allowedOrigins: string[];
 }
 
-export interface UseRemoteTerminalInfraCard extends CardHook, AzureConfigHook {
-  readonly cardId: "remote_terminal_infra";
+export interface UsePrivateFrontendInfraCard extends CardHook, AzureConfigHook {
+  readonly cardId: "private_frontend_infra";
   location: string;
   setLocation: (loc: string) => void;
   siteStorageAccount: string;
@@ -64,33 +64,31 @@ export interface UseRemoteTerminalInfraCard extends CardHook, AzureConfigHook {
   resourceGroupName: string;
   lawName: string;
   webStorageAccountName: string;
-  result: RemoteTerminalInfraResult | null;
+  result: PrivateFrontendInfraResult | null;
   resultMatches: boolean;
   runNonce: number;
 }
 
 const RESULT_KEY = "zeninstaller_private_env_result";
-const { save: saveResult, load: loadResult } = createResultStorage<RemoteTerminalInfraResult>(RESULT_KEY);
+const { save: saveResult, load: loadResult } = createResultStorage<PrivateFrontendInfraResult>(RESULT_KEY);
 
-/*
- * The relay the stage-card terminal runs on: Web PubSub, the session table, and the Function App
- * that issues group-scoped tokens. Mirrors web/deploy-remote-terminal/env, built from the browser
- * instead of Terraform. Every connection is managed identity — nothing here stores a key.
- */
-export function useRemoteTerminalInfraCard({
+// Everything the private installer site needs before it can be built and uploaded, created from the
+// browser rather than Terraform: the group, the workspace it logs to, the storage account that serves
+// the site, and the app registration users sign in to.
+export function usePrivateFrontendInfraCard({
   azureAccount,
   subscriptionId,
   tenantId,
   allowedOrigins,
   variableValues,
-}: UseRemoteTerminalInfraCardParams): UseRemoteTerminalInfraCard {
+}: UsePrivateFrontendInfraCardParams): UsePrivateFrontendInfraCard {
   const [location, setLocation] = useState(DEFAULT_AZURE_LOCATION);
   const [locations, setLocations] = useState<AzureLocation[]>([]);
   const [locationsLoading, setLocationsLoading] = useState(false);
   const [locationsError, setLocationsError] = useState<string | null>(null);
   const { steps, setSteps, running, setRunning, updateStep, resetSteps } = useStepRunner();
   const { ensureRegistered } = useProviderRegistration({ azureAccount, subscriptionId, tenantId });
-  const [result, setResult] = useState<RemoteTerminalInfraResult | null>(loadResult);
+  const [result, setResult] = useState<PrivateFrontendInfraResult | null>(loadResult);
   const [runNonce, setRunNonce] = useState(0);
 
   const resourceGroupName = PRIVATE_RESOURCE_GROUP;
@@ -235,7 +233,7 @@ export function useRemoteTerminalInfraCard({
 
     try {
       updateStep("providers", "running");
-      const providers = await ensureRegistered(REMOTE_TERMINAL_PROVIDERS);
+      const providers = await ensureRegistered(PRIVATE_FRONTEND_PROVIDERS);
       updateStep(
         "providers",
         providers.registered.length === 0 ? "skipped" : "done",
@@ -313,7 +311,7 @@ export function useRemoteTerminalInfraCard({
       if (!existingInstallerSp) await createServicePrincipal(azureAccount, installerApp.appId, tenantId);
       mark("installerSp", existingInstallerSp ? "exists" : "created");
 
-      const finished: RemoteTerminalInfraResult = {
+      const finished: PrivateFrontendInfraResult = {
         subscriptionId,
         siteStorageAccount: webStorageAccountName,
         tenantId: tenantId || azureAccount.tenantId,
@@ -347,7 +345,7 @@ export function useRemoteTerminalInfraCard({
   const summary = !azureConfigured ? "Unavailable" : done ? "Private environment ready" : "Set up the private environment";
 
   return {
-    cardId: "remote_terminal_infra" as const,
+    cardId: "private_frontend_infra" as const,
     location,
     setLocation,
     siteStorageAccount: webStorageAccountName,

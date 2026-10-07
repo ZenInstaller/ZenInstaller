@@ -5,7 +5,7 @@
 
 import { Box, Button, CircularProgress, MenuItem, Select, TextField, Typography } from "@mui/material";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
-import { CLOUD_DOCS } from "./config.ts";
+import { CLOUD_DOCS } from "./config";
 import { MONO as mono, labelSx } from "../../config/styles";
 import Card from "../../components/Card";
 import ViewLink from "../../components/ViewLink";
@@ -59,6 +59,7 @@ export default function AzureLoginCard({ card, azureLogin }: Props) {
     tenantIdError,
     savedTenantId,
     tenantsLoaded,
+    tenantPinned,
   } = azureLogin;
 
   // A tenant list was fetched, but the saved tenant doesn't appear in it — an error, not just a warning.
@@ -153,6 +154,7 @@ export default function AzureLoginCard({ card, azureLogin }: Props) {
             <Box>
               <Typography sx={{ ...labelSx, mb: 0.75 }}>
                 Tenant
+                {/* Only tells you how to find a tenant to type in, which a pinned tenant makes moot. */}
                 <Box
                   component="a"
                   href={CLOUD_DOCS.azure.urlGetTenantId}
@@ -160,13 +162,14 @@ export default function AzureLoginCard({ card, azureLogin }: Props) {
                   rel="noopener noreferrer"
                   sx={{
                     ml: 1,
-                    display: "inline-flex",
+                    display: tenantPinned ? "none" : "inline-flex",
                     color: "#2563eb",
                     textDecoration: "none",
                     alignItems: "center",
                   }}
                 >
                   <Typography
+                    component="span"
                     sx={{
                       fontSize: "0.7rem",
                       "&:hover": { textDecoration: "underline" },
@@ -186,6 +189,8 @@ export default function AzureLoginCard({ card, azureLogin }: Props) {
               ) : tenants.length > 0 ? (
                 // Fetched (or MSA-fallback) list available — plain dropdown, picking loads that tenant immediately.
                 <Select
+                  // Pinned at build time: the value is shown but is not the user's to change.
+                  disabled={tenantPinned}
                   data-id="tenant-select"
                   data-sensitive="true"
                   size="small"
@@ -208,7 +213,9 @@ export default function AzureLoginCard({ card, azureLogin }: Props) {
                       data-tenant-name={t.displayName}
                     >
                       <Box>
-                        <Typography sx={{ fontSize: "0.8rem", ...mono }}>{t.displayName}</Typography>
+                        <Typography sx={{ fontSize: "0.8rem", ...mono }}>
+                          {tenantDisplayName(tenants, t.tenantId)}
+                        </Typography>
                         <Typography data-sensitive="true" sx={{ fontSize: "0.68rem", color: "#94a3b8", ...mono }}>
                           {t.tenantId}
                         </Typography>
@@ -236,6 +243,7 @@ export default function AzureLoginCard({ card, azureLogin }: Props) {
                     onChange={(e) => setManualTenantId(e.target.value)}
                     sx={{ minWidth: { xs: 0, sm: 320 }, width: "100%" }}
                     inputProps={{ style: { fontFamily: "'IBM Plex Mono', monospace", fontSize: "0.8rem" } }}
+                    helperText={tenants.length > 0 ? tenantDisplayName(tenants, manualTenantId) : undefined}
                   />
                   <Button
                     variant="contained"

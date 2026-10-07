@@ -3,82 +3,73 @@
  * @license SPDX-License-Identifier: MIT
  */
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
-  appInsightsScope,
-  ensureAppInsights,
-  ensureFlexFunctionApp,
-  ensureFlexServicePlan,
-  ensureLogAnalyticsWorkspace,
+  ensureBlobServiceProperties,
   ensureRbacRoleAtScope,
+  ensureBlobDiagnostics,
+  ensureLogAnalyticsWorkspace,
   ensureResourceGroup,
+  resourceGroupExists,
+  findStorageAccountGroup,
+  storageAccountNameAvailable,
+  ensureSubscriptionDiagnostics,
+  listLocations,
+  type AzureLocation,
   ensureStorageAccount,
-  ensureStorageContainer,
-  ensureStorageTable,
-  ensureWebPubSub,
-  ensureWebPubSubHub,
-  servicePlanId,
+  getStaticWebsiteUrl,
   storageAccountScope,
-  webPubSubScope,
 } from "../../api/azureArm";
-import { createAppRegistration, createServicePrincipal, ensureFederatedCredential, getExistingApp, getExistingSP } from "../../api/azureGraph";
+import { createSpaAppRegistration, createServicePrincipal, ensureSpaRedirectUri, getExistingApp, getExistingSP } from "../../api/azureGraph";
 import { useStepRunner } from "../../hooks/util/useStepRunner";
 import { useProviderRegistration } from "../../hooks/util/useProviderRegistration";
-import { DEFAULT_AZURE_LOCATION } from "../../logic/naming";
 import {
-  TERMINAL_DEPLOY_CONTAINER,
-  TERMINAL_HUB,
-  TERMINAL_SESSION_TABLE,
-  getTerminalAppInsightsName,
-  getTerminalFunctionAppName,
-  getTerminalLogAnalyticsWorkspaceName,
-  getRootResourceGroupName,
-  getTerminalPipelineAppName,
-  getTerminalStorageAccountName,
-  getTerminalWebPubSubName,
-  getFederatedCredential,
+  DEFAULT_AZURE_LOCATION,
+  DIAGNOSTIC_SETTING_NAME,
+  getPrivateInstallerAppName,
+  PRIVATE_LOG_ANALYTICS,
+  PRIVATE_RESOURCE_GROUP,
+  getWebStorageAccountName,
 } from "../../logic/naming";
-import { REMOTE_TERMINAL_PROVIDERS } from "../../config/azureConfig";
+import { PRIVATE_INSTALLER_DELEGATED, REMOTE_TERMINAL_PROVIDERS, STORAGE_SCOPES } from "../../config/azureConfig";
+import { ensureScopeConsent } from "../../auth/msal";
 import { createResultStorage } from "../../logic/resultStorage";
-import { VALID_ENVS } from "../../config/githubConfig";
-import type { Account, AzureConfigHook, AzureTarget, CardHook, CardStatus, SetupStep } from "../../types";
+import type { AzureConfigHook, AzureTarget, CardHook, CardStatus, SetupStep } from "../../types";
 
 export type RemoteTerminalInfraResult = {
-  corpName: string;
   subscriptionId: string;
-  apiUrl: string;
-  webPubSubHost: string;
-  hubName: string;
-  pipelineClientId: string;
-  pipelineTenantId: string;
+  siteStorageAccount: string;
+  tenantId: string;
+  installerClientId: string;
 };
 
 export interface UseRemoteTerminalInfraCardParams extends AzureTarget {
-  corpName: string;
+  variableValues: Record<string, string>;
   // Origins the browser calls /register and /negotiate from; without them every session fails on CORS.
   allowedOrigins: string[];
-  githubAccount: Account | null;
-  githubRepo: string;
-  // GitHub's numeric repo id — needed for the immutable OIDC subject.
-  githubRepoId: number | null;
 }
 
 export interface UseRemoteTerminalInfraCard extends CardHook, AzureConfigHook {
   readonly cardId: "remote_terminal_infra";
   location: string;
   setLocation: (loc: string) => void;
+  siteStorageAccount: string;
+  setSiteStorageAccount: (name: string) => void;
+  siteStorageChecking: boolean;
+  siteStorageError: string | null;
+  checkSiteStorageAccount: () => Promise<boolean>;
+  locations: AzureLocation[];
+  locationsLoading: boolean;
+  locationsError: string | null;
   resourceGroupName: string;
-  webPubSubName: string;
-  functionAppName: string;
-  storageAccountName: string;
-  hubName: string;
-  pipelineAppName: string;
+  lawName: string;
+  webStorageAccountName: string;
   result: RemoteTerminalInfraResult | null;
   resultMatches: boolean;
   runNonce: number;
 }
 
-const RESULT_KEY = "zeninstaller_remote_terminal_infra_result";
+const RESULT_KEY = "zeninstaller_private_env_result";
 const { save: saveResult, load: loadResult } = createResultStorage<RemoteTerminalInfraResult>(RESULT_KEY);
 
 /*
@@ -89,32 +80,40 @@ const { save: saveResult, load: loadResult } = createResultStorage<RemoteTermina
 export function useRemoteTerminalInfraCard({
   azureAccount,
   subscriptionId,
-  corpName,
   tenantId,
   allowedOrigins,
-  githubAccount,
-  githubRepo,
-  githubRepoId,
+  variableValues,
 }: UseRemoteTerminalInfraCardParams): UseRemoteTerminalInfraCard {
   const [location, setLocation] = useState(DEFAULT_AZURE_LOCATION);
+  const [locations, setLocations] = useState<AzureLocation[]>([]);
+  const [locationsLoading, setLocationsLoading] = useState(false);
+  const [locationsError, setLocationsError] = useState<string | null>(null);
   const { steps, setSteps, running, setRunning, updateStep, resetSteps } = useStepRunner();
   const { ensureRegistered } = useProviderRegistration({ azureAccount, subscriptionId, tenantId });
   const [result, setResult] = useState<RemoteTerminalInfraResult | null>(loadResult);
   const [runNonce, setRunNonce] = useState(0);
 
-  const resourceGroupName = getRootResourceGroupName(corpName);
-  const lawName = getTerminalLogAnalyticsWorkspaceName(corpName);
-  const appInsightsName = getTerminalAppInsightsName(corpName);
-  const storageAccountName = getTerminalStorageAccountName(corpName);
-  const webPubSubName = getTerminalWebPubSubName(corpName);
-  const functionAppName = getTerminalFunctionAppName(corpName);
-  const planName = `${functionAppName}-plan`;
-  const pipelineAppName = getTerminalPipelineAppName(corpName);
-  const environments = ["PROD", "TEST"].filter((e) => VALID_ENVS.includes(e));
+  const resourceGroupName = PRIVATE_RESOURCE_GROUP;
+  const lawName = PRIVATE_LOG_ANALYTICS;
+  /*
+   * Derived from the subscription so it is unique and the same on every re-run. The name is global
+   * to Azure, so when another tenant already holds it the field is the way out: type another one.
+   */
+  const [siteStorageOverride, setSiteStorageOverride] = useState("");
+  const [siteStorageChecking, setSiteStorageChecking] = useState(false);
+  const [siteStorageError, setSiteStorageError] = useState<string | null>(null);
+  const webStorageAccountName = siteStorageOverride || variableValues.SITE_STORAGE_ACCOUNT || getWebStorageAccountName(subscriptionId);
 
-  const resultMatches = !!result && result.corpName === corpName && result.subscriptionId === subscriptionId;
-  const done = resultMatches;
-  const azureConfigured = !!azureAccount && !!subscriptionId && !!corpName;
+  const resultMatches = !!result && result.subscriptionId === subscriptionId;
+
+  /*
+   * Completion is read back from the things themselves: the group and the site's account from Azure,
+   * the client id from the GitHub environment. A record in this browser proves none of them exist.
+   */
+  const [rgExists, setRgExists] = useState(false);
+  const [storageExists, setStorageExists] = useState(false);
+  const done = rgExists && storageExists && !!variableValues.VITE_AZURE_CLIENT_ID;
+  const azureConfigured = !!azureAccount && !!subscriptionId;
 
   const reset = useCallback(() => {
     resetSteps();
@@ -122,27 +121,91 @@ export function useRemoteTerminalInfraCard({
     saveResult(null);
   }, [resetSteps]);
 
-  const run = useCallback(async () => {
-    if (!azureAccount || !subscriptionId || !corpName) return;
-    if (!githubAccount || !githubRepo || githubRepoId === null) {
-      setSteps([
-        {
-          id: "github",
-          label: "Check the GitHub repository",
-          status: "error",
-          detail: "Select the GitHub account and repository first — the OIDC credentials are scoped to them",
-        },
-      ]);
+  useEffect(() => {
+    if (!azureAccount || !subscriptionId) {
+      setRgExists(false);
+      setStorageExists(false);
       return;
     }
-    const org = githubAccount.login;
-    if (storageAccountName.length > 24) {
+    let cancelled = false;
+    void (async () => {
+      const [rg, storage] = await Promise.all([
+        resourceGroupExists(azureAccount, subscriptionId, resourceGroupName, tenantId).catch(() => false),
+        findStorageAccountGroup(azureAccount, subscriptionId, webStorageAccountName, tenantId).catch(() => null),
+      ]);
+      if (cancelled) return;
+      setRgExists(rg);
+      setStorageExists(!!storage);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [azureAccount, subscriptionId, tenantId, resourceGroupName, webStorageAccountName, runNonce]);
+
+  const setSiteStorageAccount = useCallback((name: string) => {
+    setSiteStorageOverride(name);
+    setSiteStorageError(
+      name.length > 24 ? `${name.length} characters; Azure allows 24` : /^[a-z0-9]*$/.test(name) ? null : "Lowercase letters and digits only",
+    );
+  }, []);
+
+  // An account this subscription can see is the customer's own, so it is reused wherever it lives.
+  const checkSiteStorageAccount = useCallback(async (): Promise<boolean> => {
+    const name = webStorageAccountName;
+    if (!/^[a-z0-9]{3,24}$/.test(name)) {
+      setSiteStorageError("3-24 characters, lowercase letters and digits only");
+      return false;
+    }
+    if (!azureAccount || !subscriptionId) return true;
+
+    setSiteStorageChecking(true);
+    setSiteStorageError(null);
+    try {
+      if (await findStorageAccountGroup(azureAccount, subscriptionId, name, tenantId)) return true;
+      if (await storageAccountNameAvailable(azureAccount, subscriptionId, name, tenantId)) return true;
+      setSiteStorageError("This name is taken somewhere in Azure — choose a different one");
+      return false;
+    } catch (e) {
+      setSiteStorageError(e instanceof Error ? e.message : "Could not check the name");
+      return false;
+    } finally {
+      setSiteStorageChecking(false);
+    }
+  }, [azureAccount, subscriptionId, tenantId, webStorageAccountName]);
+
+  // Load the subscription's available regions once an account + subscription are known.
+  useEffect(() => {
+    if (!azureAccount || !subscriptionId) {
+      setLocations([]);
+      return;
+    }
+    let cancelled = false;
+    setLocationsLoading(true);
+    setLocationsError(null);
+    listLocations(azureAccount, subscriptionId, tenantId)
+      .then((locs) => {
+        if (!cancelled) setLocations(locs);
+      })
+      .catch((err) => {
+        if (!cancelled) setLocationsError(err instanceof Error ? err.message : "Failed to load Azure regions");
+      })
+      .finally(() => {
+        if (!cancelled) setLocationsLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [azureAccount, subscriptionId, tenantId]);
+
+  const run = useCallback(async () => {
+    if (!azureAccount || !subscriptionId) return;
+    if (webStorageAccountName.length > 24) {
       setSteps([
         {
           id: "name",
           label: "Check resource names",
           status: "error",
-          detail: `Storage account name "${storageAccountName}" is ${storageAccountName.length} characters; Azure allows 24`,
+          detail: `Storage account name "${webStorageAccountName}" is ${webStorageAccountName.length} characters; Azure allows 24`,
         },
       ]);
       return;
@@ -153,23 +216,22 @@ export function useRemoteTerminalInfraCard({
       { id: "providers", label: "Register required Azure resource providers", status: "pending" },
       { id: "rg", label: `Create resource group ${resourceGroupName}`, status: "pending" },
       { id: "law", label: `Create Log Analytics workspace ${lawName}`, status: "pending" },
-      { id: "appins", label: `Create Application Insights ${appInsightsName}`, status: "pending" },
-      { id: "storage", label: `Create storage account ${storageAccountName}`, status: "pending" },
-      { id: "table", label: `Create ${TERMINAL_SESSION_TABLE} table`, status: "pending" },
-      { id: "container", label: `Create ${TERMINAL_DEPLOY_CONTAINER} container`, status: "pending" },
-      { id: "wps", label: `Create Web PubSub ${webPubSubName}`, status: "pending" },
-      { id: "hub", label: `Configure hub ${TERMINAL_HUB}`, status: "pending" },
-      { id: "plan", label: "Create Flex Consumption plan", status: "pending" },
-      { id: "app", label: `Create Function App ${functionAppName}`, status: "pending" },
-      { id: "rbac", label: "Grant the Function App its data-plane roles", status: "pending" },
-      { id: "pipelineApp", label: `Create app registration ${pipelineAppName}`, status: "pending" },
-      { id: "pipelineSp", label: "Create its service principal", status: "pending" },
-      { id: "pipelineCreds", label: `Add GitHub OIDC credentials for ${environments.join(", ")}`, status: "pending" },
-      { id: "pipelineRbac", label: "Grant it Web PubSub Service Owner", status: "pending" },
+      { id: "webStorage", label: `Create storage account ${webStorageAccountName}`, status: "pending" },
+      { id: "webBlob", label: "Enable static website hosting and reach the blob service", status: "pending" },
+      { id: "webConsent", label: "Consent to the storage data plane", status: "pending" },
+      { id: "webRbac", label: "Grant yourself Storage Blob Data Contributor on it", status: "pending" },
+      { id: "diagnostics", label: "Send activity and blob writes to the workspace", status: "pending" },
+      { id: "installerApp", label: `Create app registration ${getPrivateInstallerAppName()}`, status: "pending" },
+      {
+        id: "installerSp",
+        label: `List ${getPrivateInstallerAppName()} under enterprise applications`,
+        status: "pending",
+      },
     ];
     setSteps(initialSteps);
 
-    const mark = (id: string, r: "created" | "exists") => updateStep(id, r === "exists" ? "skipped" : "done", r === "exists" ? "Already exists" : undefined);
+    const mark = (id: string, r: "created" | "exists") =>
+      updateStep(id, r === "exists" ? "skipped" : "done", r === "exists" ? "Already exists" : undefined);
 
     try {
       updateStep("providers", "running");
@@ -177,7 +239,7 @@ export function useRemoteTerminalInfraCard({
       updateStep(
         "providers",
         providers.registered.length === 0 ? "skipped" : "done",
-        providers.registered.length === 0 ? "Already registered" : providers.registered.join(", ")
+        providers.registered.length === 0 ? "Already registered" : providers.registered.join(", "),
       );
 
       updateStep("rg", "running");
@@ -187,109 +249,75 @@ export function useRemoteTerminalInfraCard({
       const law = await ensureLogAnalyticsWorkspace(azureAccount, subscriptionId, resourceGroupName, lawName, location, tenantId);
       mark("law", law.result);
 
-      updateStep("appins", "running");
+      // Storage account names are global, so one that already exists has to be used where it is.
+      const storageGroup = (await findStorageAccountGroup(azureAccount, subscriptionId, webStorageAccountName, tenantId)) ?? resourceGroupName;
+
+      updateStep("webStorage", "running");
+      mark("webStorage", await ensureStorageAccount(azureAccount, subscriptionId, storageGroup, webStorageAccountName, location, tenantId));
+
+      updateStep("webBlob", "running");
+      await ensureBlobServiceProperties(azureAccount, subscriptionId, storageGroup, webStorageAccountName, allowedOrigins, tenantId);
+      updateStep("webBlob", "done", allowedOrigins.join(", "));
+
+      // Navigates away when consent is missing, so nothing below runs until the user comes back.
+      updateStep("webConsent", "running");
+      const promptedStorage = await ensureScopeConsent(azureAccount, [...STORAGE_SCOPES], tenantId);
+      if (promptedStorage) return;
+      updateStep("webConsent", "skipped", "Already granted");
+
+      // Owner does not reach the blob data plane, so the browser needs this to upload the built site.
+      updateStep("webRbac", "running");
       mark(
-        "appins",
-        // App Insights wants the workspace's resource id, not its name.
-        await ensureAppInsights(azureAccount, subscriptionId, resourceGroupName, appInsightsName, location, law.id, tenantId)
+        "webRbac",
+        await ensureRbacRoleAtScope(
+          azureAccount,
+          storageAccountScope(subscriptionId, storageGroup, webStorageAccountName),
+          azureAccount.localAccountId,
+          "Storage Blob Data Contributor",
+          tenantId,
+          "User",
+        ),
       );
 
-      updateStep("storage", "running");
-      mark("storage", await ensureStorageAccount(azureAccount, subscriptionId, resourceGroupName, storageAccountName, location, tenantId));
-
-      updateStep("table", "running");
-      mark("table", await ensureStorageTable(azureAccount, subscriptionId, resourceGroupName, storageAccountName, TERMINAL_SESSION_TABLE, tenantId));
-
-      updateStep("container", "running");
-      mark("container", await ensureStorageContainer(azureAccount, subscriptionId, resourceGroupName, storageAccountName, TERMINAL_DEPLOY_CONTAINER, tenantId));
-
-      updateStep("wps", "running");
-      mark("wps", await ensureWebPubSub(azureAccount, subscriptionId, resourceGroupName, webPubSubName, location, "Free_F1", tenantId));
-
-      updateStep("hub", "running");
-      mark("hub", await ensureWebPubSubHub(azureAccount, subscriptionId, resourceGroupName, webPubSubName, TERMINAL_HUB, tenantId));
-
-      updateStep("plan", "running");
-      mark("plan", await ensureFlexServicePlan(azureAccount, subscriptionId, resourceGroupName, planName, location, tenantId));
-
-      updateStep("app", "running");
-      const blobBase = `https://${storageAccountName}.blob.core.windows.net`;
-      const tableBase = `https://${storageAccountName}.table.core.windows.net`;
-      const { result: appResult, principalId } = await ensureFlexFunctionApp(
+      // Audit trail: who touched the subscription, and who rewrote the site's contents.
+      updateStep("diagnostics", "running");
+      const activity = await ensureSubscriptionDiagnostics(azureAccount, subscriptionId, DIAGNOSTIC_SETTING_NAME, law.id, tenantId);
+      const blobLogs = await ensureBlobDiagnostics(
         azureAccount,
         subscriptionId,
-        resourceGroupName,
-        functionAppName,
-        location,
-        servicePlanId(subscriptionId, resourceGroupName, planName),
-        `${blobBase}/${TERMINAL_DEPLOY_CONTAINER}`,
-        {
-          APPLICATIONINSIGHTS_AUTHENTICATION_STRING: "Authorization=AAD",
-          AzureWebJobsStorage__accountName: storageAccountName,
-          AzureWebJobsStorage__credential: "managedidentity",
-          AzureWebJobsStorage__blobServiceUri: `${blobBase}/`,
-          AzureWebJobsStorage__tableServiceUri: `${tableBase}/`,
-          AzureWebJobsStorage__queueServiceUri: `https://${storageAccountName}.queue.core.windows.net/`,
-          // The platform's cors block is separate; the backend reads this one itself.
-          ALLOWED_ORIGINS: allowedOrigins.join(","),
-          WEBPUBSUB_ENDPOINT: `${webPubSubName}.webpubsub.azure.com`,
-          HUB_NAME: TERMINAL_HUB,
-          SESSION_TABLE_ACCOUNT_NAME: storageAccountName,
-          SESSION_TABLE_NAME: TERMINAL_SESSION_TABLE,
-        },
-        allowedOrigins,
-        tenantId
+        storageGroup,
+        webStorageAccountName,
+        DIAGNOSTIC_SETTING_NAME,
+        law.id,
+        tenantId,
       );
-      mark("app", appResult);
+      mark("diagnostics", activity === "exists" && blobLogs === "exists" ? "exists" : "created");
 
-      updateStep("rbac", "running");
-      const saScope = storageAccountScope(subscriptionId, resourceGroupName, storageAccountName);
-      const wpsScope = webPubSubScope(subscriptionId, resourceGroupName, webPubSubName);
-      const grants: [string, string][] = [
-        [saScope, "Storage Blob Data Contributor"],
-        [saScope, "Storage Queue Data Contributor"],
-        [saScope, "Storage Table Data Contributor"],
-        [wpsScope, "Web PubSub Service Owner"],
-        [appInsightsScope(subscriptionId, resourceGroupName, appInsightsName), "Monitoring Metrics Publisher"],
-      ];
-      const assigned: string[] = [];
-      for (const [scope, role] of grants) {
-        if ((await ensureRbacRoleAtScope(azureAccount, scope, principalId, role, tenantId)) === "created") {
-          assigned.push(role);
-        }
-      }
-      updateStep("rbac", assigned.length === 0 ? "skipped" : "done", assigned.length === 0 ? "Already assigned" : assigned.join(", "));
+      // The redirect uri is the site this card just created, so the app is registered after it.
+      updateStep("installerApp", "running");
+      const siteUrl = await getStaticWebsiteUrl(azureAccount, subscriptionId, webStorageAccountName, tenantId);
+      if (!siteUrl) throw new Error("The site's web endpoint is not available yet");
+      const existingInstaller = await getExistingApp(azureAccount, getPrivateInstallerAppName(), tenantId);
+      const installerApp =
+        existingInstaller ??
+        (await createSpaAppRegistration(azureAccount, getPrivateInstallerAppName(), [siteUrl], PRIVATE_INSTALLER_DELEGATED, tenantId));
+      // An app created just now already carries the uri; an older one predates this storage account.
+      const addedUri = existingInstaller ? await ensureSpaRedirectUri(azureAccount, existingInstaller.id, siteUrl, tenantId) : false;
+      if (addedUri) updateStep("installerApp", "done", `Added redirect URI ${siteUrl}`);
+      else mark("installerApp", existingInstaller ? "exists" : "created");
 
-      updateStep("pipelineApp", "running");
-      const existingApp = await getExistingApp(azureAccount, pipelineAppName, tenantId);
-      const app = existingApp ?? (await createAppRegistration(azureAccount, pipelineAppName, [], tenantId));
-      mark("pipelineApp", existingApp ? "exists" : "created");
-
-      updateStep("pipelineSp", "running");
-      const existingSp = await getExistingSP(azureAccount, app.appId, tenantId);
-      const sp = existingSp ?? (await createServicePrincipal(azureAccount, app.appId, tenantId));
-      mark("pipelineSp", existingSp ? "exists" : "created");
-
-      updateStep("pipelineCreds", "running");
-      let addedCreds = 0;
-      for (const env of environments) {
-        const cred = getFederatedCredential(org, githubAccount.id, githubRepo, githubRepoId, env);
-        if (await ensureFederatedCredential(azureAccount, app.id, cred.name, cred.subject, tenantId)) addedCreds += 1;
-      }
-      mark("pipelineCreds", addedCreds === 0 ? "exists" : "created");
-
-      // Service Owner, not Service Reader: issuing a client token is a POST on the data plane.
-      updateStep("pipelineRbac", "running");
-      mark("pipelineRbac", await ensureRbacRoleAtScope(azureAccount, wpsScope, sp.id, "Web PubSub Service Owner", tenantId));
+      // Without a service principal the app has no enterprise application entry, so there is nothing
+      // for an administrator to consent to and nothing to hold a permission grant.
+      updateStep("installerSp", "running");
+      const existingInstallerSp = await getExistingSP(azureAccount, installerApp.appId, tenantId);
+      if (!existingInstallerSp) await createServicePrincipal(azureAccount, installerApp.appId, tenantId);
+      mark("installerSp", existingInstallerSp ? "exists" : "created");
 
       const finished: RemoteTerminalInfraResult = {
-        corpName,
         subscriptionId,
-        apiUrl: `https://${functionAppName}.azurewebsites.net`,
-        webPubSubHost: `${webPubSubName}.webpubsub.azure.com`,
-        hubName: TERMINAL_HUB,
-        pipelineClientId: app.appId,
-        pipelineTenantId: tenantId || azureAccount.tenantId,
+        siteStorageAccount: webStorageAccountName,
+        tenantId: tenantId || azureAccount.tenantId,
+        installerClientId: installerApp.appId,
       };
       setResult(finished);
       saveResult(finished);
@@ -302,36 +330,34 @@ export function useRemoteTerminalInfraCard({
     }
   }, [
     allowedOrigins,
-    appInsightsName,
-    azureAccount,
-    corpName,
-    ensureRegistered,
-    functionAppName,
     lawName,
-    location,
-    planName,
     resourceGroupName,
+    azureAccount,
+    ensureRegistered,
+    location,
     setRunning,
     setSteps,
-    environments,
-    githubAccount,
-    githubRepo,
-    githubRepoId,
-    pipelineAppName,
-    storageAccountName,
     subscriptionId,
     tenantId,
     updateStep,
-    webPubSubName,
+    webStorageAccountName,
   ]);
 
   const status: CardStatus = !azureConfigured ? "error" : done ? "complete" : "warning";
-  const summary = !azureConfigured ? "Unavailable" : done ? "Terminal relay ready" : "Set up the terminal relay";
+  const summary = !azureConfigured ? "Unavailable" : done ? "Private environment ready" : "Set up the private environment";
 
   return {
     cardId: "remote_terminal_infra" as const,
     location,
     setLocation,
+    siteStorageAccount: webStorageAccountName,
+    setSiteStorageAccount,
+    siteStorageChecking,
+    siteStorageError,
+    checkSiteStorageAccount,
+    locations,
+    locationsLoading,
+    locationsError,
     steps,
     running,
     done,
@@ -343,12 +369,9 @@ export function useRemoteTerminalInfraCard({
     resultMatches,
     runNonce,
     resourceGroupName,
-    webPubSubName,
-    functionAppName,
-    storageAccountName,
-    hubName: TERMINAL_HUB,
-    pipelineAppName,
-    cardRequirements: ["azure_login", "azure_subscription", "core_infra"],
-    cardDependencyLabel: "Set up the private zeninstaller environment",
+    lawName,
+    webStorageAccountName,
+    cardRequirements: ["azure_login", "azure_subscription"],
+    cardDependencyLabel: "Set up the private environment",
   };
 }

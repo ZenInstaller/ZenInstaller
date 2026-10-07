@@ -4,7 +4,7 @@
  */
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { getMsal, MSA_TENANT } from "../../auth/msal";
+import { cleanTenantId, getMsal, LOGIN_AUTHORITY, MSA_TENANT, PINNED_TENANT_ID } from "../../auth/msal";
 import { LOGIN_SCOPES, ARM_SCOPES } from "../../config/azureConfig";
 import { listTenants } from "../../api/azureGraph";
 import type { AzureTenant } from "../../types";
@@ -31,6 +31,7 @@ export interface UseAzureAccount extends LoginHook<AzureAccount> {
   tenantIdError: string | null;
   selectTenant: (tenantId: string) => void;
   tenantsLoaded: boolean;
+  tenantPinned: boolean; // VITE_AZURE_TENANT_ID is set, so the tenant is not the user's to choose.
 }
 
 const SESSION_KEY = "zeninstaller_arm_tenant";
@@ -126,7 +127,7 @@ export function useAzureAccount(): UseAzureAccount {
         const result = await msal.handleRedirectPromise();
         if (cancelled) return;
 
-        const savedTenant = sessionStorage.getItem(SESSION_KEY) || undefined;
+        const savedTenant = cleanTenantId(sessionStorage.getItem(SESSION_KEY));
 
         // Probe for an ARM token so the pending-consent redirect fires here rather than
         // surfacing later as an unexplained failure in whichever card reads ARM first.
@@ -185,7 +186,7 @@ export function useAzureAccount(): UseAzureAccount {
       if (!msal) return;
       await msal.loginRedirect({
         scopes: LOGIN_SCOPES,
-        authority: "https://login.microsoftonline.com/common",
+        authority: LOGIN_AUTHORITY,
         prompt: "select_account",
       });
     } catch (err) {
@@ -296,11 +297,12 @@ export function useAzureAccount(): UseAzureAccount {
 
     loginError,
     tenants,
-    manualTenantId,
+    manualTenantId: PINNED_TENANT_ID ?? manualTenantId,
     setManualTenantId,
-    confirmedTenantId,
+    confirmedTenantId: PINNED_TENANT_ID ?? confirmedTenantId,
     tenantIdError,
     tenantsLoaded,
+    tenantPinned: !!PINNED_TENANT_ID,
     selectTenant,
   };
 }

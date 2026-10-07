@@ -11,20 +11,19 @@ import { useAzureAccount, type UseAzureAccount } from "../cards/AzureLogin/useAz
 import type { AzureAccount } from "../types";
 
 async function waitFor(assertion: () => void, timeoutMs = 1000) {
-  const start = Date.now();
-  for (;;) {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
     try {
       assertion();
       return;
-    } catch (error) {
-      if (Date.now() - start >= timeoutMs) {
-        throw error;
-      }
+    } catch {
       await act(async () => {
         await new Promise((resolve) => setTimeout(resolve, 0));
       });
     }
   }
+  // Out of time: one last go, so what surfaces is the assertion's own error.
+  assertion();
 }
 
 const { apiMocks } = vi.hoisted(() => ({
@@ -39,6 +38,12 @@ vi.mock("../auth/msal", () => ({
   getMsal: apiMocks.getMsal,
   getToken: apiMocks.getToken,
   MSA_TENANT: "msa-tenant",
+  LOGIN_AUTHORITY: "https://login.microsoftonline.com/common",
+  PINNED_TENANT_ID: undefined,
+  cleanTenantId: (t?: string | null) => {
+    const tid = t?.trim();
+    return !tid || tid === "undefined" || tid === "null" ? undefined : tid;
+  },
 }));
 
 vi.mock("../api/azureGraph", () => ({

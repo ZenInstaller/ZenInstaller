@@ -9,6 +9,14 @@ import type { AzureAccount } from "../types";
 
 export const MSA_TENANT = "9188040d-6c67-4c5b-b112-36a304b66dad"; // Microsoft consumer tenant (MSA accounts)
 
+export function cleanTenantId(tenant?: string | null): string | undefined {
+  const tid = tenant?.trim();
+  return !tid || tid === "undefined" || tid === "null" ? undefined : tid;
+}
+
+export const PINNED_TENANT_ID = cleanTenantId(import.meta.env.VITE_AZURE_TENANT_ID);
+export const LOGIN_AUTHORITY = `https://login.microsoftonline.com/${PINNED_TENANT_ID ?? "common"}`;
+
 let _msal: PublicClientApplication | null = null;
 let _initialized = false;
 
@@ -18,7 +26,7 @@ export async function getMsal(): Promise<PublicClientApplication | null> {
     _msal = new PublicClientApplication({
       auth: {
         clientId: AZURE_CLIENT_ID,
-        authority: "https://login.microsoftonline.com/common",
+        authority: LOGIN_AUTHORITY,
         redirectUri: window.location.origin,
       },
       cache: { cacheLocation: "sessionStorage" },
@@ -34,8 +42,8 @@ export async function getMsal(): Promise<PublicClientApplication | null> {
 export async function ensureScopeConsent(account: AzureAccount, scopes: string[], overrideTenantId?: string): Promise<boolean> {
   const msal = await getMsal();
   if (!msal) return false;
-  const tenant = overrideTenantId || account.tenantId;
-  const authority = tenant !== MSA_TENANT ? `https://login.microsoftonline.com/${tenant}` : undefined;
+  const tenant = PINNED_TENANT_ID ?? cleanTenantId(overrideTenantId) ?? account.tenantId;
+  const authority = tenant && tenant !== MSA_TENANT ? `https://login.microsoftonline.com/${tenant}` : undefined;
   const request = {
     scopes,
     account,
@@ -68,8 +76,8 @@ export async function getToken(account: AzureAccount, scopes: string[], override
     throw new Error("MSA_NEEDS_TENANT");
   }
 
-  const tenant = overrideTenantId ?? account.tenantId;
-  const authority = tenant !== MSA_TENANT ? `https://login.microsoftonline.com/${tenant}` : undefined;
+  const tenant = PINNED_TENANT_ID ?? cleanTenantId(overrideTenantId) ?? account.tenantId;
+  const authority = tenant && tenant !== MSA_TENANT ? `https://login.microsoftonline.com/${tenant}` : undefined;
 
   const res = await msal.acquireTokenSilent({
     scopes,

@@ -14,6 +14,7 @@ import { readBlobWithProgress, type DownloadProgress } from "../logic/download";
 import type { RemoteLoginDispatch } from "./github";
 
 const url = import.meta.env.VITE_API_URL;
+export const BACKEND_CONFIGURED = !!url;
 
 // ─── Auth ─────────────────────────────────────────────────────────────────────
 

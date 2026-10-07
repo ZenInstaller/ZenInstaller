@@ -5,7 +5,16 @@
 
 import { getToken } from "../auth/msal";
 import { azFetch as gFetch, ARM, GRAPH } from "./azureFetch";
-import { APP_SCOPES, ARM_SCOPES, DOMAIN_SCOPES, ORGANIZATION_SCOPES, GRANT_CONSENT_SCOPES, ACCESS_PASS_SCOPES, GROUPS_SCOPES } from "../config/azureConfig";
+import {
+  APP_SCOPES,
+  ARM_SCOPES,
+  DOMAIN_SCOPES,
+  ORGANIZATION_SCOPES,
+  GRANT_CONSENT_SCOPES,
+  ACCESS_PASS_SCOPES,
+  GROUPS_SCOPES,
+  ROLE_MANAGEMENT_SCOPES,
+} from "../config/azureConfig";
 import { RBAC_ROLE_IDS } from "../config/azureConfig";
 import { deterministicUuid } from "../logic/crypto";
 import type { AzureAccount, AzureTenant } from "../types";
@@ -53,7 +62,11 @@ export async function listTenants(account: AzureAccount, overrideTenantId?: stri
 
 // ── App registration ───────────────────────────────────────────────────────────
 
-export async function getExistingApp(account: AzureAccount, displayName: string, overrideTenantId?: string): Promise<{ appId: string; id: string } | null> {
+export async function getExistingApp(
+  account: AzureAccount,
+  displayName: string,
+  overrideTenantId?: string,
+): Promise<{ appId: string; id: string } | null> {
   const token = await getToken(account, APP_SCOPES, overrideTenantId);
   const data = await gFetch(token, GRAPH, `/applications?$filter=displayName eq '${displayName}'&$select=appId,id`);
   return data.value?.[0] ? { appId: data.value[0].appId, id: data.value[0].id } : null;
@@ -70,7 +83,7 @@ export async function createAppRegistration(
   account: AzureAccount,
   displayName: string,
   permissions: readonly string[],
-  overrideTenantId?: string
+  overrideTenantId?: string,
 ): Promise<{ appId: string; id: string }> {
   const token = await getToken(account, APP_SCOPES, overrideTenantId);
   const body: {
@@ -101,7 +114,69 @@ export async function createAppRegistration(
   return { appId: data.appId, id: data.id };
 }
 
+/*
+ * requiredResourceAccess identifies a permission by guid, and those differ per resource and per
+ * cloud — so they are read off each resource's own service principal by name rather than hardcoded.
+ */
+async function delegatedScopeIds(token: string, resourceAppId: string, scopeNames: readonly string[]) {
+  const data = await gFetch(token, GRAPH, `/servicePrincipals?$filter=appId eq '${resourceAppId}'&$select=oauth2PermissionScopes`);
+  const published: { id: string; value: string }[] = data.value?.[0]?.oauth2PermissionScopes ?? [];
+  return scopeNames.map((wanted) => {
+    const scope = published.find((p) => p.value === wanted);
+    if (!scope) throw new Error(`${resourceAppId} publishes no delegated scope named "${wanted}"`);
+    return { id: scope.id, type: "Scope" as const };
+  });
+}
+
+// A browser app signing in users: delegated permissions only, and redirect URIs under "spa" so the
+// authorization code flow with PKCE is allowed without a client secret.
+export async function createSpaAppRegistration(
+  account: AzureAccount,
+  displayName: string,
+  redirectUris: string[],
+  delegated: Record<string, readonly string[]>,
+  overrideTenantId?: string,
+): Promise<{ appId: string; id: string }> {
+  const token = await getToken(account, APP_SCOPES, overrideTenantId);
+  const requiredResourceAccess = await Promise.all(
+    Object.entries(delegated).map(async ([resourceAppId, scopes]) => ({
+      resourceAppId,
+      resourceAccess: await delegatedScopeIds(token, resourceAppId, scopes),
+    })),
+  );
+
+  const data = await gFetch(token, GRAPH, "/applications", {
+    method: "POST",
+    body: JSON.stringify({
+      displayName,
+      signInAudience: "AzureADMyOrg",
+      api: { requestedAccessTokenVersion: 2 },
+      spa: { redirectUris },
+      requiredResourceAccess,
+    }),
+  });
+  return { appId: data.appId, id: data.id };
+}
+
 // ── Service principal ──────────────────────────────────────────────────────────
+
+// A second site means a second origin, so the uri is appended rather than replacing what is registered.
+export async function ensureSpaRedirectUri(
+  account: AzureAccount,
+  appObjectId: string,
+  redirectUri: string,
+  overrideTenantId?: string,
+): Promise<boolean> {
+  const token = await getToken(account, APP_SCOPES, overrideTenantId);
+  const app = await gFetch(token, GRAPH, `/applications/${appObjectId}?$select=spa`);
+  const registered: string[] = app?.spa?.redirectUris ?? [];
+  if (registered.includes(redirectUri)) return false;
+  await gFetch(token, GRAPH, `/applications/${appObjectId}`, {
+    method: "PATCH",
+    body: JSON.stringify({ spa: { redirectUris: [...registered, redirectUri] } }),
+  });
+  return true;
+}
 
 export async function getExistingSP(account: AzureAccount, appId: string, overrideTenantId?: string): Promise<{ id: string } | null> {
   const token = await getToken(account, APP_SCOPES, overrideTenantId);
@@ -137,7 +212,7 @@ export async function ensureFederatedCredential(
   appObjectId: string,
   name: string,
   subject: string,
-  overrideTenantId?: string
+  overrideTenantId?: string,
 ): Promise<boolean> {
   const token = await getToken(account, APP_SCOPES, overrideTenantId);
   const existing = await gFetch(token, GRAPH, `/applications/${appObjectId}/federatedIdentityCredentials`);
@@ -162,17 +237,17 @@ export async function hasRbacRole(
   subscriptionId: string,
   principalId: string,
   roleName: string,
-  overrideTenantId?: string
+  overrideTenantId?: string,
 ): Promise<boolean> {
   const token = await getToken(account, ARM_SCOPES, overrideTenantId);
   const roleId = RBAC_ROLE_IDS[roleName];
   const existing = await gFetch(
     token,
     ARM,
-    `/subscriptions/${subscriptionId}/providers/Microsoft.Authorization/roleAssignments?api-version=2022-04-01&$filter=assignedTo('${principalId}')`
+    `/subscriptions/${subscriptionId}/providers/Microsoft.Authorization/roleAssignments?api-version=2022-04-01&$filter=assignedTo('${principalId}')`,
   );
   return !!existing?.value?.some((a: { properties: { roleDefinitionId: string } }) =>
-    a.properties.roleDefinitionId.toLowerCase().endsWith(roleId.toLowerCase())
+    a.properties.roleDefinitionId.toLowerCase().endsWith(roleId.toLowerCase()),
   );
 }
 
@@ -181,7 +256,7 @@ export async function ensureRbacRole(
   subscriptionId: string,
   spObjectId: string,
   roleName: string,
-  overrideTenantId?: string
+  overrideTenantId?: string,
 ): Promise<void> {
   if (await hasRbacRole(account, subscriptionId, spObjectId, roleName, overrideTenantId)) return;
 
@@ -210,7 +285,12 @@ export async function listAppRoleAssignments(account: AzureAccount, spObjectId: 
   return (data?.value ?? []).map((a: { appRoleId: string }) => a.appRoleId);
 }
 
-export async function grantAdminConsent(account: AzureAccount, spObjectId: string, permissions: readonly string[], overrideTenantId?: string): Promise<void> {
+export async function grantAdminConsent(
+  account: AzureAccount,
+  spObjectId: string,
+  permissions: readonly string[],
+  overrideTenantId?: string,
+): Promise<void> {
   const token = await getToken(account, GRANT_CONSENT_SCOPES, overrideTenantId);
 
   const graphSP = await gFetch(token, GRAPH, "/servicePrincipals?$filter=appId eq '00000003-0000-0000-c000-000000000000'&$select=id");
@@ -401,7 +481,11 @@ export async function resetUserPassword(account: AzureAccount, userId: string, n
 }
 
 // Creates a Temporary Access Pass for a user (requires delegated UserAuthenticationMethod.ReadWrite.All).
-export async function createTemporaryAccessPassForUser(account: AzureAccount, userId: string, overrideTenantId?: string): Promise<TemporaryAccessPass> {
+export async function createTemporaryAccessPassForUser(
+  account: AzureAccount,
+  userId: string,
+  overrideTenantId?: string,
+): Promise<TemporaryAccessPass> {
   const token = await getToken(account, ACCESS_PASS_SCOPES, overrideTenantId);
   const maxAttempts = 4;
   let data: {
@@ -449,7 +533,12 @@ export async function createTemporaryAccessPassForUser(account: AzureAccount, us
 }
 
 // Checks whether a previously-created Temporary Access Pass method still exists for a user.
-export async function temporaryAccessPassMethodExists(account: AzureAccount, userId: string, methodId: string, overrideTenantId?: string): Promise<boolean> {
+export async function temporaryAccessPassMethodExists(
+  account: AzureAccount,
+  userId: string,
+  methodId: string,
+  overrideTenantId?: string,
+): Promise<boolean> {
   try {
     const token = await getToken(account, ACCESS_PASS_SCOPES, overrideTenantId);
     await gFetch(token, GRAPH, `/users/${userId}/authentication/temporaryAccessPassMethods/${methodId}?$select=id`);
@@ -495,7 +584,7 @@ export async function updateGroup(
   account: AzureAccount,
   groupId: string,
   patch: { displayName?: string; description?: string },
-  overrideTenantId?: string
+  overrideTenantId?: string,
 ): Promise<void> {
   const token = await getToken(account, GROUPS_SCOPES, overrideTenantId);
   await gFetch(token, GRAPH, `/groups/${groupId}`, { method: "PATCH", body: JSON.stringify(patch) });
@@ -524,8 +613,10 @@ export async function getGroupByName(account: AzureAccount, displayName: string,
 
 export async function createGroup(
   account: AzureAccount,
-  params: { displayName: string; description: string; mailNickname: string },
-  overrideTenantId?: string
+  // isAssignableToRole cannot be changed later, so a group that may ever hold a directory role
+  // has to be born with it. Setting it also requires the caller to be a privileged role admin.
+  params: { displayName: string; description: string; mailNickname: string; isAssignableToRole?: boolean },
+  overrideTenantId?: string,
 ): Promise<EntraGroup> {
   const token = await getToken(account, GROUPS_SCOPES, overrideTenantId);
   const data = await gFetch(token, GRAPH, "/groups", {
@@ -536,6 +627,7 @@ export async function createGroup(
       mailNickname: params.mailNickname,
       mailEnabled: false,
       securityEnabled: true,
+      ...(params.isAssignableToRole && { isAssignableToRole: true }),
     }),
   });
   return { id: data.id, displayName: data.displayName, description: data.description ?? params.description };
@@ -559,4 +651,46 @@ export async function isGroupMember(account: AzureAccount, groupId: string, memb
     body: JSON.stringify({ groupIds: [groupId] }),
   });
   return !!(data?.value ?? []).includes(groupId);
+}
+
+// ── PIM for Entra roles ───────────────────────────────────────────────────────
+
+/*
+ * Eligible, not active: members of the group hold nothing until they activate the role, and the
+ * activation expires. Reading it back is a plain filter; creating it goes through a request object.
+ */
+export async function hasRoleEligibility(
+  account: AzureAccount,
+  principalId: string,
+  roleDefinitionId: string,
+  overrideTenantId?: string,
+): Promise<boolean> {
+  const token = await getToken(account, ROLE_MANAGEMENT_SCOPES, overrideTenantId);
+  const filter = `principalId eq '${principalId}' and roleDefinitionId eq '${roleDefinitionId}'`;
+  const data = await gFetch(token, GRAPH, `/roleManagement/directory/roleEligibilitySchedules?$filter=${encodeURIComponent(filter)}`);
+  return (data?.value ?? []).length > 0;
+}
+
+export async function ensureRoleEligibility(
+  account: AzureAccount,
+  principalId: string,
+  roleDefinitionId: string,
+  justification: string,
+  overrideTenantId?: string,
+): Promise<"created" | "exists"> {
+  if (await hasRoleEligibility(account, principalId, roleDefinitionId, overrideTenantId)) return "exists";
+
+  const token = await getToken(account, ROLE_MANAGEMENT_SCOPES, overrideTenantId);
+  await gFetch(token, GRAPH, "/roleManagement/directory/roleEligibilityScheduleRequests", {
+    method: "POST",
+    body: JSON.stringify({
+      action: "adminAssign",
+      justification,
+      roleDefinitionId,
+      principalId,
+      directoryScopeId: "/",
+      scheduleInfo: { startDateTime: new Date().toISOString(), expiration: { type: "noExpiration" } },
+    }),
+  });
+  return "created";
 }

@@ -42,6 +42,7 @@ export default function GithubLoginCard({ card, auth }: Props) {
     logout: onLogout,
     mode,
     setMode,
+    backendAvailable,
     token: pat,
     setToken: setPat,
     refresh: onRefresh,
@@ -86,8 +87,8 @@ export default function GithubLoginCard({ card, auth }: Props) {
           <Intro />
         </Box>
 
-        {/* Mode toggle — hidden once logged in */}
-        {!user && (
+        {/* Mode toggle — hidden once logged in, and when PAT is the only mode there is nothing to pick */}
+        {!user && backendAvailable && (
           <Box sx={{ mb: 2 }}>
             <Typography sx={{ fontSize: "0.72rem", color: "#64748b", mb: 1 }}>
               <Box component="span" sx={{ ...monoSx, fontWeight: 600 }}>

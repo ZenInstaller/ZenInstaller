@@ -19,6 +19,12 @@ const { apiMocks } = vi.hoisted(() => ({
   },
 }));
 
+// Only the flag is faked: these tests assert on the real exchange's outgoing request.
+vi.mock("../api/backend", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("../api/backend")>()),
+  BACKEND_CONFIGURED: true,
+}));
+
 vi.mock("../api", () => ({
   verifyAuth: apiMocks.verifyAuth,
   switchToDirect: apiMocks.switchToDirect,

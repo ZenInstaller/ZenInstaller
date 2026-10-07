@@ -21,6 +21,8 @@ type Props = {
   repo: string;
   envName: string | null;
   keys: readonly string[];
+  // Saved and counted like the rest, but never shown — values the card derives, not ones anyone types.
+  hiddenKeys?: readonly string[];
   variables: UseGithubVariables;
   populate?: Record<string, string>;
   title?: string;
@@ -40,6 +42,7 @@ export default function CloudVariableDetail({
   repo,
   envName,
   keys,
+  hiddenKeys,
   variables,
   populate,
   title = "Variables",
@@ -75,7 +78,10 @@ export default function CloudVariableDetail({
     onAutoSaveResult,
   });
 
-  const notConfigured = keys.filter((k) => !variables.values[k]).length;
+  const visibleKeys = hiddenKeys?.length ? keys.filter((k) => !hiddenKeys.includes(k)) : keys;
+
+  // Counts what is on screen; a hidden key has no row for the reader to go and fill in.
+  const notConfigured = visibleKeys.filter((k) => !variables.values[k]).length;
 
   const complete = keys.every((k) => !!variables.values[k]);
   const scopedValues = Object.fromEntries(keys.map((k) => [k, variables.values[k] ?? ""]));
@@ -129,7 +135,7 @@ export default function CloudVariableDetail({
       </Box>
 
       <VariablesCard
-        requiredKeys={keys}
+        requiredKeys={visibleKeys}
         savedValues={variables.values}
         localValues={localValues}
         upsertStatuses={upsertStatuses}

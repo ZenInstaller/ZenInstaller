@@ -8,5 +8,8 @@ import type { AzureTenant } from "../types";
 // Looks up a tenant's display name in a fetched list, falling back to the raw id when unknown.
 export function tenantDisplayName(tenants: AzureTenant[], tenantId: string | null | undefined): string | undefined {
   if (!tenantId) return undefined;
-  return tenants.find((t) => t.tenantId === tenantId)?.displayName ?? tenantId;
+  const tenant = tenants.find((t) => t.tenantId === tenantId);
+  if (!tenant) return tenantId;
+  const { displayName, defaultDomain } = tenant;
+  return defaultDomain && defaultDomain !== displayName ? `${displayName} (${defaultDomain})` : displayName;
 }

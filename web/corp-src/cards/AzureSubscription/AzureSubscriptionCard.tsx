@@ -86,7 +86,12 @@ export default function AzureSubscriptionCard({
     if (!subscriptions.some((s) => s.id === selectedSubscriptionId)) setSelectedSubscriptionId("");
   }, [subscriptions, selectedSubscriptionId, setSelectedSubscriptionId]);
 
-  const populate = { AZURE_TENANT_ID: manualTenantId, AZURE_SUBSCRIPTION_ID: selectedSubscriptionId };
+  // The build bakes VITE_AZURE_TENANT_ID in to pin sign-in to this tenant, so it tracks the same choice.
+  const populate = {
+    AZURE_TENANT_ID: manualTenantId,
+    AZURE_SUBSCRIPTION_ID: selectedSubscriptionId,
+    VITE_AZURE_TENANT_ID: manualTenantId,
+  };
   const tenantLabel = tenantDisplayName(tenants, manualTenantId);
   const subscriptionOptions = subscriptions.filter((s) => s.tenantId === manualTenantId);
 
@@ -187,6 +192,7 @@ export default function AzureSubscriptionCard({
           keys={AZURE_TARGET_KEYS}
           variables={variables}
           populate={populate}
+          hiddenKeys={["VITE_AZURE_TENANT_ID"]}
           title="Saved to GitHub"
           githubUrl={githubUrl}
           saveHint={

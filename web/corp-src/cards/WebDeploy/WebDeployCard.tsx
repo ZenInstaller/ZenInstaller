@@ -112,30 +112,33 @@ export default function WebDeployCard({ card, web, repoFullName, githubAccount, 
           variables={variables}
           title="Build settings"
           githubUrl={githubUrl}
+          keyHints={{
+            VITE_GITHUB_CLIENT_ID: (
+              <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                <Typography sx={{ fontSize: "0.7rem", color: "#94a3b8" }}>Where does this come from?</Typography>
+                <Box
+                  component="a"
+                  href={GITHUB_OAUTH_DOC}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 0.25,
+                    color: "#1d4ed8",
+                    textDecoration: "none",
+                    "&:hover": { textDecoration: "underline" },
+                  }}
+                >
+                  <Typography component="span" sx={{ fontSize: "0.7rem", color: "inherit" }}>
+                    Creating the GitHub OAuth app
+                  </Typography>
+                  <OpenInNewIcon sx={{ fontSize: 11 }} />
+                </Box>
+              </Box>
+            ),
+          }}
         />
-
-        <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, mt: -1 }}>
-          <Typography sx={{ fontSize: "0.7rem", color: "#94a3b8" }}>Where does this come from?</Typography>
-          <Box
-            component="a"
-            href={GITHUB_OAUTH_DOC}
-            target="_blank"
-            rel="noopener noreferrer"
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              gap: 0.25,
-              color: "#1d4ed8",
-              textDecoration: "none",
-              "&:hover": { textDecoration: "underline" },
-            }}
-          >
-            <Typography component="span" sx={{ fontSize: "0.7rem", color: "inherit" }}>
-              Creating the GitHub OAuth app
-            </Typography>
-            <OpenInNewIcon sx={{ fontSize: 11 }} />
-          </Box>
-        </Box>
 
         {staleVariables.length > 0 && (
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>

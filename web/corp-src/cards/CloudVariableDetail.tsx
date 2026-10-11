@@ -30,6 +30,8 @@ type Props = {
   onComplete?: (done: boolean) => void;
   githubUrl?: string;
   saveHint?: ReactNode; // Rendered next to the Save button (e.g. an "unsaved change" warning).
+  tableHint?: ReactNode; // Rendered under the variable table, above the Save button (e.g. a note on the whole set).
+  keyHints?: Partial<Record<string, ReactNode>>; // Note under one variable's row, e.g. where its value comes from.
   keyErrors?: Partial<Record<string, string>>; // Per-key external validation error, shown as a row-level error icon.
   autoSaveCounter?: number; // Increment to auto-apply populate values and immediately save them to GitHub.
   onAutoSaveResult?: (result: "saved" | "no-changes" | "error") => void; // Called when auto-save (triggered by autoSaveCounter) completes.
@@ -50,6 +52,8 @@ export default function CloudVariableDetail({
   onComplete,
   githubUrl,
   saveHint,
+  tableHint,
+  keyHints,
   keyErrors,
   autoSaveCounter,
   onAutoSaveResult,
@@ -142,9 +146,12 @@ export default function CloudVariableDetail({
         upsertStatuses={upsertStatuses}
         overwriteWarning
         keyErrors={keyErrors}
+        keyHints={keyHints}
         onChange={handleChange}
         onRevert={handleRevert}
       />
+
+      {tableHint && <Box sx={{ mt: 1 }}>{tableHint}</Box>}
 
       <Box
         sx={{

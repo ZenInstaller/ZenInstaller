@@ -41,8 +41,11 @@ jobs:
       - name: Build VitePress docs
         run: pnpm run docs:build
 
-      - name: Merge docs into dist
-        run: cp -r web/docs/.vitepress/dist web/dist/docs
+      - name: Lay docs at the root and the app under /core
+        run: |
+          mv web/dist web/core-build
+          cp -r web/docs/.vitepress/dist web/dist
+          mv web/core-build web/dist/core
 
       - name: Write CNAME
         if: vars.CNAME != ''

@@ -3,7 +3,7 @@
  * @license SPDX-License-Identifier: MIT
  */
 
-const DOCS_BASE = "/docs";
+const DOCS_BASE = "";
 
 // TODO: Investige if we should remove redundant cloud-docs wrapper.
 export const CLOUD_DOCS = {

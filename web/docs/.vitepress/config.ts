@@ -8,8 +8,8 @@ import { defineConfig } from "vitepress";
 export default defineConfig({
   title: "ZenInstaller Docs",
   description: "ZenInstaller documentation and guides",
-  base: "/docs/",
-  ignoreDeadLinks: [/^\/scripts\//],
+  base: "/",
+  ignoreDeadLinks: [/^\/core\//],
   themeConfig: {
     sidebar: [
       {

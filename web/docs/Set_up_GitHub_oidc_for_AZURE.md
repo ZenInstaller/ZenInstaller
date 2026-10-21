@@ -243,7 +243,7 @@ The script creates the app, adds federated credentials for each environment, ass
 
 **Option A — Download and upload to Cloud Shell**
 
-1. **Download** <a href="/docs/scripts/azure-github-oidc-setup.sh" download>azure-github-oidc-setup.sh</a>
+1. **Download** <a href="/scripts/azure-github-oidc-setup.sh" download>azure-github-oidc-setup.sh</a>
 2. **Edit** the four variables at the top of the file
 3. **Upload** to [Azure Cloud Shell](https://shell.azure.com): in the toolbar click **Manage files → Upload** and select the file
    > If this is your first time opening Cloud Shell: select **Bash** when prompted to choose a shell, then select your **Subscription** in the Getting started screen and click **Apply**.

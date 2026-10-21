@@ -13,8 +13,4 @@ The manual steps are detailed in the pages linked below.
 
 4. Add ZenInstaller app to your new Github Organisation account.
 
-5.
-
-<a href="/" onclick="window.location.href='/'">Go Back to ZenInstaller</a>
-
-<a href="/" onclick="window.location.href='/'">Go to ZenInstaller to start the setup</a>
+[Go to ZenInstaller to start the setup](/core/)

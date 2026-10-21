@@ -3,4 +3,4 @@
  * @license SPDX-License-Identifier: MIT
  */
 
-export const GITHUB_OAUTH_DOC = "/docs/Allow_access_to_GitHub";
+export const GITHUB_OAUTH_DOC = "/Allow_access_to_GitHub";
